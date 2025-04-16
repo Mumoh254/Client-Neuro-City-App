@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useFlutterwave } from 'flutterwave-react-v3';
+
 import { FaCar, FaCreditCard, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
 import axios from 'axios';
 import styled from 'styled-components';
