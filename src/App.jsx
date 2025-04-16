@@ -187,6 +187,7 @@ function App() {
   <NavLink to="/analytics" onClick={() => setIsMenuOpen(false)}>
     <FiActivity /> Analytics
   </NavLink>
+  
   <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
     <FiCloud /> Weather
   </NavLink>
