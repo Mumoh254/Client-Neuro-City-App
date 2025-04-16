@@ -87,19 +87,19 @@ const ReportCorruption = () => {
     <HeroSection>
       <div className="hero-content">
         <h1 className="display-4 mb-4 fw-bold">
-          <FiAlertTriangle className="me-3" /> 
+          <FiAlertTriangle className="me-2" /> 
           Not On My Watch
         </h1>
-        <p className="lead fs-3 mb-4">
+        <p className="lead fs-6 mb-2">
           Join the Fight Against Corruption in Nairobi City the  Breathing Heart of  Kenya
          
         </p>
-        <div className="d-flex gap-3 justify-content-center">
-          <GradientButton size="lg">
-            <FiUpload className="me-2" /> Report Now
+        <div className="d-flex gap-3 justify-content-center px-1">
+          <GradientButton size="sm">
+            <FiUpload className="me-6" /> Report Now
           </GradientButton>
-          <Button variant="outline-light" size="lg">
-            <FiEye className="me-2" /> View Cases
+          <Button variant="outline-light"  className='btn' size="sm">
+            <FiEye className="me-6" /> View Cases
           </Button>
         </div>
       </div>
@@ -108,42 +108,54 @@ const ReportCorruption = () => {
 
   // Action Cards component
   const ActionCards = () => (
-    <Row className="my-5 g-4">
-      <Col md={4}>
-        <ActionCard className="h-100 text-center p-4" style={{background: "#2563eb"}}>
+    <Row className="my-5 gy-4 gx-3">
+      <Col xs={12} sm={6} md={4}>
+        <ActionCard
+          className="h-100 text-center p-4 shadow rounded-4 border-0"
+          style={{ background: "#2563eb" }}
+        >
           <Card.Body>
             <div className="icon-wrapper bg-primary-gradient mb-4">
               <FiUpload size={40} className="text-white" />
             </div>
-            <h3 className="mb-3 text-white">Safe Reporting</h3>
-            <p className="text-white">Your identity remains completely protected</p>
+            <h5 className="mb-2 fw-semibold text-white">Safe Reporting</h5>
+            <p className="text-white small mb-0">Your identity remains completely protected</p>
           </Card.Body>
         </ActionCard>
       </Col>
-      <Col md={4}>
-        <ActionCard className="h-100 text-center p-4"  style={{background: "#d97706"}}>
+  
+      <Col xs={12} sm={6} md={4}>
+        <ActionCard
+          className="h-100 text-center p-4 shadow rounded-4 border-0"
+          style={{ background: "#d97706" }}
+        >
           <Card.Body>
-            <div className="icon-wrapper bg-success-gradient mb-4"  >
+            <div className="icon-wrapper bg-success-gradient mb-4">
               <FiEye size={40} className="text-white" />
             </div>
-            <h3 className="mb-3 text-white" >Live Tracking</h3>
-            <p className="  text-white">Monitor reported cases in real-time</p>
+            <h5 className="mb-2 fw-semibold text-white">Live Tracking</h5>
+            <p className="text-white small mb-0">Monitor reported cases in real-time</p>
           </Card.Body>
         </ActionCard>
       </Col>
-      <Col md={4}>
-        <ActionCard className="h-100 text-center p-4" style={{background: "#2563eb"}}>
+  
+      <Col xs={12} sm={6} md={4}>
+        <ActionCard
+          className="h-100 text-center p-4 shadow rounded-4 border-0"
+          style={{ background: "#2563eb" }}
+        >
           <Card.Body>
             <div className="icon-wrapper bg-warning-gradient mb-4">
               <FiMessageSquare size={40} className="text-white" />
             </div>
-            <h3 className="mb-3  text-white">Community Voice</h3>
-            <p className=" text-white">Engage with ongoing investigations</p>
+            <h5 className="mb-2 fw-semibold text-white">Community Voice</h5>
+            <p className="text-white small mb-0">Engage with ongoing investigations</p>
           </Card.Body>
         </ActionCard>
       </Col>
     </Row>
   );
+  
 
   // Handle image upload
   const handleImageUpload = (e) => {
@@ -193,10 +205,10 @@ const ReportCorruption = () => {
   return (
     <>
       <HeroContent />
-      <Container className="py-5">
+      <Container className="py-3">
         <ActionCards />
 
-        <ReportCard className="my-5 p-4">
+        <ReportCard className="my-5 p-1">
           <Card.Body>
             <h2 className="text-start mb-5 display-5 fw-bold text-primary">
               <FiAlertTriangle className="me-3" /> 
@@ -292,7 +304,7 @@ const ReportCorruption = () => {
                 </Col>
 
                 <Col className="text-start">
-                  <GradientButton type="submit" size="lg">
+                  <GradientButton type="submit" size="md">
                     <FiUpload className="me-2" /> Submit Report
                   </GradientButton>
 

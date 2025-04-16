@@ -18,7 +18,7 @@ const TomTomTrafficMap = () => {
       key: API_KEY,
       container: mapElement.current,
       center: [36.8219, -1.2921], // Nairobi center
-      zoom: 11,
+      zoom: 16,
     });
 
     mapRef.current.on('load', () => {
@@ -75,13 +75,13 @@ const TomTomTrafficMap = () => {
   }, []);
 
   return (
-    <div style={{ padding: '10px' }}>
+    <div style={{ padding: '0px' }}>
       <h2 style={{ display: 'flex', alignItems: 'center' }}>
         <span>TomTom Nairobi Traffic Map</span>
         <button
           onClick={toggleModal}
           style={{
-            padding: '10px 20px',
+            padding: '8px 5px',
             background: '#06b10f',
             color: '#fff',
             border: 'none',
@@ -98,9 +98,9 @@ const TomTomTrafficMap = () => {
         ref={mapElement}
         style={{
           width: '100%',
-          height: '80vh',
+          height: '100vh',
           borderRadius: '10px',
-          marginBottom: '1rem',
+          marginBottom: '0rem',
         }}
       />
       
