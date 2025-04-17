@@ -7,12 +7,12 @@ const SoftwareFeedback = () => {
     name: 'The Neuro-City-App',
     developer: 'Peter Mumo Itumo - CEO & Founder, Welt Tallis Group',
     extra: 'Email: infowelttallis@gmail.com | Call: +25470045355',
-    support: " Maggy",
+    support: " Null",
     review:  "Ester  ,  John  ,  Veronica",
     systemID: 'WELT-TALLIS-NEURO-NBO-PROD-v1.0.0.0',
     version: 'v1.0.0.0',
     lastUpdate: 'April 12, 2025',
-    techStack: 'HTML  ,  CSS    ,  JAVASCRIPT , React 19, Bootstrap-5,  OpenWeather API, TomTom, Leaflet Maps, Node.js, Google-Analytics, Prisma ORM, PostgreSQL on Neon DB, SheetDB, GEO-Location , WEB SOCKETS ,  PWA-SUPPORT',
+    techStack: 'HTML  ,  CSS    ,  JAVASCRIPT , React 19, Bootstrap-5,  OpenWeather API, TomTom, Leaflet Maps, Node.js, Google-Analytics, Prisma ORM, PostgreSQL on Neon DB, MONGO-DB , CLOUDINARY , SheetDB, GEO-Location , WEB SOCKETS ,  PWA-SUPPORT',
     description:
       'Neuro City App is a civic tech platform created to improve how citizens of Nairobi interact with their city. The system empowers people to report corruption, access vital services, get real-time traffic and weather updates, discover safe places to stay or visit, and help shape how the city runs. It’s a one-stop solution for urban engagement, governance transparency, and smart city evolution.'
   };

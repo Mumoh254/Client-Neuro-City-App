@@ -25,6 +25,7 @@ import Login from './authFolder/login';
 import TermsAndConditions from './authFolder/termsConditions';
 import   ReportCorruption   from "./painpoints/reportCorruption"
 import SoftwareFeedback from './software/softwareFeedback';
+import Favourites from './favourites/favourites';
 
 
 const AppContainer = styled.div`
@@ -200,6 +201,12 @@ function App() {
   <NavLink to="/traffic" onClick={() => setIsMenuOpen(false)}>
     <FiNavigation /> Traffic
   </NavLink>
+
+  <NavLink to="/peoples/favourites" onClick={() => setIsMenuOpen(false)}>
+    <FiNavigation /> Explore
+  </NavLink>
+
+
   <NavLink to="/tracking" onClick={() => setIsMenuOpen(false)}>
     <FiSettings /> Tracking
   </NavLink>
@@ -237,6 +244,7 @@ function App() {
             <Route path="/software-feedback" element={<SoftwareFeedback />} />
             
             <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/peoples/favourites" element={<Favourites />} />
             <Route path="/report-corruption" element={<ReportCorruption />} />
             <Route path="/user-registartion-analytics" element={<RegistrationAnalytics />} />
             
@@ -245,7 +253,7 @@ function App() {
         </MainContent>
 
         <StickyButtons>
-          <NavLink to="/weather" className="button">
+          <NavLink to="/peopels/favourites" className="button">
             <FiCloud size={24} />
           </NavLink>
           <NavLink to="/traffic" className="button">
