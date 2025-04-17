@@ -61,27 +61,38 @@ const MobileMenuButton = styled.button`
 
 const Sidebar = styled.nav`
   width: 240px;
-   overflow-y: auto;
-  z-index: 1000;
+  height: 100vh;
+  overflow-y: auto;
   background: #ffffff;
-  height:  fit-content;
   padding: 1rem;
   box-shadow: 2px 0 8px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
+z-index:  2000;
+  /* Hide scrollbar */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
   @media (max-width: 768px) {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 1000;
     transform: ${props => props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
     width: 280px;
-    padding-top: 4rem;
+    padding-top: 3rem;
     background: rgba(255, 255, 255, 0.98);
-    z-index:1000;
     backdrop-filter: blur(10px);
-    overflow-y:  auto;
+    height: 100vh;
+
+    /* Hide scrollbar in mobile too */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   a {
