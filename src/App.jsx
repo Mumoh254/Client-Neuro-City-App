@@ -209,7 +209,7 @@ function App() {
 
   <NavLink to="/tracking" onClick={() => setIsMenuOpen(false)}>
     <FiSettings /> Tracking
-  </NavLink>
+    </NavLink>
   <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
     <FiBook /> Terms
   </NavLink>
