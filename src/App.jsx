@@ -24,6 +24,9 @@ import Register from './authFolder/register';
 import Login from './authFolder/login';
 import TermsAndConditions from './authFolder/termsConditions';
 import   ReportCorruption   from "./painpoints/reportCorruption"
+import SoftwareFeedback from './software/softwareFeedback';
+
+
 const AppContainer = styled.div`
   display: flex;
   min-height: fit-content;
@@ -77,6 +80,7 @@ const Sidebar = styled.nav`
     background: rgba(255, 255, 255, 0.98);
     z-index:1000;
     backdrop-filter: blur(10px);
+    overflow-y:  auto;
   }
 
   a {
@@ -187,6 +191,8 @@ function App() {
   <NavLink to="/analytics" onClick={() => setIsMenuOpen(false)}>
     <FiActivity /> Analytics
   </NavLink>
+
+ 
   
   <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
     <FiCloud /> Weather
@@ -202,6 +208,10 @@ function App() {
   </NavLink>
   <NavLink to="/login" onClick={() => setIsMenuOpen(false)}>
     <FiUser /> Login
+  </NavLink>
+
+  <NavLink to="/software-feedback" className="button">
+    <FiAlertCircle size={24} />Software Guide {/* Feedback Icon */}
   </NavLink>
 </Sidebar>
 
@@ -224,6 +234,8 @@ function App() {
             <Route path="/gr" element={<QrCodeGenerator />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/software-feedback" element={<SoftwareFeedback />} />
+            
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/report-corruption" element={<ReportCorruption />} />
             <Route path="/user-registartion-analytics" element={<RegistrationAnalytics />} />

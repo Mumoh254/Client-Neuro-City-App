@@ -1,277 +1,254 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Badge, Spinner, Modal, Accordion } from 'react-bootstrap';
-import { FaFilter, FaTrashAlt, FaTrain, FaMapMarkerAlt, FaClock, FaInfoCircle, FaPlus } from 'react-icons/fa';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useState, useEffect, useRef } from 'react';
+import { Alert, Spinner, Button } from 'react-bootstrap';
+import { FaMapMarkerAlt, FaRoute } from 'react-icons/fa';
 
-// Configure leaflet markers
-L.Icon.Default.mergeOptions({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
-});
-
-const initialAreas = [
-  'CBD', 'Westlands', 'Karen', 'Embakasi', 'Kasarani', 'Dagoretti'
-];
+const TOMTOM_API_KEY = 'DlEzVnQ82dvbAocIfiwPCTBNZDAWKCKk';
 
 const PublicAmenities = () => {
-  const [amenities, setAmenities] = useState(() => {
-    const saved = localStorage.getItem('amenities');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [areas, setAreas] = useState(initialAreas);
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedArea, setSelectedArea] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [newAmenity, setNewAmenity] = useState({
-    name: '',
-    type: 'sanitation',
-    area: '',
-    description: '',
-    location: null,
-    image: ''
-  });
-  const [mapCenter, setMapCenter] = useState([-1.286389, 36.817223]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [mapInstance, setMapInstance] = useState(null);
+  const [amenities, setAmenities] = useState([]);
+  const [routeData, setRouteData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const mapContainer = useRef(null);
 
-  // Save to localStorage
+  // Sample amenities data (latitude, longitude)
+  const nairobiAmenities = [
+    {
+      id: 1,
+      name: 'CBD Upperhill Public Toilet',
+      type: 'Toilet',
+      coords: [-1.2921, 36.8219], // [lat, lon]
+      hours: '6:00 AM - 10:00 PM',
+      fee: 'Ksh 20'
+    },
+    {
+      id: 2,
+      name: 'City Market Restrooms',
+      type: 'Bathroom',
+      coords: [-1.2845, 36.8232],
+      hours: '24/7',
+      fee: 'Ksh 30'
+    }
+  ];
+
   useEffect(() => {
-    localStorage.setItem('amenities', JSON.stringify(amenities));
-  }, [amenities]);
+    let map;
+    let tt;
 
-  const handleSubmitAmenity = () => {
-    if (!newAmenity.name || !newAmenity.area) return;
-    
-    const amenity = {
-      ...newAmenity,
-      id: Date.now(),
-      rating: 0,
-      reviews: [],
-      timestamp: new Date().toISOString()
+    const loadTomTomSDK = () => {
+      return new Promise((resolve, reject) => {
+        if (window.tt) return resolve(window.tt);
+
+        const script = document.createElement('script');
+        script.src = 'https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.23.0/maps/maps-web.min.js';
+        script.async = true;
+        script.onload = () => {
+          tt = window.tt;
+          document.head.insertAdjacentHTML(
+            'beforeend',
+            `<link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.23.0/maps/maps.css">`
+          );
+          resolve(tt);
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
     };
 
-    setAmenities([...amenities, amenity]);
-    if (!areas.includes(newAmenity.area)) {
-      setAreas([...areas, newAmenity.area]);
+    const getLocation = () => {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject('Geolocation not supported');
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          position => resolve([position.coords.longitude, position.coords.latitude]),
+          error => reject(`Geolocation error: ${error.message}`),
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+    };
+
+    const initializeMap = async () => {
+      try {
+        // Load TomTom SDK
+        tt = await loadTomTomSDK();
+        
+        if (!tt) throw new Error('TomTom SDK failed to load');
+
+        // Get user location or fallback to Nairobi center
+        let center;
+        try {
+          center = await getLocation();
+        } catch {
+          center = [36.8219, -1.2921]; // Nairobi center [lon, lat]
+        }
+
+        // Initialize map
+        map = new tt.Map({
+          key: TOMTOM_API_KEY,
+          container: mapContainer.current,
+          center: center,
+          zoom: 14,
+          style: 'tomtom://vector/1/basic-main'
+        });
+
+        // Add user marker
+        new tt.Marker({ color: '#3b82f6' })
+          .setLngLat(center)
+          .addTo(map);
+
+        // Add amenities
+        const amenitiesData = nairobiAmenities.map(a => ({
+          ...a,
+          coords: [a.coords[1], a.coords[0]] // Convert to [lon, lat]
+        }));
+
+        amenitiesData.forEach(amenity => {
+          const marker = new tt.Marker({ color: '#10b981' })
+            .setLngLat(amenity.coords)
+            .addTo(map);
+
+          const popup = new tt.Popup({ offset: 25 })
+            .setHTML(`
+              <div class="p-2">
+                <h6 class="mb-1">${amenity.name}</h6>
+                <p class="text-muted small mb-1">${amenity.type}</p>
+                <p class="small mb-1">🕒 ${amenity.hours}</p>
+                <p class="small mb-2">💵 ${amenity.fee}</p>
+                <button class="btn btn-sm btn-primary" 
+                  data-lon="${amenity.coords[0]}" 
+                  data-lat="${amenity.coords[1]}">
+                  <FaRoute /> Get Directions
+                </button>
+              </div>
+            `);
+
+          marker.setPopup(popup);
+        });
+
+        setMapInstance(map);
+        setAmenities(amenitiesData);
+        setUserLocation(center);
+        setLoading(false);
+
+      } catch (err) {
+        setError(err.message || 'Failed to initialize map');
+        setLoading(false);
+      }
+    };
+
+    initializeMap();
+
+    return () => {
+      if (map) map.remove();
+    };
+  }, []);
+
+  const calculateRoute = async (destination) => {
+    if (!mapInstance || !userLocation) return;
+
+    try {
+      const response = await fetch(
+        `https://api.tomtom.com/routing/1/calculateRoute/${userLocation.join(',')}:${destination.join(',')}/json?` +
+        `key=${TOMTOM_API_KEY}&travelMode=pedestrian`
+      );
+
+      if (!response.ok) throw new Error('Routing failed');
+      
+      const data = await response.json();
+      const route = data.routes[0];
+      
+      if (mapInstance.getSource('route')) {
+        mapInstance.removeLayer('route');
+        mapInstance.removeSource('route');
+      }
+
+      mapInstance.addLayer({
+        id: 'route',
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: route.legs[0].points
+          }
+        },
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': 4
+        }
+      });
+
+      setRouteData(route);
+    } catch (err) {
+      setError('Could not calculate route. Please try again.');
     }
-    setShowForm(false);
-    setNewAmenity({
-      name: '',
-      type: 'sanitation',
-      area: '',
-      description: '',
-      location: null,
-      image: ''
-    });
   };
 
-  const filteredAmenities = amenities.filter(amenity => {
-    const typeMatch = selectedType === 'all' || amenity.type === selectedType;
-    const areaMatch = selectedArea === 'all' || amenity.area === selectedArea;
-    const searchMatch = amenity.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return typeMatch && areaMatch && searchMatch;
-  });
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" />
+        <span className="ms-2">Initializing map...</span>
+      </div>
+    );
+  }
 
-  const groupedAmenities = amenities.reduce((acc, amenity) => {
-    const area = amenity.area || 'Other';
-    if (!acc[area]) acc[area] = [];
-    acc[area].push(amenity);
-    return acc;
-  }, {});
+  if (error) {
+    return (
+      <div className="p-4">
+        <Alert variant="danger">
+          <h4>Map Error</h4>
+          <p>{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
-    <Container className="py-5">
-      <div className="text-center mb-5">
-        <h2 className="display-5 fw-bold mb-3">
-          <FaMapMarkerAlt className="text-primary me-2" />
-          Nairobi Community Services
-        </h2>
-        <Button variant="success" onClick={() => setShowForm(true)}>
-          <FaPlus className="me-2" /> Add New Service
-        </Button>
+    <div className="p-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Nairobi Public Amenities</h2>
+        {routeData && (
+          <div className="d-flex align-items-center">
+            <FaClock className="me-2" />
+            {Math.round(routeData.summary.travelTimeInSeconds / 60)} mins
+            <Button variant="link" onClick={() => setRouteData(null)}>
+              Clear Route
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Add Amenity Modal */}
-      <Modal show={showForm} onHide={() => setShowForm(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Add Community Service</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Service Name</Form.Label>
-                  <Form.Control 
-                    value={newAmenity.name}
-                    onChange={(e) => setNewAmenity({...newAmenity, name: e.target.value})}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Area/Neighborhood</Form.Label>
-                  <Form.Control
-                    value={newAmenity.area}
-                    onChange={(e) => setNewAmenity({...newAmenity, area: e.target.value})}
-                    list="areaSuggestions"
-                  />
-                  <datalist id="areaSuggestions">
-                    {areas.map(area => <option key={area} value={area} />)}
-                  </datalist>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Service Type</Form.Label>
-                  <Form.Select
-                    value={newAmenity.type}
-                    onChange={(e) => setNewAmenity({...newAmenity, type: e.target.value})}
-                  >
-                    <option value="sanitation">Sanitation</option>
-                    <option value="waste">Waste Management</option>
-                    <option value="transport">Transport</option>
-                    <option value="community">Community Space</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label>Description</Form.Label>
-                  <Form.Control 
-                    as="textarea"
-                    value={newAmenity.description}
-                    onChange={(e) => setNewAmenity({...newAmenity, description: e.target.value})}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowForm(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmitAmenity}>
-            Submit Service
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <div 
+        ref={mapContainer}
+        style={{
+          height: '600px',
+          width: '100%',
+          borderRadius: '12px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        }}
+      />
 
-      {/* Filters & Content */}
-      <Row className="g-4">
-        <Col lg={3}>
-          <Card className="shadow-sm sticky-top">
-            <Card.Body>
-              <Form.Group className="mb-3">
-                <Form.Control
-                  type="search"
-                  placeholder="Search services..."
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </Form.Group>
+      {/* Add event listener for route buttons */}
+      {mapInstance && useEffect(() => {
+        const handleRouteClick = (e) => {
+          if (e.target.closest('[data-lon]')) {
+            const lon = parseFloat(e.target.dataset.lon);
+            const lat = parseFloat(e.target.dataset.lat);
+            calculateRoute([lon, lat]);
+          }
+        };
 
-              <Form.Group className="mb-3">
-                <Form.Label>Filter by Area</Form.Label>
-                <Form.Select 
-                  value={selectedArea} 
-                  onChange={(e) => setSelectedArea(e.target.value)}
-                >
-                  <option value="all">All Areas</option>
-                  {areas.map(area => (
-                    <option key={area} value={area}>{area}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-
-              <Form.Group>
-                <Form.Label>Service Type</Form.Label>
-                <div className="d-grid gap-2">
-                  {['all', 'sanitation', 'waste', 'transport', 'community'].map((type) => (
-                    <Button
-                      key={type}
-                      variant={selectedType === type ? 'primary' : 'outline-secondary'}
-                      onClick={() => setSelectedType(type)}
-                      className="text-start"
-                    >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </Button>
-                  ))}
-                </div>
-              </Form.Group>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col lg={9}>
-          <Accordion defaultActiveKey="0" alwaysOpen>
-            {Object.entries(groupedAmenities).map(([area, amenities], index) => (
-              <Accordion.Item eventKey={index.toString()} key={area}>
-                <Accordion.Header>
-                  <h5 className="mb-0">
-                    {area} <Badge bg="secondary" className="ms-2">{amenities.length}</Badge>
-                  </h5>
-                </Accordion.Header>
-                <Accordion.Body>
-                  <Row className="g-4">
-                    {amenities.map(amenity => (
-                      <Col key={amenity.id} xs={12}>
-                        <Card className="shadow-sm">
-                          <Card.Body>
-                            <div className="d-flex align-items-center mb-3">
-                              <Badge bg="primary" className="me-3">
-                                {amenity.type.toUpperCase()}
-                              </Badge>
-                              <Card.Title className="mb-0">{amenity.name}</Card.Title>
-                            </div>
-                            <Card.Text>{amenity.description}</Card.Text>
-                            <div className="text-muted small">
-                              <FaMapMarkerAlt className="me-1" /> 
-                              {amenity.area} • Added {new Date(amenity.timestamp).toLocaleDateString()}
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                </Accordion.Body>
-              </Accordion.Item>
-            ))}
-          </Accordion>
-        </Col>
-      </Row>
-
-      {/* Interactive Map */}
-      <Row className="mt-5">
-        <Col>
-          <Card className="shadow-lg">
-            <Card.Body className="p-0" style={{ height: '500px' }}>
-              <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; OpenStreetMap contributors'
-                />
-                {amenities.map((amenity) => (
-                  <Marker key={amenity.id} position={[amenity.location?.lat || -1.286389, amenity.location?.lng || 36.817223]}>
-                    <Popup>
-                      <div className="amenity-popup">
-                        <h6>{amenity.name}</h6>
-                        <p className="small text-muted mb-2">{amenity.description}</p>
-                        <div className="small">
-                          <Badge bg="info">{amenity.area}</Badge>
-                          <Badge bg="secondary" className="ms-2">{amenity.type}</Badge>
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+        mapContainer.current.addEventListener('click', handleRouteClick);
+        return () => mapContainer.current.removeEventListener('click', handleRouteClick);
+      }, [mapInstance])}
+    </div>
   );
 };
 
