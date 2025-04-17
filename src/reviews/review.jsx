@@ -1,592 +1,570 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Card, Form, Button, Row, Col, Spinner, Alert } from 'react-bootstrap';
-import { 
-  FaComment, 
-  FaThumbsUp, 
-  FaUser, 
-  FaPaperPlane, 
-  FaRegSmileBeam, 
-  FaCaretDown, 
-  FaCaretUp 
+import React, { useState, useEffect } from 'react';
+import {
+  Card, Form, Button, Spinner, Alert,
+  Badge, Modal
+} from 'react-bootstrap';
+import {
+  FaComment, FaThumbsUp, FaPaperPlane, FaBriefcase,
+  FaUsers, FaPlus, FaStar, FaCalendarAlt, FaMapMarkerAlt,
+  FaEnvelope, FaHandsHelping, FaMoneyBillWave, FaUser
 } from 'react-icons/fa';
 import axios from 'axios';
-import { formatDistanceToNow } from 'date-fns';
-import Swal from 'sweetalert2';
-import 'sweetalert2/src/sweetalert2.scss';
-import styled, { createGlobalStyle } from 'styled-components';
+import emailjs from 'emailjs-com';
+import DatePicker from 'react-datepicker';
+import styled from 'styled-components';
+import 'react-datepicker/dist/react-datepicker.css';
 
-// Global styles for overall app look
-const GlobalStyles = createGlobalStyle`
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f0f2f5;
+// Styled Components
+const HubContainer = styled.div`
+  background: #f8f9fa;
+  min-height: 100vh;
+`;
+
+const HeroSection = styled.div`
+  background: linear-gradient(135deg, #2c3e50, #3498db);
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
+  
+  h1 { font-weight: 300; margin-bottom: 1rem; }
+  p { font-size: 1.2rem; opacity: 0.9; }
+`;
+
+const ContentWrapper = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+`;
+
+const NavBar = styled.nav`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+`;
+
+const NavButton = styled.button`
+  border: none;
+  background: ${props => props.$active ? '#3498db' : 'transparent'};
+  color: ${props => props.$active ? 'white' : '#2c3e50'};
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${props => props.$active ? '#2980b9' : '#f8f9fa'};
   }
 `;
 
-// Styled components
-const PostCard = styled(Card)`
-  border: none;
-  border-radius: 15px;
-  margin-bottom: 1rem;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-  
-  &:hover {
-    transform: translateY(-2px);
+const Section = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+`;
+
+const ReviewForm = styled.div`
+  margin-bottom: 2rem;
+  textarea {
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1rem;
   }
+`;
+
+const ActionBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+`;
+
+const StickerPicker = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  button {
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    padding: 0 0.5rem;
+    cursor: pointer;
+  }
+`;
+
+const ReviewCard = styled(Card)`
+  margin-bottom: 1.5rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+`;
+
+const UserInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
 `;
 
 const UserAvatar = styled.div`
-  flex-shrink: 0;
   width: 40px;
   height: 40px;
-  background: #1877f2;
   border-radius: 50%;
+  background: #3498db;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
   font-weight: bold;
-  font-size: 1rem;
 `;
 
-const StickyNav = styled.div`
-  position: sticky;
-  top: 0;
-  background: #fff;
-  padding: 10px 0;
-  border-bottom: 1px solid #e0e0e0;
-  z-index: 1000;
+const ReviewContent = styled.div`
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
 `;
 
-const StickyBottomForm = styled.div`
+const Stickers = styled.div`
+  font-size: 1.5rem;
+  margin-top: 1rem;
+`;
+
+const ReviewActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  button {
+    color: #6c757d;
+    &:hover { color: #3498db; text-decoration: none; }
+  }
+`;
+
+const ServiceGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+`;
+
+const ServiceCard = styled(Card)`
+  padding: 1.5rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  h4 { margin-bottom: 0.5rem; }
+`;
+
+const ServiceHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const Rating = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const ServiceDetails = styled.div`
+  color: #6c757d;
+  margin-bottom: 1rem;
+  div { margin-bottom: 0.5rem; }
+`;
+
+const JobForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+`;
+
+const JobCard = styled(Card)`
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  h4 { margin-bottom: 0.5rem; }
+`;
+
+const JobDetails = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  color: #6c757d;
+`;
+
+const LoadingOverlay = styled.div`
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  background: #fff;
-  padding: 10px;
-  border-top: 1px solid #e0e0e0;
+  bottom: 0;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
 `;
 
-const PostInput = styled(Form.Control)`
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  &:focus {
-    border-color: #1877f2;
-    box-shadow: none;
-  }
-`;
-
-const GradientButton = styled(Button)`
-  background: #1877f2;
-  border: none;
-  &:hover {
-    background: #1558b0;
-  }
-`;
-
-const EmojiPickerContainer = styled.div`
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-top: 5px;
-`;
-
-const StickerPickerContainer = styled.div`
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-top: 5px;
-  img {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: border 0.2s;
-    &:hover {
-      border: 1px solid #1877f2;
-    }
-  }
-`;
-
-const TimeStamp = ({ date }) => (
-  <small style={{ color: '#6c757d' }}>
-    {formatDistanceToNow(new Date(date), { addSuffix: true })}
-  </small>
-);
-
-const CommentContainer = styled.div`
-  background: #f9f9f9;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 8px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-`;
-
-const CommentDisplay = ({ comment }) => (
-  <CommentContainer>
-    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-      <UserAvatar style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>
-        {comment.author?.name?.charAt(0) || 'C'}
-      </UserAvatar>
-      <div style={{ marginLeft: '8px', fontWeight: '600' }}>
-        {comment.author?.name || 'Anonymous'}
-      </div>
-      <div style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#6c757d' }}>
-        <TimeStamp date={comment.createdAt} />
-      </div>
-    </div>
-    <div style={{ fontSize: '0.9rem', color: '#333' }}>
-      {comment.content}
-    </div>
-  </CommentContainer>
-);
-
-const Post = ({
-  post,
-  handleLike,
-  handleComment,
-  commentContent,
-  setCommentContent,
-  showEmojiPicker,
-  toggleEmojiPicker,
-  handleEmojiClick,
-  showStickerPicker,
-  toggleStickerPicker,
-  handleStickerClick,
-  showComments,
-  toggleComments,
-  visibleComments
-}) => {
-  const commentCount = post.comments?.length || 0;
-  const displayedComments = visibleComments[post.id] 
-    ? post.comments 
-    : post.comments?.slice(0, 3);
-
-  return (
-    <PostCard>
-      <Card.Body>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <UserAvatar>{post.author?.name?.charAt(0) || 'N'}</UserAvatar>
-          <div style={{ marginLeft: '10px' }}>
-            <div style={{ fontWeight: '600', color: '#333' }}>
-              {post.author?.name || 'Nairobi Citizen'}
-            </div>
-            <TimeStamp date={post.createdAt} />
-          </div>
-        </div>
-        {/* Content */}
-        <div style={{ marginBottom: '15px', color: '#333', fontSize: '1rem' }}>
-          {post.content}
-        </div>
-        {/* Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', color: '#6c757d', fontSize: '0.9rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <FaThumbsUp style={{ marginRight: '4px' }} />
-            <span style={{ marginRight: '12px' }}>{post.likes?.length || 0}</span>
-            <FaComment style={{ marginRight: '4px' }} />
-            <span>{commentCount}</span>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <GradientButton 
-              variant="outline-primary"
-              size="sm"
-              onClick={() => handleLike(post.id)}
-              style={{ borderRadius: '20px' }}
-            >
-              Like
-            </GradientButton>
-            <Button 
-              variant="outline-secondary" 
-              size="sm" 
-              onClick={() => toggleComments(post.id)}
-              style={{ borderRadius: '20px' }}
-            >
-              {showComments[post.id] ? <FaCaretUp /> : <FaCaretDown />} Comments
-            </Button>
-          </div>
-        </div>
-        {/* Comments Section */}
-        {showComments[post.id] && (
-          <div style={{ marginBottom: '15px' }}>
-            {commentCount > 0 && (
-              <h6 style={{ marginBottom: '15px', fontWeight: '600', color: '#1877f2' }}>
-                Comments ({commentCount})
-              </h6>
-            )}
-            {displayedComments?.map(comment => (
-              <CommentDisplay key={comment.id} comment={comment} />
-            ))}
-            {commentCount > 3 && !visibleComments[post.id] && (
-              <Button 
-                variant="link" 
-                onClick={() => toggleComments(post.id)}
-                style={{ textDecoration: 'none', color: '#1877f2', padding: '0' }}
-              >
-                View more comments...
-              </Button>
-            )}
-            <Form onSubmit={(e) => { e.preventDefault(); handleComment(post.id); }}>
-              <Row className="align-items-center">
-                <Col>
-                  <div className="position-relative">
-                    <Form.Control
-                      type="text"
-                      value={commentContent[post.id] || ''}
-                      onChange={(e) => setCommentContent({
-                        ...commentContent,
-                        [post.id]: e.target.value
-                      })}
-                      placeholder="Write your comment..."
-                      style={{ 
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '20px',
-                        padding: '10px 20px'
-                      }}
-                    />
-                    <FaRegSmileBeam 
-                      className="position-absolute"
-                      style={{ right: '20px', top: '10px', cursor: 'pointer', fontSize: '1.2rem', color: '#6c757d' }}
-                      onClick={() => toggleEmojiPicker(post.id)}
-                    />
-                    <Button
-                      variant="link"
-                      className="position-absolute"
-                      style={{ right: '60px', top: '8px', padding: '0' }}
-                      onClick={() => toggleStickerPicker(post.id)}
-                    >
-                      <img 
-                        src="https://img.icons8.com/emoji/48/000000/sticker-emoji.png" 
-                        alt="Sticker" 
-                        style={{ width: '24px', height: '24px' }}
-                      />
-                    </Button>
-                  </div>
-                  {showEmojiPicker[post.id] && (
-                    <EmojiPickerContainer>
-                      {["❤️", "💔", "😂", "👻", "👍", "😄", "😍", "🎉", "🙏", "🔥", "😢", "🚀"].map((emoji, index) => (
-                        <span
-                          key={index}
-                          style={{ cursor: 'pointer', fontSize: '1.5rem' }}
-                          onClick={() => handleEmojiClick(post.id, emoji)}
-                        >
-                          {emoji}
-                        </span>
-                      ))}
-                    </EmojiPickerContainer>
-                  )}
-                  {showStickerPicker[post.id] && (
-                    <StickerPickerContainer>
-                      {[
-                        "https://img.icons8.com/emoji/48/000000/red-heart.png",
-                        "https://img.icons8.com/emoji/48/000000/green-heart.png",
-                        "https://img.icons8.com/emoji/48/000000/smiling-face-with-sunglasses.png",
-                        "https://img.icons8.com/emoji/48/000000/thumbs-up.png"
-                      ].map((stickerUrl, index) => (
-                        <img
-                          key={index}
-                          src={stickerUrl}
-                          alt="sticker"
-                          onClick={() => handleStickerClick(post.id, stickerUrl)}
-                        />
-                      ))}
-                    </StickerPickerContainer>
-                  )}
-                </Col>
-                <Col xs="auto">
-                  <GradientButton 
-                    type="submit"
-                    className="d-flex align-items-center"
-                    style={{ borderRadius: '20px', padding: '10px 20px' }}
-                  >
-                    <FaPaperPlane className="me-2" />
-                    Send
-                  </GradientButton>
-                </Col>
-              </Row>
-            </Form>
-          </div>
-        )}
-      </Card.Body>
-    </PostCard>
-  );
-};
-
-const ReviewsSection = () => {
+const ReviewSection = () => {
+  const [activeTab, setActiveTab] = useState('reviews');
   const [posts, setPosts] = useState([]);
-  const [newPost, setNewPost] = useState('');
-  const [commentContent, setCommentContent] = useState({});
-  const [showEmojiPicker, setShowEmojiPicker] = useState({});
-  const [showStickerPicker, setShowStickerPicker] = useState({});
-  const [showComments, setShowComments] = useState({});
-  const [visibleComments, setVisibleComments] = useState({});
-  const [sortBy, setSortBy] = useState('recent');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const API_BASE = 'http://localhost:8000/apiV1/smartcity-ke';
+  const [services, setServices] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [formData, setFormData] = useState({
+    review: { content: '', stickers: [] },
+    service: { type: 'cleaning', areas: [], rate: '' },
+    job: { title: '', description: '', salary: '' },
+    booking: { date: new Date(), time: '09:00', address: '' }
+  });
+  const [selectedService, setSelectedService] = useState(null);
+  const [showBooking, setShowBooking] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const sortPosts = (posts) => {
-    switch (sortBy) {
-      case 'likes':
-        return [...posts].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
-      case 'comments':
-        return [...posts].sort((a, b) => (b.comments?.length || 0) - (a.comments?.length || 0));
-      default:
-        return posts;
-    }
-  };
-
-  const handleSubmitPost = async (e) => {
-    e.preventDefault();
-    if (!newPost.trim()) return;
-
-    try {
-      const response = await axios.post(`${API_BASE}/posts`, {
-        content: newPost,
-        userId: "smart_ke_WT_318784939",
-      });
-      setPosts([response.data, ...posts]);
-      setNewPost('');
-    } catch (err) {
-      console.error('Error creating post:', err);
-    }
-  };
-
-  const handleLike = async (postId) => {
-    try {
-      const response = await axios.put(`${API_BASE}/${postId}/like`, {
-        userId: "smart_ke_WT_318784939",
-      });
-      setPosts(posts.map(post =>
-        post.id === postId ? { ...post, likes: response.data.likes } : post
-      ));
-    } catch (err) {
-      console.error('Error liking post:', err);
-    }
-  };
-
-  const handleComment = async (postId) => {
-    const content = commentContent[postId]?.trim();
-    if (!content) return;
-
-    try {
-      const response = await axios.post(`${API_BASE}/${postId}/comments`, {
-        content,
-        userId: "smart_ke_WT_318784939",
-      });
-      setPosts(posts.map(post =>
-        post.id === postId ? { ...post, comments: [...post.comments, response.data] } : post
-      ));
-      setCommentContent({ ...commentContent, [postId]: '' });
-    } catch (err) {
-      console.error('Error adding comment:', err);
-    }
-  };
-
-  const toggleEmojiPicker = (postId) => {
-    setShowEmojiPicker({
-      ...showEmojiPicker,
-      [postId]: !showEmojiPicker[postId],
-    });
-  };
-
-  const toggleStickerPicker = (postId) => {
-    setShowStickerPicker({
-      ...showStickerPicker,
-      [postId]: !showStickerPicker[postId],
-    });
-  };
-
-  const toggleComments = (postId) => {
-    setShowComments({
-      ...showComments,
-      [postId]: !showComments[postId],
-    });
-
-    if (!visibleComments[postId]) {
-      setVisibleComments({
-        ...visibleComments,
-        [postId]: true,
-      });
-    }
-  };
-
-  const handleEmojiClick = (postId, emoji) => {
-    setCommentContent({
-      ...commentContent,
-      [postId]: (commentContent[postId] || '') + emoji,
-    });
-  };
-
-  const handleStickerClick = (postId, stickerUrl) => {
-    setCommentContent({
-      ...commentContent,
-      [postId]: (commentContent[postId] || '') + ` [sticker:${stickerUrl}] `,
-    });
-  };
+  const SERVICE_TYPES = ['Cleaning', 'Laundry', 'Cooking', 'Repairs', 'Childcare'];
+  const STICKERS = ['👍', '❤️', '🚀', '💡', '🎉', '👏'];
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchCommunityData = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/posts`);
-        setPosts(response.data || []);
+        setLoading(true);
+        const [postsRes, servicesRes, jobsRes] = await Promise.all([
+          axios.get('/api/reviews'),
+          axios.get('/api/services'),
+          axios.get('/api/jobs')
+        ]);
+        
+        setPosts(Array.isArray(postsRes?.data) ? postsRes.data : []);
+        setServices(Array.isArray(servicesRes?.data) ? servicesRes.data : []);
+        setJobs(Array.isArray(jobsRes?.data) ? jobsRes.data : []);
       } catch (err) {
-        setError('Failed to load posts');
-        console.error('Error fetching posts:', err);
+        setError('Failed to load community data');
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
+    fetchCommunityData();
   }, []);
 
-  if (loading) return (
-    <div className="text-center py-5">
-      <Spinner animation="border" variant="primary" />
-      <p className="mt-2">Loading feedback...</p>
-    </div>
-  );
+  const handleServiceBooking = async () => {
+    try {
+      await axios.post('/api/bookings', {
+        ...formData.booking,
+        serviceId: selectedService?.id
+      });
 
-  if (error) return (
-    <div className="text-center py-5 text-danger">
-      <FaComment size={32} className="mb-3" />
-      <p>{error}</p>
-    </div>
+      await emailjs.send(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+        {
+          to_email: selectedService?.email,
+          service_type: selectedService?.type,
+          date: formData.booking.date.toLocaleDateString(),
+          time: formData.booking.time,
+          address: formData.booking.address
+        },
+        process.env.REACT_APP_EMAILJS_USER_ID
+      );
+
+      setShowBooking(false);
+      setSuccess('Booking confirmed! Service provider notified');
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err) {
+      setError('Booking failed. Please try again.');
+      console.error(err);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    try {
+      const newPost = await axios.post('/api/reviews', formData.review);
+      setPosts(prev => [newPost.data, ...prev]);
+      setFormData(prev => ({...prev, review: { content: '', stickers: [] }}));
+    } catch (err) {
+      setError('Failed to post review');
+      console.error(err);
+    }
+  };
+
+  const handleServiceSubmit = async () => {
+    try {
+      const newService = await axios.post('/api/services', formData.service);
+      setServices(prev => [newService.data, ...prev]);
+      setFormData(prev => ({...prev, service: { type: 'cleaning', areas: [], rate: '' }}));
+    } catch (err) {
+      setError('Service registration failed');
+      console.error(err);
+    }
+  };
+
+  const handleJobSubmit = async () => {
+    try {
+      const newJob = await axios.post('/api/jobs', formData.job);
+      setJobs(prev => [newJob.data, ...prev]);
+      setFormData(prev => ({...prev, job: { title: '', description: '', salary: '' }}));
+    } catch (err) {
+      setError('Job post failed');
+      console.error(err);
+    }
+  };
+
+  const PostCard = ({ post }) => (
+    <ReviewCard>
+      <UserInfo>
+        <UserAvatar>
+          {post?.author?.name?.[0] || <FaUser />}
+        </UserAvatar>
+        <div>
+          <h5>{post?.author?.name || 'Anonymous'}</h5>
+          <small>{new Date(post?.createdAt).toLocaleDateString()}</small>
+        </div>
+      </UserInfo>
+      <ReviewContent>
+        {post.content}
+        <Stickers>{post.stickers?.join(' ')}</Stickers>
+      </ReviewContent>
+      <ReviewActions>
+        <Button variant="link">
+          <FaThumbsUp /> {post.likes?.length || 0}
+        </Button>
+        <Button variant="link">
+          <FaComment /> {post.comments?.length || 0}
+        </Button>
+      </ReviewActions>
+    </ReviewCard>
   );
 
   return (
-    <Container className="reviews-section my-5" style={{ maxWidth: '800px', paddingBottom: '120px' }}>
-      <StickyNav>
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <h2 className="text-primary fw-bold d-flex align-items-center mb-0">
-            <div className="icon-wrapper bg-primary rounded-circle me-3" style={{ width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FaComment size={28} className="text-white" />
+    <HubContainer>
+      <HeroSection>
+        <h1>Nairobi Community Empowerment Hub</h1>
+        <p>Connecting Nairobians through services, jobs, and community support</p>
+      </HeroSection>
+
+      <ContentWrapper>
+        <NavBar>
+          <NavButton 
+            $active={activeTab === 'reviews'} 
+            onClick={() => setActiveTab('reviews')}
+          >
+            <FaComment /> Community Reviews
+          </NavButton>
+          <NavButton 
+            $active={activeTab === 'services'} 
+            onClick={() => setActiveTab('services')}
+          >
+            <FaUsers /> Mamafua Services
+          </NavButton>
+          <NavButton 
+            $active={activeTab === 'jobs'} 
+            onClick={() => setActiveTab('jobs')}
+          >
+            <FaBriefcase /> Job Board
+          </NavButton>
+        </NavBar>
+
+        {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
+        {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
+
+        {activeTab === 'reviews' && (
+          <Section>
+            <ReviewForm>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={formData.review.content}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  review: { ...prev.review, content: e.target.value }
+                }))}
+                placeholder="Share your experience with the community..."
+              />
+              <ActionBar>
+                <StickerPicker>
+                  {STICKERS.map((sticker, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        review: { 
+                          ...prev.review, 
+                          stickers: [...prev.review.stickers, sticker] 
+                        }
+                      }))}
+                    >
+                      {sticker}
+                    </button>
+                  ))}
+                </StickerPicker>
+                <Button variant="primary" onClick={handleReviewSubmit}>
+                  <FaPaperPlane /> Post Review
+                </Button>
+              </ActionBar>
+            </ReviewForm>
+
+            {posts.map(post => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </Section>
+        )}
+
+        {activeTab === 'services' && (
+          <Section>
+            <div className="mb-4">
+              <h4><FaHandsHelping /> Offer Your Service</h4>
+              <Form.Select
+                value={formData.service.type}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  service: { ...prev.service, type: e.target.value }
+                }))}
+                className="mb-2"
+              >
+                {SERVICE_TYPES.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Form.Select>
+              <Button onClick={handleServiceSubmit} variant="success">
+                <FaPlus /> Register Service
+              </Button>
             </div>
-            Nairobi
-          </h2>
-          <div className="d-flex gap-2">
-            <Button
-              variant={sortBy === 'recent' ? 'primary' : 'outline-primary'}
-              onClick={() => setSortBy('recent')}
-              className="rounded-pill"
-            >
-              Newest
-            </Button>
-            <Button
-              variant={sortBy === 'likes' ? 'primary' : 'outline-primary'}
-              onClick={() => setSortBy('likes')}
-              className="rounded-pill"
-            >
-              Most Liked
-            </Button>
-            <Button
-              variant={sortBy === 'comments' ? 'primary' : 'outline-primary'}
-              onClick={() => setSortBy('comments')}
-              className="rounded-pill"
-            >
-              Most Comments
-            </Button>
-          </div>
-        </div>
-      </StickyNav>
 
-      {posts.length === 0 ? (
-        <div className="text-center py-5 bg-light rounded-3">
-          <FaComment size={48} className="text-muted mb-3" />
-          <h5 className="text-muted">No feedback yet. Be the first to share!</h5>
-        </div>
-      ) : (
-        sortPosts(posts).map(post => (
-          <Post 
-            key={post.id} 
-            post={post} 
-            handleLike={handleLike}
-            handleComment={handleComment}
-            commentContent={commentContent}
-            setCommentContent={setCommentContent}
-            showEmojiPicker={showEmojiPicker}
-            toggleEmojiPicker={toggleEmojiPicker}
-            handleEmojiClick={handleEmojiClick}
-            showStickerPicker={showStickerPicker}
-            toggleStickerPicker={toggleStickerPicker}
-            handleStickerClick={handleStickerClick}
-            showComments={showComments}
-            toggleComments={toggleComments}
-            visibleComments={visibleComments}
-          />
-        ))
+            <ServiceGrid>
+              {services.map(service => (
+                <ServiceCard key={service.id}>
+                  <ServiceHeader>
+                    <h4>{service.type}</h4>
+                    <Rating>
+                      <FaStar className="text-warning" /> {service.rating || '4.5'}
+                    </Rating>
+                  </ServiceHeader>
+                  <ServiceDetails>
+                    <div><FaMapMarkerAlt /> {service.areas?.join(', ') || 'Nairobi'}</div>
+                    <div><FaMoneyBillWave /> Ksh {service.rate}/hour</div>
+                  </ServiceDetails>
+                  <Button 
+                    onClick={() => {
+                      setSelectedService(service);
+                      setShowBooking(true);
+                    }}
+                    variant="outline-primary"
+                  >
+                    <FaCalendarAlt /> Book Service
+                  </Button>
+                </ServiceCard>
+              ))}
+            </ServiceGrid>
+          </Section>
+        )}
+
+        {activeTab === 'jobs' && (
+          <Section>
+            <JobForm>
+              <Form.Control
+                placeholder="Job Title"
+                value={formData.job.title}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  job: { ...prev.job, title: e.target.value }
+                }))}
+                className="mb-2"
+              />
+              <Form.Control
+                as="textarea"
+                placeholder="Job Description"
+                value={formData.job.description}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  job: { ...prev.job, description: e.target.value }
+                }))}
+                className="mb-2"
+              />
+              <Button onClick={handleJobSubmit} variant="primary">
+                <FaBriefcase /> Post Job
+              </Button>
+            </JobForm>
+
+            {jobs.map(job => (
+              <JobCard key={job.id}>
+                <h4>{job.title}</h4>
+                <JobDetails>
+                  <div>{job.company || 'Local Business'}</div>
+                  <Badge bg="info">{job.type || 'Full-time'}</Badge>
+                  <div>Ksh {job.salary}</div>
+                </JobDetails>
+                <p>{job.description}</p>
+              </JobCard>
+            ))}
+          </Section>
+        )}
+      </ContentWrapper>
+
+      <Modal show={showBooking} onHide={() => setShowBooking(false)}>
+        <Modal.Header closeButton>
+          <h3>Book {selectedService?.type} Service</h3>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <div className="mb-3">
+              <label>Date</label>
+              <DatePicker
+                selected={formData.booking.date}
+                onChange={date => setFormData(prev => ({
+                  ...prev,
+                  booking: { ...prev.booking, date }
+                }))}
+                minDate={new Date()}
+                className="form-control"
+              />
+            </div>
+            <div className="mb-3">
+              <label>Time</label>
+              <Form.Control
+                type="time"
+                value={formData.booking.time}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  booking: { ...prev.booking, time: e.target.value }
+                }))}
+              />
+            </div>
+            <div className="mb-3">
+              <label>Address</label>
+              <Form.Control
+                placeholder="Enter address"
+                value={formData.booking.address}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  booking: { ...prev.booking, address: e.target.value }
+                }))}
+              />
+            </div>
+            <Button 
+              onClick={handleServiceBooking} 
+              variant="success" 
+              className="w-100"
+            >
+              <FaEnvelope /> Confirm Booking
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {loading && (
+        <LoadingOverlay>
+          <Spinner animation="border" variant="primary" />
+        </LoadingOverlay>
       )}
-
-      <StickyBottomForm>
-        <PostCard className="border-0 shadow-lg">
-          <Card.Body className="bg-light rounded-3">
-            <Form onSubmit={handleSubmitPost}>
-              <Form.Group>
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  value={newPost}
-                  onChange={(e) => setNewPost(e.target.value)}
-                  placeholder="Share your thoughts about city services..."
-                  className="mb-3 fs-5 border-0 bg-white shadow-sm post-textarea"
-                  style={{ borderRadius: '15px' }}
-                />
-              </Form.Group>
-              <div className="d-flex justify-content-end">
-                <GradientButton 
-                  type="submit"
-                  className="rounded-pill px-4 py-2 d-flex align-items-center"
-                >
-                  <FaPaperPlane className="me-2" />
-                  Post Feedback
-                </GradientButton>
-              </div>
-            </Form>
-          </Card.Body>
-        </PostCard>
-      </StickyBottomForm>
-
-      <GlobalStyles />
-
-      <style jsx>{`
-        .reviews-section {
-          margin-top: 2rem;
-        }
-        .post-textarea {
-          resize: none;
-        }
-        .icon-wrapper {
-          width: 50px;
-          height: 50px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        /* Make analytics modal scrollable if content overflows */
-        .analytics-modal {
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-        /* Sticky nav adjustments */
-        .sticky-nav {
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          background: white;
-          padding: 1rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-      `}</style>
-    </Container>
+    </HubContainer>
   );
 };
 
-export default ReviewsSection;
+export default ReviewSection;

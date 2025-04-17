@@ -8,11 +8,12 @@ const SoftwareFeedback = () => {
     developer: 'Peter Mumo Itumo - CEO & Founder, Welt Tallis Group',
     extra: 'Email: infowelttallis@gmail.com | Call: +25470045355',
     support: " Null",
-    review:  "Ester  ,  John  ,  Veronica",
+    review:  "Peter  Noel , John Peter Kigotho , Emmah Mutuku",
     systemID: 'WELT-TALLIS-NEURO-NBO-PROD-v1.0.0.0',
+    companyname: "Welt Tallis",
     version: 'v1.0.0.0',
     lastUpdate: 'April 12, 2025',
-    techStack: 'HTML  ,  CSS    ,  JAVASCRIPT , React 19, Bootstrap-5,  OpenWeather API, TomTom, Leaflet Maps, Node.js, Google-Analytics, Prisma ORM, PostgreSQL on Neon DB, MONGO-DB , CLOUDINARY , SheetDB, GEO-Location , WEB SOCKETS ,  PWA-SUPPORT',
+    techStack: 'HTML  ,  CSS    ,  JAVASCRIPT , Email-js , Node-Mailer , React 19, Bootstrap-5,  OpenWeather API, TomTom, Leaflet Maps, Node.js, Google-Analytics, Prisma ORM, PostgreSQL on Neon DB, MONGO-DB , CLOUDINARY , SheetDB, GEO-Location , WEB SOCKETS ,  PWA-SUPPORT',
     description:
       'Neuro City App is a civic tech platform created to improve how citizens of Nairobi interact with their city. The system empowers people to report corruption, access vital services, get real-time traffic and weather updates, discover safe places to stay or visit, and help shape how the city runs. It’s a one-stop solution for urban engagement, governance transparency, and smart city evolution.'
   };
@@ -228,7 +229,8 @@ const SoftwareFeedback = () => {
                           <strong>Suport  Team:</strong> {softwareInfo.support}
                         </li>
                         <li className="mb-2">
-                          <strong>Etra  Info:</strong> 
+                          <strong>Etra  Information :</strong> 
+                          <span className="text-muted ms-1">{softwareInfo.companyname}</span>
                           <span className="text-muted ms-2">{softwareInfo.extra}</span>
                         </li>
                       </ul>

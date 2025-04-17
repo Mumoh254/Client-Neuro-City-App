@@ -77,7 +77,7 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/analytics?range=${timeFilter}`);
+        const res = await axios.get(`${API_BASE}/analytics-posts?range=${timeFilter}`);
         setData(res.data);
         console.log(res.data);
         setLoading(false);

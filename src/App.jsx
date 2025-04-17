@@ -1,8 +1,7 @@
-// App.js
 import { useState } from 'react'
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
 import { FiHome, FiMapPin, FiNavigation ,FiAlertCircle, FiCloud, FiMenu, FiX, 
-  FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook } from 'react-icons/fi';
+  FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook, FiRadio, FiMessageCircle, FiUserPlus } from 'react-icons/fi';
 import styled from 'styled-components'
 import LandingPage from './pages/landPage'
 import ParkingForm from './parking/park'
@@ -23,21 +22,19 @@ import QrCodeGenerator from './qr'
 import Register from './authFolder/register';
 import Login from './authFolder/login';
 import TermsAndConditions from './authFolder/termsConditions';
-import   ReportCorruption   from "./painpoints/reportCorruption"
+import ReportCorruption from "./painpoints/reportCorruption"
 import SoftwareFeedback from './software/softwareFeedback';
 import Favourites from './favourites/favourites';
-
 
 const AppContainer = styled.div`
   display: flex;
   min-height: fit-content;
   position: relative;
-  margin-bottom:  5rem;
+  margin-bottom: 5rem;
 
   @media (max-width: 768px) {
     flex-direction: column;
-
-    min-height:  fit-content;
+    min-height: fit-content;
   }
 `
 
@@ -67,8 +64,8 @@ const Sidebar = styled.nav`
   padding: 1rem;
   box-shadow: 2px 0 8px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
-z-index:  2000;
-  /* Hide scrollbar */
+  z-index: 2000;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -77,22 +74,12 @@ z-index:  2000;
 
   @media (max-width: 768px) {
     position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
     transform: ${props => props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
     width: 280px;
     padding-top: 3rem;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     height: 100vh;
-
-    /* Hide scrollbar in mobile too */
-    &::-webkit-scrollbar {
-      display: none;
-    }
-    scrollbar-width: none;
-    -ms-overflow-style: none;
   }
 
   a {
@@ -131,6 +118,7 @@ const MainContent = styled.main`
   @media (max-width: 768px) {
     padding: 1rem;
     padding-top: 4rem;
+    padding-bottom: 80px;
   }
 `
 
@@ -150,14 +138,13 @@ const StickyButtons = styled.div`
   right: 1rem;
   display: flex;
   gap: 0.5rem;
- 
   z-index: 1000;
-  flex-direction:  column;
+  flex-direction: column;
 
   a, button {
     padding: 0.75rem;
     border-radius: 50%;
-    background:rgba(99, 101, 241, 0.82);
+    background: rgba(99, 101, 241, 0.82);
     color: white;
     display: flex;
     align-items: center;
@@ -169,6 +156,50 @@ const StickyButtons = styled.div`
       transform: translateY(-2px);
       background: #4f46e5;
     }
+  }
+`
+
+const BottomNav = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-around;
+  z-index: 1000;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  backdrop-filter: blur(12px);
+
+
+`
+
+const NavItem = styled(NavLink)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &.active {
+    color: #6366f1;
+    
+    svg {
+      transform: translateY(-4px);
+    }
+  }
+
+  svg {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+  }
+
+  span {
+    font-size: 0.75rem;
   }
 `
 
@@ -185,53 +216,46 @@ function App() {
         <Backdrop $visible={isMenuOpen} onClick={() => setIsMenuOpen(false)} />
 
         <Sidebar $isOpen={isMenuOpen}>
-  <NavLink to="/" end onClick={() => setIsMenuOpen(false)}>
-    <FiHome /> Home
-  </NavLink>
-  <NavLink to="/parking" onClick={() => setIsMenuOpen(false)}>
-    <FiMapPin /> Parking
-  </NavLink>
-  <NavLink to="/garbage" onClick={() => setIsMenuOpen(false)}>
-    <FiTrash2 /> Garbage
-  </NavLink>
-  <NavLink to="/reviews" onClick={() => setIsMenuOpen(false)}>
-    <FiStar /> Reviews
-  </NavLink>
-  <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
-    <FiMap /> Amenities
-  </NavLink>
-  <NavLink to="/analytics" onClick={() => setIsMenuOpen(false)}>
-    <FiActivity /> Analytics
-  </NavLink>
-
- 
-  
-  <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
-    <FiCloud /> Weather
-  </NavLink>
-  <NavLink to="/traffic" onClick={() => setIsMenuOpen(false)}>
-    <FiNavigation /> Traffic
-  </NavLink>
-
-  <NavLink to="/peoples/favourites" onClick={() => setIsMenuOpen(false)}>
-    <FiNavigation /> Explore
-  </NavLink>
-
-
-  <NavLink to="/tracking" onClick={() => setIsMenuOpen(false)}>
-    <FiSettings /> Tracking
-    </NavLink>
-  <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
-    <FiBook /> Terms
-  </NavLink>
-  <NavLink to="/login" onClick={() => setIsMenuOpen(false)}>
-    <FiUser /> Login
-  </NavLink>
-
-  <NavLink to="/software-feedback" className="button">
-    <FiAlertCircle size={24} />Software Guide {/* Feedback Icon */}
-  </NavLink>
-</Sidebar>
+          <NavLink to="/" end onClick={() => setIsMenuOpen(false)}>
+            <FiHome /> Home
+          </NavLink>
+          <NavLink to="/parking" onClick={() => setIsMenuOpen(false)}>
+            <FiMapPin /> Parking
+          </NavLink>
+          <NavLink to="/garbage" onClick={() => setIsMenuOpen(false)}>
+            <FiTrash2 /> Garbage
+          </NavLink>
+          <NavLink to="/reviews" onClick={() => setIsMenuOpen(false)}>
+            <FiStar /> Reviews
+          </NavLink>
+          <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
+            <FiMap /> Amenities
+          </NavLink>
+          <NavLink to="/analytics" onClick={() => setIsMenuOpen(false)}>
+            <FiActivity /> Analytics
+          </NavLink>
+          <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
+            <FiCloud /> Weather
+          </NavLink>
+          <NavLink to="/traffic" onClick={() => setIsMenuOpen(false)}>
+            <FiNavigation /> Traffic
+          </NavLink>
+          <NavLink to="/peoples/favourites" onClick={() => setIsMenuOpen(false)}>
+            <FiNavigation /> Explore
+          </NavLink>
+          <NavLink to="/tracking" onClick={() => setIsMenuOpen(false)}>
+            <FiSettings /> Tracking
+          </NavLink>
+          <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
+            <FiBook /> Terms
+          </NavLink>
+          <NavLink to="/login" onClick={() => setIsMenuOpen(false)}>
+            <FiUser /> Login
+          </NavLink>
+          <NavLink to="/software-feedback" className="button">
+            <FiAlertCircle size={24} />Software Guide
+          </NavLink>
+        </Sidebar>
 
         <MainContent>
           <Routes>
@@ -253,15 +277,32 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/software-feedback" element={<SoftwareFeedback />} />
-            
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/peoples/favourites" element={<Favourites />} />
             <Route path="/report-corruption" element={<ReportCorruption />} />
             <Route path="/user-registartion-analytics" element={<RegistrationAnalytics />} />
-            
-            
           </Routes>
         </MainContent>
+
+        {/* Global Bottom Navigation */}
+        <BottomNav>
+          <NavItem to="/traffic">
+            <FiNavigation />
+            <span>Traffic</span>
+          </NavItem>
+          <NavItem to="/news">
+            <FiRadio />
+            <span>News</span>
+          </NavItem>
+          <NavItem to="/register">
+            <FiUserPlus />
+            <span>Register</span>
+          </NavItem>
+          <NavItem to="/report-corruption">
+            <FiMessageCircle />
+            <span>Corruption</span>
+          </NavItem>
+        </BottomNav>
 
         <StickyButtons>
           <NavLink to="/peopels/favourites" className="button">
