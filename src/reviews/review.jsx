@@ -14,12 +14,64 @@ import DatePicker from 'react-datepicker';
 import styled from 'styled-components';
 import 'react-datepicker/dist/react-datepicker.css';
 
-// Styled Components
 const HubContainer = styled.div`
   background: #f8f9fa;
   min-height: 100vh;
   padding-bottom: 120px;
 `;
+
+const ServiceGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+`;
+
+const JobGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+`;
+
+const ModernCard = styled(Card)`
+  border: none;
+  border-radius: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const ServiceHeader = styled.div`
+  background: linear-gradient(135deg, #3498db, #2c3e50);
+  color: white;
+  padding: 1rem;
+  border-radius: 15px 15px 0 0;
+`;
+
+const JobHeader = styled.div`
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  padding: 1rem;
+  border-radius: 15px 15px 0 0;
+`;
+
+const LocationBadge = styled(Badge)`
+  background-color: ${props => {
+    const locations = {
+      'Nairobi': '#e74c3c',
+      'Westlands': '#9b59b6',
+      'Kiambu': '#1abc9c',
+      'default': '#3498db'
+    };
+    return locations[props.$location] || locations.default;
+  }} !important;
+  margin: 0.25rem;
+`;
+
 
 const StickyReviewForm = styled.div`
   position: fixed;
@@ -94,6 +146,9 @@ const NavBar = styled.nav`
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 `;
 
+
+
+
 const NavButton = styled.button`
   border: none;
   background: ${props => props.$active ? '#3498db' : 'transparent'};
@@ -121,6 +176,9 @@ const UserAvatar = styled.div`
 `;
 
 const ReviewSection = () => {
+  const LOCATIONS = ['Nairobi', 'Westlands', 'Kiambu',"pipeline" , "Kasarani" , "Eastlands" , "Kitusuri"  , "Kayole"  ,  "Dandora"  ,  "Kikuyu"  , 'Thika', 'Karen'];
+  const RATE_TYPES = ['Per Hour', 'Per Day'];
+
   const [activeTab, setActiveTab] = useState('reviews');
   const [posts, setPosts] = useState([]);
   const [services, setServices] = useState([]);
@@ -139,10 +197,12 @@ const ReviewSection = () => {
       salary: '',
       type: 'Full-time',
       deadline: new Date(),
-      contactEmail: ''
+      contactEmail: '',
+      link: ""
     },
     booking: { date: new Date(), time: '09:00', address: '' }
   });
+  console.log(formData)
   const [selectedService, setSelectedService] = useState(null);
   const [showBooking, setShowBooking] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -157,19 +217,31 @@ const ReviewSection = () => {
   const STICKERS = ['👍', '❤️', '🚀', '💡', '🎉', '👏'];
   const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance'];
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const [servicesRes, jobsRes] = await Promise.all([
-        
-          axios.get('https://sheetdb.io/api/v1/YOUR_SHEET_ID'),
-          axios.get('https://sheetdb.io/api/v1/YOUR_SHEET_ID')
+          axios.get('https://sheetdb.io/api/v1/gu4zdm9nf6y1m'),
+          axios.get('https://sheetdb.io/api/v1/0d0o21777vjlo')
         ]);
-
-       
-        setServices(servicesRes.data.sort((a, b) => b.rating - a.rating));
-        setJobs(jobsRes.data);
+  
+        console.log({
+          message: "this is my response",
+          jobs: jobsRes.data,
+          services: servicesRes.data
+        });
+  
+        // Make sure the data is an array
+        const servicesData = Array.isArray(servicesRes.data) ? servicesRes.data : [];
+        const jobsData = Array.isArray(jobsRes.data) ? jobsRes.data : [];
+  
+        setServices(servicesData.sort((a, b) => b.rating - a.rating));
+        setJobs(jobsData);
+  
+        console.log('Services:', servicesData);
+        console.log('Jobs:', jobsData);
       } catch (err) {
         setError('Failed to load data');
       } finally {
@@ -178,6 +250,7 @@ const ReviewSection = () => {
     };
     fetchData();
   }, []);
+  
 
 
 
@@ -186,7 +259,7 @@ const ReviewSection = () => {
       const fetchCommunityData = async () => {
         try {
           setLoading(true);
-          const [postsRes, servicesRes, jobsRes] = await Promise.all([
+          const [postsRes ] = await Promise.all([
             axios.get('http://localhost:8000/apiV1/smartcity-ke/posts'),
             axios.get('/api/services'),
             axios.get('/api/jobs')
@@ -206,7 +279,7 @@ const ReviewSection = () => {
 
   const handleServiceBooking = async () => {
     try {
-      await axios.post('https://sheetdb.io/api/v1/YOUR_SHEET_ID', {
+      await axios.post('https://sheetdb.io/api/v1/gu4zdm9nf6y1m', {
         ...formData.booking,
         serviceId: selectedService?.id
       });
@@ -222,7 +295,7 @@ const ReviewSection = () => {
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://sheetdb.io/api/v1/YOUR_SHEET_ID', formData.review);
+      await axios.post('https://sheetdb.io/api/v1/gu4zdm9nf6y1m', formData.review);
       setPosts(prev => [{...formData.review, id: Date.now()}, ...prev]);
       setFormData(prev => ({...prev, review: { content: '', stickers: [] }}));
       setSuccess('Review posted!');
@@ -240,7 +313,7 @@ const ReviewSection = () => {
         rating: 0,
         id: Date.now() 
       };
-      await axios.post('https://sheetdb.io/api/v1/YOUR_SHEET_ID', newService);
+      await axios.post('https://sheetdb.io/api/v1/gu4zdm9nf6y1m', newService);
       setServices(prev => [newService, ...prev]);
       setFormData(prev => ({ ...prev, service: { type: 'Cleaning', rate: '', phone: '', email: '' }}));
       setSuccess('Service registered!');
@@ -248,19 +321,40 @@ const ReviewSection = () => {
       setError('Service registration failed');
     }
   };
-
   const handleJobSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Prepare the job data, including the unique id and the form data
       const newJob = { ...formData.job, id: Date.now() };
-      await axios.post('https://sheetdb.io/api/v1/YOUR_SHEET_ID', newJob);
-      setJobs(prev => [newJob, ...prev]);
-      setFormData(prev => ({ ...prev, job: { title: '', description: '', salary: '', type: 'Full-time', deadline: new Date(), contactEmail: '' }}));
-      setSuccess('Job posted!');
+  
+      // Post to the SheetDB API (make sure you use the correct endpoint)
+      const response = await axios.post('https://sheetdb.io/api/v1/0d0o21777vjlo', [newJob]);
+  
+      // If successful, update the jobs state and reset form data
+      if (response.status === 200) {
+        setJobs(prev => [newJob, ...prev]);
+        setFormData(prev => ({ 
+          ...prev, 
+          job: { 
+            title: '', 
+            description: '', 
+            salary: '', 
+            type: 'Full-time', 
+            deadline: new Date(), 
+            contactEmail: '' 
+          }
+        }));
+  
+        setSuccess('Job posted!');
+      } else {
+        setError('Job post failed');
+      }
     } catch (err) {
+      console.error(err);  // Log the error for better debugging
       setError('Job post failed');
     }
   };
+  
 
   const handleCommentSubmit = async (postId) => {
     const content = commentTexts[postId];
@@ -317,82 +411,124 @@ const handleToggleCommentInput = (postId) => {
 };
 
 
-
-  const ServiceCard = ({ service }) => (
-    <ServiceCardWrapper>
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4>{service.type}</h4>
-          <div className="d-flex align-items-center gap-2">
-            <Button variant="link" onClick={() => rateService(service.id, 1)}>
-              <FaThumbsUp className="text-primary" /> 
-              <span>{service.likes || 0}</span>
-            </Button>
-            <div className="d-flex align-items-center">
-              <FaStar className="text-warning me-1" /> 
-              <span>{service.rating || 0}</span>
-            </div>
-          </div>
-        </div>
-        <div className="mb-3">
+const ServiceCard = ({ service }) => (
+  <ModernCard>
+    <ServiceHeader>
+      <div className="d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">{service.type}</h5>
+        {service.likes >= 200 && (
+          <FaCheckCircle className="text-warning" title="Verified Service" />
+        )}
+      </div>
+      <LocationBadge $location={service.location} pill>
+        {service.location}
+      </LocationBadge>
+    </ServiceHeader>
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
           <FaMoneyBillWave className="me-2" />
-          Ksh {service.rate}/hour
+          <strong>Ksh {service.rate}</strong>
+          <small className="text-muted">/{service.rateType}</small>
         </div>
-        <div className="contact-section mb-4">
-          <h5>Contact:</h5>
+        <div className="d-flex align-items-center">
+          <Button variant="link" onClick={() => rateService(service.id, 1)}>
+            <FaThumbsUp className="text-primary" /> 
+            <span>{service.likes || 0}</span>
+          </Button>
+        </div>
+      </div>
+      
+      <div className="mb-3">
+        <FaMapMarkerAlt className="me-2" />
+        {service.areas?.join(', ') || 'Nairobi'}
+      </div>
+
+      <div className="contact-section">
+        <h6 className="text-muted">Contact:</h6>
+        <div className="d-flex align-items-center mb-2">
+          <FaPhone className="me-2" />
+          <a href={`tel:${service.phone}`} className="text-decoration-none">
+            {service.phone}
+          </a>
+        </div>
+        {service.email && (
           <div className="d-flex align-items-center mb-2">
-            <FaPhone className="me-2" />
-            <a href={`tel:${service.phone}`} className="text-decoration-none">
-              {service.phone}
+            <FaEnvelope className="me-2" />
+            <a href={`mailto:${service.email}`} className="text-decoration-none">
+              {service.email}
             </a>
           </div>
-          {service.email && (
-            <div className="d-flex align-items-center mb-2">
-              <FaEnvelope className="me-2" />
-              <a href={`mailto:${service.email}`} className="text-decoration-none">
-                {service.email}
-              </a>
-            </div>
-          )}
-        </div>
-        <Button 
-          variant="outline-primary" 
-          className="w-100"
-          onClick={() => {
-            setSelectedService(service);
-            setShowBooking(true);
-          }}
-        >
-          <FaCalendarAlt className="me-2" /> Book Service
-        </Button>
-      </Card.Body>
-    </ServiceCardWrapper>
-  );
+        )}
+      </div>
+
+      <Button 
+        variant="outline-primary" 
+        className="w-100 mt-2"
+        onClick={() => {
+          setSelectedService(service);
+          setShowBooking(true);
+        }}
+      >
+        <FaCalendarAlt className="me-2" /> Book Service
+      </Button>
+    </Card.Body>
+  </ModernCard>
+);
 
   const JobCard = ({ job }) => (
-    <JobCardWrapper>
+    <ModernCard>
+      <JobHeader>
+        <h5 className="mb-0">{job.title}</h5>
+        <div className="d-flex align-items-center mt-2">
+          <LocationBadge $location={job.location} pill>
+            {job.location}
+          </LocationBadge>
+          <Badge bg="light" text="dark" pill>
+            {job.type}
+          </Badge>
+        </div>
+      </JobHeader>
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4>{job.title}</h4>
-          <Badge bg="info">{job.type}</Badge>
+          <div>
+            <FaMoneyBillWave className="me-2" />
+            <strong>Ksh {job.salary}</strong>
+          </div>
+          <div>
+            <FaClock className="me-2" />
+            {new Date(job.deadline).toLocaleDateString()}
+          </div>
         </div>
-        <div className="d-flex flex-wrap gap-3 mb-3 text-muted">
-          <div><FaMoneyBillWave className="me-2" />Ksh {job.salary}</div>
-          <div><FaClock className="me-2" />Apply by: {new Date(job.deadline).toLocaleDateString()}</div>
+
+        <p className="text-muted">{job.description}</p>
+
+        <div className="d-flex gap-2">
+          {job.applicationLink && (
+            <Button 
+              variant="primary" 
+              className="d-flex align-items-center"
+              href={job.applicationLink}
+              target="_blank"
+            >
+              <FaLink className="me-2" /> Apply Online
+            </Button>
+          )}
+          {job.contactEmail && (
+            <Button 
+              variant="outline-primary" 
+              className="d-flex align-items-center"
+              href={`mailto:${job.contactEmail}`}
+            >
+              <FaEnvelope className="me-2" /> Email
+            </Button>
+          )}
         </div>
-        <p className="mb-3">{job.description}</p>
-        {job.contactEmail && (
-          <Button 
-            variant="outline-primary" 
-            className="d-flex align-items-center"
-            href={`mailto:${job.contactEmail}`}
-          >
-            <FaEnvelope className="me-2" /> Apply
-          </Button>
-        )}
       </Card.Body>
-    </JobCardWrapper>
+    </ModernCard>
   );
+
+  
   const PostCard = ({ post, index }) => (
     <PostBubble $even={index % 2 === 0}>
       <div className="d-flex align-items-center mb-2">
@@ -520,14 +656,14 @@ const handleToggleCommentInput = (postId) => {
         {activeTab === 'services' && (
           <div>
             <Card className="mb-4">
-              <Card.Body>
-                <h4><FaStar className="text-warning me-2" /> Top Rated Services</h4>
-                {services.length > 0 ? (
-                  services.map(service => <ServiceCard key={service.id} service={service} />)
-                ) : (
-                  <Alert variant="info">No services available</Alert>
-                )}
-              </Card.Body>
+            <Card.Body>
+  <h4><FaStar className="text-warning me-2" /> Top Rated Services</h4>
+  {Array.isArray(services) && services.length > 0 ? (
+    services.map(service => <ServiceCard key={service.id} service={service} />)
+  ) : (
+    <Alert variant="info">No services available</Alert>
+  )}
+</Card.Body>
             </Card>
 
             <Card className="mb-4">
@@ -591,11 +727,12 @@ const handleToggleCommentInput = (postId) => {
             <Card className="mb-4">
               <Card.Body>
                 <h4><FaBriefcase /> Job Board</h4>
-                {jobs.length > 0 ? (
-                  jobs.map(job => <JobCard key={job.id} job={job} />)
-                ) : (
-                  <Alert variant="info">No jobs available</Alert>
-                )}
+                {(Array.isArray(jobs) && jobs.length > 0) ? (
+  jobs.map(job => <JobCard key={job.id} job={job} />)
+) : (
+  <Alert variant="info">No jobs available</Alert>
+)}
+
               </Card.Body>
             </Card>
 
