@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
 import { FiHome, FiMapPin, FiNavigation ,FiAlertCircle, FiCloud, FiMenu, FiX, 
   FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook, FiRadio, FiMessageCircle, FiUserPlus } from 'react-icons/fi';
+  import { PiUserSoundFill } from "react-icons/pi";
+  import { FaInternetExplorer } from "react-icons/fa6";
+  import { FaTrashRestoreAlt ,  FaHome  ,  FaPeopleCarry } from "react-icons/fa";
+import { FaCircleInfo } from "react-icons/fa6";
+import { GiMoonClaws } from "react-icons/gi";
+import { SiGoogleanalytics } from "react-icons/si";
 import styled from 'styled-components'
 import LandingPage from './pages/landPage'
 import ParkingForm from './parking/park'
@@ -217,22 +223,22 @@ function App() {
 
         <Sidebar $isOpen={isMenuOpen}>
           <NavLink to="/" end onClick={() => setIsMenuOpen(false)}>
-            <FiHome /> Home
+            < FaHome /> Home
           </NavLink>
           <NavLink to="/parking" onClick={() => setIsMenuOpen(false)}>
             <FiMapPin /> Parking
           </NavLink>
           <NavLink to="/garbage" onClick={() => setIsMenuOpen(false)}>
-            <FiTrash2 /> Garbage
+            <FaTrashRestoreAlt /> Garbage
           </NavLink>
           <NavLink to="/reviews" onClick={() => setIsMenuOpen(false)}>
-            <FiStar /> Reviews
+            <PiUserSoundFill /> Community-Hub
           </NavLink>
           <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
             <FiMap /> Amenities
           </NavLink>
           <NavLink to="/analytics" onClick={() => setIsMenuOpen(false)}>
-            <FiActivity /> Analytics
+            <SiGoogleanalytics  /> Analytics
           </NavLink>
           <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
             <FiCloud /> Weather
@@ -241,19 +247,19 @@ function App() {
             <FiNavigation /> Traffic
           </NavLink>
           <NavLink to="/peoples/favourites" onClick={() => setIsMenuOpen(false)}>
-            <FiNavigation /> Explore
+            <FaInternetExplorer /> Explore
           </NavLink>
           <NavLink to="/tracking" onClick={() => setIsMenuOpen(false)}>
             <FiSettings /> Tracking
           </NavLink>
           <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
-            <FiBook /> Terms
+            <GiMoonClaws  /> Terms
           </NavLink>
           <NavLink to="/login" onClick={() => setIsMenuOpen(false)}>
             <FiUser /> Login
           </NavLink>
           <NavLink to="/software-feedback" className="button">
-            <FiAlertCircle size={24} />Software Guide
+            <FaCircleInfo size={24} />Software Guide
           </NavLink>
         </Sidebar>
 
@@ -286,22 +292,34 @@ function App() {
 
         {/* Global Bottom Navigation */}
         <BottomNav>
-          <NavItem to="/traffic">
-            <FiNavigation />
-            <span>Traffic</span>
-          </NavItem>
+        
           <NavItem to="/news">
             <FiRadio />
             <span>News</span>
           </NavItem>
-          <NavItem to="/register">
+          <NavItem to="/login">
             <FiUserPlus />
-            <span>Register</span>
+            <span>login</span>
           </NavItem>
           <NavItem to="/report-corruption">
             <FiMessageCircle />
             <span>Corruption</span>
           </NavItem>
+
+
+          <NavItem to="/report-corruption">
+            <FaPeopleCarry />
+            <span>Community</span>
+          </NavItem>
+
+          
+
+          <NavItem to="/">
+            <FaHome />
+            <span>Home</span>
+          </NavItem>
+
+          
         </BottomNav>
 
         <StickyButtons>

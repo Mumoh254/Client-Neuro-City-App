@@ -80,6 +80,29 @@ body {
   color: white;
 }
 
+.review-toggle-btn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 1050;
+}
+
+.custom-sticky-review {
+  position: fixed !important;
+  bottom: 80px !important;
+  right: 10%  !important;
+  width: 320px !important;
+  z-index: 051 !important;
+  background-color: #000;
+  border-radius: 10px;
+}
+
+.mg{
+  margin-left: 0% !important;
+
+}
+
+
 overflow-y: auto;
 
 /* Hide scrollbar for Chrome, Safari and Opera */
