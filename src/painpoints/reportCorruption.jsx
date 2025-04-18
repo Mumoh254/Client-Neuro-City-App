@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
-import { Form, Button, Alert, Container, Row, Col, Card } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Form, Button, Alert, Container, Row, Col, Card, Spinner, Pagination } from 'react-bootstrap';
 import axios from 'axios';
-import { FiAlertTriangle, FiEye, FiUpload, FiMessageSquare, FiMapPin, FiUser, FiType } from 'react-icons/fi';
+import { FiAlertTriangle, FiEye, FiUpload, FiMapPin, FiUser, FiType, FiBarChart2, FiTrendingUp } from 'react-icons/fi';
 import styled from 'styled-components';
+import { Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, registerables } from 'chart.js';
+
+ChartJS.register(...registerables);
 
 // Styled Components
 const HeroSection = styled.div`
@@ -17,19 +21,6 @@ const HeroSection = styled.div`
   text-align: center;
   color: white;
   padding: 0rem;
-`;
-
-const ActionCard = styled(Card)`
-  border: none;
-  border-radius: 15px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  }
 `;
 
 const ReportCard = styled(Card)`
@@ -53,20 +44,6 @@ const StyledFormControl = styled(Form.Control)`
   }
 `;
 
-const GradientButton = styled(Button)`
-  background: linear-gradient(135deg, #19376d 0%, #2457a6 100%);
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(25, 55, 109, 0.3);
-  }
-`;
-
 const ReportCorruption = () => {
   const [formData, setFormData] = useState({
     facilityName: '',
@@ -81,83 +58,33 @@ const ReportCorruption = () => {
 
   const [submitted, setSubmitted] = useState(false);
   const [cases, setCases] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const itemsPerPage = 6;
 
-  // Hero content component
-  const HeroContent = () => (
-    <HeroSection>
-      <div className="hero-content">
-        <h1 className="display-4 mb-4 fw-bold">
-          <FiAlertTriangle className="me-2" /> 
-          Not On My Watch
-        </h1>
-        <p className="lead fs-6 mb-2">
-          Join the Fight Against Corruption in Nairobi City the  Breathing Heart of  Kenya
-         
-        </p>
-        <div className="d-flex gap-3 justify-content-center px-1">
-          <GradientButton size="sm">
-            <FiUpload className="me-6" /> Report Now
-          </GradientButton>
-          <Button variant="outline-light"  className='btn' size="sm">
-            <FiEye className="me-6" /> View Cases
-          </Button>
-        </div>
-      </div>
-    </HeroSection>
-  );
+  // Fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [analyticsRes, casesRes] = await Promise.all([
+          axios.get('http://localhost:8000/apiV1/smartcity-ke/corrupt-analyse'),
+          axios.get(`http://localhost:8000/apiV1/smartcity-ke/reports?page=${currentPage}&limit=${itemsPerPage}`)
+        ]);
 
-  // Action Cards component
-  const ActionCards = () => (
-    <Row className="my-5 gy-4 gx-3">
-      <Col xs={12} sm={6} md={4}>
-        <ActionCard
-          className="h-100 text-center p-4 shadow rounded-4 border-0"
-          style={{ background: "#2563eb" }}
-        >
-          <Card.Body>
-            <div className="icon-wrapper bg-primary-gradient mb-4">
-              <FiUpload size={40} className="text-white" />
-            </div>
-            <h5 className="mb-2 fw-semibold text-white">Safe Reporting</h5>
-            <p className="text-white small mb-0">Your identity remains completely protected</p>
-          </Card.Body>
-        </ActionCard>
-      </Col>
-  
-      <Col xs={12} sm={6} md={4}>
-        <ActionCard
-          className="h-100 text-center p-4 shadow rounded-4 border-0"
-          style={{ background: "#d97706" }}
-        >
-          <Card.Body>
-            <div className="icon-wrapper bg-success-gradient mb-4">
-              <FiEye size={40} className="text-white" />
-            </div>
-            <h5 className="mb-2 fw-semibold text-white">Live Tracking</h5>
-            <p className="text-white small mb-0">Monitor reported cases in real-time</p>
-          </Card.Body>
-        </ActionCard>
-      </Col>
-  
-      <Col xs={12} sm={6} md={4}>
-        <ActionCard
-          className="h-100 text-center p-4 shadow rounded-4 border-0"
-          style={{ background: "#2563eb" }}
-        >
-          <Card.Body>
-            <div className="icon-wrapper bg-warning-gradient mb-4">
-              <FiMessageSquare size={40} className="text-white" />
-            </div>
-            <h5 className="mb-2 fw-semibold text-white">Community Voice</h5>
-            <p className="text-white small mb-0">Engage with ongoing investigations</p>
-          </Card.Body>
-        </ActionCard>
-      </Col>
-    </Row>
-  );
-  
+        setAnalytics(analyticsRes.data);
+        setCases(casesRes.data.reports);
+        setTotalPages(casesRes.data.totalPages);
+      } catch (err) {
+        setError('Failed to load data');
+      }
+    };
 
-  // Handle image upload
+    fetchData();
+  }, [currentPage]);
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -169,197 +96,238 @@ const ReportCorruption = () => {
     }
   };
 
-  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const reportData = {
-        facility: {
-          name: formData.facilityName,
-          type: formData.facilityType,
-          location: formData.location
-        },
-        description: formData.description,
-        isAnonymous: formData.isAnonymous,
-        reporter: formData.isAnonymous ? null : formData.reporter,
-        image: formData.image ? await toBase64(formData.image) : null
-      };
+      const formPayload = new FormData();
+      formPayload.append('facilityName', formData.facilityName);
+      formPayload.append('facilityType', formData.facilityType);
+      formPayload.append('location', formData.location);
+      formPayload.append('description', formData.description);
+      formPayload.append('isAnonymous', formData.isAnonymous);
+      formPayload.append('image', formData.image);
 
-      await axios.post('http://localhost:8000/apiV1/smartcity-ke/create-report', reportData);
+      await axios.post('/api/smartcity-ke/reports', formPayload, {
+        headers: {'Content-Type': 'multipart/form-data'}
+      });
+
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 5000);
-      setFormData({...formData, facilityName: '', location: '', description: '', image: null, preview: null});
+      setFormData({
+        facilityName: '',
+        facilityType: 'Government Office',
+        location: '',
+        description: '',
+        image: null,
+        preview: null
+      });
+      setCurrentPage(1); // Refresh to first page
     } catch (error) {
-      console.error(error);
+      console.error('Submission error:', error);
     }
   };
 
-  // Base64 converter
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
+  // Generate random colors for charts
+  const getRandomColors = (num) => {
+    const colors = [];
+    for (let i = 0; i < num; i++) {
+      colors.push(`hsl(${Math.random() * 360}, 100%, 50%)`);
+    }
+    return colors;
+  };
 
   return (
-    <>
-      <HeroContent />
-      <Container className="py-3">
-        <ActionCards />
+    <div className="corruption-reporting-system">
+      <HeroSection>
+        <div className="hero-content">
+          <h1 className="display-4 mb-4 fw-bold">
+            <FiAlertTriangle className="me-2" /> 
+            Report Corruption
+          </h1>
+          <p className="lead fs-6 mb-2">
+            Help us build a transparent Nairobi City
+          </p>
+        </div>
+      </HeroSection>
 
-        <ReportCard className="my-5 p-1">
-          <Card.Body>
-            <h2 className="text-start mb-5 display-5 fw-bold text-primary">
-              <FiAlertTriangle className="me-3" /> 
-              File Corruption Report
-            </h2>
-            
-            <Form onSubmit={handleSubmit}>
-              <Row className="g-4">
-                <Col md={6}>
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold mb-3">
-                      <FiType className="me-2" /> Facility Name
-                    </Form.Label>
-                    <StyledFormControl 
-                      required
-                      value={formData.facilityName}
-                      onChange={(e) => setFormData({...formData, facilityName: e.target.value})}
-                      placeholder="Enter facility name"
+      <Container className="py-5">
+        {/* Analytics Section */}
+        <div className="analytics-dashboard mb-5">
+          <h2 className="mb-4 display-5 fw-bold text-primary">
+            <FiBarChart2 className="me-3" />
+            Corruption Insights
+          </h2>
+
+          <Row className="g-4">
+            <Col md={6}>
+              <ReportCard className="p-3">
+                <h5 className="mb-3 fw-bold">
+                  <FiAlertTriangle className="me-2" />
+                  Top Reported Facilities
+                </h5>
+                {analytics ? (
+                  <Bar 
+                    data={{
+                      labels: analytics.topFacilities.map(f => f.name),
+                      datasets: [{
+                        label: 'Reports Count',
+                        data: analytics.topFacilities.map(f => f.count),
+                        backgroundColor: getRandomColors(analytics.topFacilities.length) // Using different colors
+                      }]
+                    }}
+                  />
+                ) : <Spinner animation="border" />}
+              </ReportCard>
+            </Col>
+
+            <Col md={6}>
+              <ReportCard className="p-3">
+                <h5 className="mb-3 fw-bold">
+                  <FiTrendingUp className="me-2" />
+                  Reporting Trends
+                </h5>
+                {analytics ? (
+                  <Bar 
+                    data={{
+                      labels: analytics.monthlyTrends.map(m => m.month),
+                      datasets: [{
+                        label: 'Monthly Reports',
+                        data: analytics.monthlyTrends.map(m => m.count),
+                        backgroundColor: getRandomColors(analytics.monthlyTrends.length) // Using different colors
+                      }]
+                    }}
+                  />
+                ) : <Spinner animation="border" />}
+              </ReportCard>
+            </Col>
+          </Row>
+        </div>
+
+        {/* Reporting Form */}
+        <ReportCard className="my-5 p-4">
+          <h2 className="mb-4 display-5 fw-bold text-primary">
+            <FiUpload className="me-3" />
+            File New Report
+          </h2>
+          
+          <Form onSubmit={handleSubmit}>
+            <Row className="g-4">
+              <Col md={6}>
+                <Form.Group className="mb-4">
+                  <Form.Label>Facility Name</Form.Label>
+                  <StyledFormControl
+                    required
+                    value={formData.facilityName}
+                    onChange={(e) => setFormData({...formData, facilityName: e.target.value})}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-4">
+                  <Form.Label>Facility Type</Form.Label>
+                  <StyledFormControl
+                    as="select"
+                    value={formData.facilityType}
+                    onChange={(e) => setFormData({...formData, facilityType: e.target.value})}
+                  >
+                    {['Government Office', 'Hospital', 'Police Station', 'School'].map(opt => (
+                      <option key={opt}>{opt}</option>
+                    ))}
+                  </StyledFormControl>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-4">
+                  <Form.Label>Incident Details</Form.Label>
+                  <StyledFormControl
+                    as="textarea"
+                    rows={5}
+                    required
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col md={12}>
+                <Form.Group className="mb-4">
+                  <Form.Label>Upload Evidence</Form.Label>
+                  <StyledFormControl
+                    type="file"
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                  />
+                  {formData.preview && (
+                    <img 
+                      src={formData.preview} 
+                      alt="Preview" 
+                      className="mt-3 img-thumbnail"
+                      style={{ maxWidth: '300px' }}
                     />
-                  </Form.Group>
+                  )}
+                </Form.Group>
+              </Col>
 
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold mb-3">
-                      <FiUser className="me-2" /> Facility Type
-                    </Form.Label>
-                    <StyledFormControl
-                      as="select"
-                      value={formData.facilityType}
-                      onChange={(e) => setFormData({...formData, facilityType: e.target.value})}
-                    >
-                      <option>Government Office</option>
-                      <option>Hospital</option>
-                      <option>Police Station</option>
-                      <option>School/University</option>
-                      <option>Service Center</option>
-                    </StyledFormControl>
-                  </Form.Group>
-
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold mb-3">
-                      <FiMapPin className="me-2" /> Location
-                    </Form.Label>
-                    <StyledFormControl 
-                      required
-                      value={formData.location}
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      placeholder="Enter facility location"
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold mb-3">
-                      Incident Details
-                    </Form.Label>
-                    <StyledFormControl 
-                      as="textarea"
-                      rows={8}
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      placeholder="Describe the corruption incident in detail..."
-                      style={{ height: '100%' }}
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={12}>
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold mb-3">
-                      <FiUpload className="me-2" /> Upload Evidence
-                    </Form.Label>
-                    <div className="file-upload-wrapper">
-                      <StyledFormControl 
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="form-control-lg"
-                      />
-                      {formData.preview && (
-                        <div className="mt-3">
-                          <img 
-                            src={formData.preview} 
-                            alt="Preview" 
-                            className="img-thumbnail rounded-3"
-                            style={{ maxWidth: '300px' }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </Form.Group>
-                </Col>
-
-                <Col className="text-start">
-                  <GradientButton type="submit" size="md">
-                    <FiUpload className="me-2" /> Submit Report
-                  </GradientButton>
-
-                  <col />
-                  <p>
-                  <br />Every day  is  a  coruption Fight day  by Peter  Mumo CEO  Welt  Tallis Cooperation !!
-                  </p>
-                </Col>
-              </Row>
-            </Form>
-          </Card.Body>
+              <Col className="text-center">
+                <Button variant="primary" type="submit" size="lg">
+                  Submit Report
+                </Button>
+              </Col>
+            </Row>
+          </Form>
         </ReportCard>
 
-        {submitted && (
-          <Alert variant="success" className="mt-4 text-center fs-5">
-            🚨 Report submitted successfully! Thank you for your courage.
-          </Alert>
-        )}
+        {/* Cases List */}
+        <div className="reported-cases">
+          <h2 className="mb-4 display-5 fw-bold text-primary">
+            <FiEye className="me-3" />
+            Recent Reports
+          </h2>
 
-        {/* Recent Cases Section */}
-        <h2 className="my-5 pt-5 text-start display-5 fw-bold text-primary">
-          <FiEye className="me-3" /> 
-          Recent Reports
-        </h2>
-        <Row className="g-4">
-          {cases.map((report) => (
-            <Col md={4} key={report.id}>
-              <ActionCard className="h-100">
-                {report.image && (
-                  <Card.Img 
-                    variant="top" 
-                    src={report.image} 
-                    className="card-img-top"
-                    style={{ height: '200px', objectFit: 'cover' }}
-                  />
-                )}
-                <Card.Body className="p-4">
-                  <Card.Title className="fw-bold mb-3">{report.facility.name}</Card.Title>
-                  <Card.Subtitle className="mb-3 text-muted">
-                    {report.facility.type} • {report.facility.location}
-                  </Card.Subtitle>
-                  <Card.Text className="text-secondary">
-                    {report.description}
-                  </Card.Text>
-                  <Button variant="outline-primary" className="w-100">
-                    <FiMessageSquare className="me-2" /> 
-                    View Details
-                  </Button>
-                </Card.Body>
-              </ActionCard>
-            </Col>
-          ))}
-        </Row>
+          {error && <Alert variant="danger">{error}</Alert>}
+
+          <Row className="g-4">
+            {cases.map(report => (
+              <Col md={4} key={report._id}>
+                <ReportCard>
+                  {report.image && (
+                    <Card.Img 
+                      variant="top" 
+                      src={`data:image/jpeg;base64,${report.image}`} 
+                      style={{ height: '200px', objectFit: 'cover' }}
+                    />
+                  )}
+                  <Card.Body>
+                    <Card.Title>{report.facilityName}</Card.Title>
+                    <Card.Subtitle className="mb-2 text-muted">
+                      {report.facilityType} • {report.location}
+                    </Card.Subtitle>
+                    <Card.Text>{report.description.slice(0, 100)}...</Card.Text>
+                    <Button variant="outline-primary">
+                      View Details
+                    </Button>
+                  </Card.Body>
+                </ReportCard>
+              </Col>
+            ))}
+          </Row>
+
+          <div className="d-flex justify-content-center">
+            <Pagination>
+              {[...Array(totalPages)].map((_, index) => (
+                <Pagination.Item
+                  key={index}
+                  active={index + 1 === currentPage}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </Pagination.Item>
+              ))}
+            </Pagination>
+          </div>
+        </div>
       </Container>
-    </>
+    </div>
   );
 };
 

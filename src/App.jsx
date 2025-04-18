@@ -31,6 +31,7 @@ import TermsAndConditions from './authFolder/termsConditions';
 import ReportCorruption from "./painpoints/reportCorruption"
 import SoftwareFeedback from './software/softwareFeedback';
 import Favourites from './favourites/favourites';
+import   CorruptionDashboard   from "./painpoints/corruptAnalytics"
 
 const AppContainer = styled.div`
   display: flex;
@@ -287,6 +288,8 @@ function App() {
             <Route path="/peoples/favourites" element={<Favourites />} />
             <Route path="/report-corruption" element={<ReportCorruption />} />
             <Route path="/user-registartion-analytics" element={<RegistrationAnalytics />} />
+            <Route path="/corruption-analytics" element={< CorruptionDashboard />} />
+           
           </Routes>
         </MainContent>
 
