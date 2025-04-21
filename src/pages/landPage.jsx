@@ -245,7 +245,7 @@ const LandingPage = () => {
     { 
       icon: <FiRadio />, 
       title: "City News", 
-      to: "/news",
+      to: "/city-news-feed",
       bg: '#3b82f6',
       bg2: '#2563eb'
     },
@@ -317,7 +317,7 @@ const LandingPage = () => {
             <span>Traffic</span>
           </NavItem>
           
-          <NavItem to="/news">
+          <NavItem to="/city-news-feed">
             <FiRadio />
             <span>News</span>
           </NavItem>
@@ -327,7 +327,7 @@ const LandingPage = () => {
             <span>Register</span>
           </NavItem>
 
-          <NavItem to="/report-corruption">
+          <NavItem to="/report/coruption-Real-time/analytics">
             <FiMessageCircle />
             <span>Corruption</span>
           </NavItem>

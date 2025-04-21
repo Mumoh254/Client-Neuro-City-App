@@ -110,8 +110,8 @@ const validationSchema = Yup.object().shape({
     .email('Invalid email address')
     .required('Email is required'),
   NationalId: Yup.string()
-    .matches(/^[A-Z0-9]{8,12}$/, 'Invalid National ID format')
-    .required('National ID is required'),
+    .matches(/^[A-Z0-9]{8,12}$/, 'Invalid National ID format'),
+   
   Gender: Yup.string()
     .required('Gender is required')
     .oneOf(['MALE', 'FEMALE', 'OTHER'], 'Invalid gender selection'),

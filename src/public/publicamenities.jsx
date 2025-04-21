@@ -39,23 +39,26 @@ const PublicAmenities = () => {
 
     const loadTomTomSDK = () => {
       return new Promise((resolve, reject) => {
-        if (window.tt) return resolve(window.tt);
-
+        if (window.tt && window.tt.Map) {
+          return resolve(window.tt);
+        }
+    
         const script = document.createElement('script');
         script.src = 'https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.23.0/maps/maps-web.min.js';
         script.async = true;
         script.onload = () => {
-          tt = window.tt;
-          document.head.insertAdjacentHTML(
-            'beforeend',
-            `<link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.23.0/maps/maps.css">`
-          );
-          resolve(tt);
+          const cssLink = document.createElement('link');
+          cssLink.rel = 'stylesheet';
+          cssLink.href = 'https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.23.0/maps/maps.css';
+          cssLink.onload = () => resolve(window.tt);
+          cssLink.onerror = () => reject('Failed to load TomTom CSS');
+          document.head.appendChild(cssLink);
         };
-        script.onerror = reject;
+        script.onerror = () => reject('Failed to load TomTom Maps SDK');
         document.head.appendChild(script);
       });
     };
+    
 
     const getLocation = () => {
       return new Promise((resolve, reject) => {
@@ -93,8 +96,9 @@ const PublicAmenities = () => {
           container: mapContainer.current,
           center: center,
           zoom: 14,
-          style: 'tomtom://vector/1/basic-main'
+          style: 'tomtom://vector/1/basic-main',
         });
+        
 
         // Add user marker
         new tt.Marker({ color: '#3b82f6' })

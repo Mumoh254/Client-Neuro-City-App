@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Alert, Container, Row, Col, Card, Spinner, Pagination } from 'react-bootstrap';
+import { 
+  Form, Button, Alert, Container, Row, Col, Card, 
+  Spinner, Pagination, Modal, Badge 
+} from 'react-bootstrap';
 import axios from 'axios';
-import { FiAlertTriangle, FiEye, FiUpload, FiMapPin, FiUser, FiType, FiBarChart2, FiTrendingUp } from 'react-icons/fi';
+import { 
+  FiAlertTriangle, FiEye, FiUpload, FiMapPin, FiUser, 
+  FiType, FiBarChart2, FiTrendingUp, FiClock, FiFileText 
+} from 'react-icons/fi';
 import styled from 'styled-components';
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, registerables } from 'chart.js';
@@ -30,6 +36,11 @@ const ReportCard = styled(Card)`
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
 `;
 
 const StyledFormControl = styled(Form.Control)`
@@ -41,6 +52,19 @@ const StyledFormControl = styled(Form.Control)`
   &:focus {
     border-color: #19376d;
     box-shadow: 0 0 0 3px rgba(25, 55, 109, 0.25);
+  }
+`;
+
+const DetailModal = styled(Modal)`
+  .modal-content {
+    border-radius: 20px;
+    border: none;
+  }
+
+  .modal-header {
+    background: #19376d;
+    color: white;
+    border-radius: 20px 20px 0 0;
   }
 `;
 
@@ -63,12 +87,33 @@ const ReportCorruption = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
   const itemsPerPage = 6;
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          console.log('Notification permission granted');
+        }
+      });
+    }
+  }, []);
+
+  // Send notification
+  const sendNotification = (title, options) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, options);
+    }
+  };
 
   // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const [analyticsRes, casesRes] = await Promise.all([
           axios.get('http://localhost:8000/apiV1/smartcity-ke/corrupt-analyse'),
           axios.get(`http://localhost:8000/apiV1/smartcity-ke/reports?page=${currentPage}&limit=${itemsPerPage}`)
@@ -79,6 +124,8 @@ const ReportCorruption = () => {
         setTotalPages(casesRes.data.totalPages);
       } catch (err) {
         setError('Failed to load data');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -95,24 +142,34 @@ const ReportCorruption = () => {
       reader.readAsDataURL(file);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
     try {
-      const formPayload = new FormData();
-      formPayload.append('facilityName', formData.facilityName);
-      formPayload.append('facilityType', formData.facilityType);
-      formPayload.append('location', formData.location);
-      formPayload.append('description', formData.description);
-      formPayload.append('isAnonymous', formData.isAnonymous);
-      formPayload.append('image', formData.image);
-
-      await axios.post('/api/smartcity-ke/reports', formPayload, {
-        headers: {'Content-Type': 'multipart/form-data'}
+      const payload = {
+        facilityName: formData.facilityName,
+        facilityType: formData.facilityType,
+        location: formData.location,
+        description: formData.description,
+        isAnonymous: formData.isAnonymous,
+        // Only include image if it's base64 or a URL. Otherwise, remove this line for plain JSON.
+      };
+  
+      await axios.post('http://localhost:8000/apiV1/smartcity-ke/create-report', payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-
+  
       setSubmitted(true);
+      sendNotification('New Report Submitted', {
+        body: `Thank you for reporting corruption at ${formData.facilityName}`,
+        icon: '/logo.png'
+      });
+  
       setTimeout(() => setSubmitted(false), 5000);
+  
+      // Reset form
       setFormData({
         facilityName: '',
         facilityType: 'Government Office',
@@ -121,19 +178,27 @@ const ReportCorruption = () => {
         image: null,
         preview: null
       });
-      setCurrentPage(1); // Refresh to first page
+  
+      setCurrentPage(1);
     } catch (error) {
       console.error('Submission error:', error);
+      sendNotification('Submission Failed', {
+        body: 'There was an error submitting your report',
+        icon: '/logo.png'
+      });
     }
   };
+  
 
-  // Generate random colors for charts
   const getRandomColors = (num) => {
-    const colors = [];
-    for (let i = 0; i < num; i++) {
-      colors.push(`hsl(${Math.random() * 360}, 100%, 50%)`);
-    }
-    return colors;
+    return Array.from({ length: num }, () => 
+      `hsl(${Math.random() * 360}, 70%, 50%)`
+    );
+  };
+
+  const handleViewDetails = (report) => {
+    setSelectedReport(report);
+    setShowDetails(true);
   };
 
   return (
@@ -172,7 +237,7 @@ const ReportCorruption = () => {
                       datasets: [{
                         label: 'Reports Count',
                         data: analytics.topFacilities.map(f => f.count),
-                        backgroundColor: getRandomColors(analytics.topFacilities.length) // Using different colors
+                        backgroundColor: getRandomColors(analytics.topFacilities.length)
                       }]
                     }}
                   />
@@ -187,13 +252,14 @@ const ReportCorruption = () => {
                   Reporting Trends
                 </h5>
                 {analytics ? (
-                  <Bar 
+                  <Line 
                     data={{
                       labels: analytics.monthlyTrends.map(m => m.month),
                       datasets: [{
                         label: 'Monthly Reports',
                         data: analytics.monthlyTrends.map(m => m.count),
-                        backgroundColor: getRandomColors(analytics.monthlyTrends.length) // Using different colors
+                        borderColor: '#19376d',
+                        tension: 0.4
                       }]
                     }}
                   />
@@ -300,10 +366,20 @@ const ReportCorruption = () => {
                   <Card.Body>
                     <Card.Title>{report.facilityName}</Card.Title>
                     <Card.Subtitle className="mb-2 text-muted">
-                      {report.facilityType} • {report.location}
+                      <FiType className="me-1" /> {report.facilityType}
                     </Card.Subtitle>
-                    <Card.Text>{report.description.slice(0, 100)}...</Card.Text>
-                    <Button variant="outline-primary">
+                    <div className="d-flex align-items-center mb-2">
+                      <FiMapPin className="me-2" />
+                      <small>{report.location}</small>
+                    </div>
+                    <Card.Text className="text-truncate">
+                      {report.description}
+                    </Card.Text>
+                    <Button 
+                      variant="outline-primary"
+                      onClick={() => handleViewDetails(report)}
+                    >
+                      <FiEye className="me-2" />
                       View Details
                     </Button>
                   </Card.Body>
@@ -312,7 +388,7 @@ const ReportCorruption = () => {
             ))}
           </Row>
 
-          <div className="d-flex justify-content-center">
+          <div className="d-flex justify-content-center mt-4">
             <Pagination>
               {[...Array(totalPages)].map((_, index) => (
                 <Pagination.Item
@@ -326,6 +402,62 @@ const ReportCorruption = () => {
             </Pagination>
           </div>
         </div>
+
+        {/* Report Details Modal */}
+        <DetailModal
+          show={showDetails}
+          onHide={() => setShowDetails(false)}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              <FiFileText className="me-2" />
+              Report Details
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedReport && (
+              <>
+                <div className="mb-4">
+                  <h5 className="fw-bold mb-3">
+                    <FiUser className="me-2" />
+                    {selectedReport.facilityName}
+                  </h5>
+                  <div className="d-flex align-items-center mb-2">
+                    <FiType className="me-2" />
+                    <span>Type: {selectedReport.facilityType}</span>
+                  </div>
+                  <div className="d-flex align-items-center mb-2">
+                    <FiMapPin className="me-2" />
+                    <span>Location: {selectedReport.location}</span>
+                  </div>
+                  <div className="d-flex align-items-center mb-4">
+                    <FiClock className="me-2" />
+                    <span>
+                      Reported on: {new Date(selectedReport.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">Incident Description</h6>
+                  <p className="text-muted">{selectedReport.description}</p>
+                </div>
+
+                {selectedReport.image && (
+                  <div className="text-center">
+                    <img
+                      src={`data:image/jpeg;base64,${selectedReport.image}`}
+                      alt="Report evidence"
+                      className="img-fluid rounded"
+                      style={{ maxHeight: '400px' }}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </Modal.Body>
+        </DetailModal>
       </Container>
     </div>
   );

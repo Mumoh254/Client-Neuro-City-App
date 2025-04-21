@@ -1,204 +1,260 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FiClock, FiLock } from 'react-icons/fi';
-import { ClipLoader } from 'react-spinners';
+import Swal from 'sweetalert2';
 import styled from 'styled-components';
+import { FaCity, FaEnvelope, FaLock, FaSpinner, FaGoogle, FaGithub } from 'react-icons/fa';
 
-// Styled Components
-const OtpContainer = styled.div`
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-`;
+const LoginContainer = styled.div`
+  max-width: 440px;
+  margin: 4rem auto;
+  padding: 2.5rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
 
-const TimerText = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #64748b;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-
-  &.expired {
-    color: #ef4444;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
   }
 `;
 
-const OtpInputGroup = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
+const LoginHeader = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.75rem;
+    color: #1e293b;
+    margin: 1rem 0 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  p {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
 `;
 
-const OtpInput = styled.input`
-  width: 3rem;
-  height: 3rem;
-  text-align: center;
-  font-size: 1.25rem;
+const LoginForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const InputGroup = styled.div`
+  position: relative;
+`;
+
+const IconStyled = styled.span`
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1.1rem;
+`;
+
+const InputField = styled.input`
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
   border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-size: 1rem;
   transition: all 0.2s ease;
+  background: #ffffff;
 
   &:focus {
     outline: none;
     border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
 
   &::placeholder {
-    color: #cbd5e1;
+    color: #94a3b8;
   }
 `;
 
-const VerifyButton = styled.button`
+const SubmitButton = styled.button`
   width: 100%;
-  padding: 0.75rem;
-  background: #6366f1;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
 
   &:hover {
-    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
   }
 
   &:disabled {
     background: #cbd5e1;
+    transform: none;
+    box-shadow: none;
     cursor: not-allowed;
   }
 `;
 
-const Login = ({ userEmail }) => {
+const SocialLogin = styled.div`
+  margin-top: 2rem;
+  text-align: center;
+
+  p {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+`;
+
+const SocialButton = styled.button`
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-bottom: 0.75rem;
+
+  &:hover {
+    border-color: #6366f1;
+    background: #f8fafc;
+  }
+`;
+
+const Login = () => {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState(['', '', '', '']);
-  const [serverError, setServerError] = useState('');
+  const [Email, setEmail] = useState('');
+  const [Password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
 
-  useEffect(() => {
-    if (!timeLeft) return;
-    
-    const timerId = setInterval(() => {
-      setTimeLeft(timeLeft - 1);
-    }, 1000);
-
-    return () => clearInterval(timerId);
-  }, [timeLeft]);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const showAlert = (type, message) => {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: type,
+      title: message,
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
   };
 
-  const handleOtpChange = (index, value) => {
-    if (/^\d+$/.test(value) || value === '') {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-
-      // Auto-focus next input
-      if (value !== '' && index < 3) {
-        document.getElementById(`otp-input-${index + 1}`).focus();
-      }
-    }
-  };
-
-  const handleVerify = async () => {
-    const otpCode = otp.join('');
-    
-    if (otpCode.length !== 4) {
-      setServerError('Please enter a valid 4-digit OTP');
-      return;
-    }
-
-    if (timeLeft === 0) {
-      setServerError('OTP has expired. Please request a new one.');
-      return;
-    }
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
-    setServerError('');
-
+  
     try {
-      const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/verify-otp', {
-        email: userEmail,
-        otp: otpCode
+      const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/login', { 
+        Email, 
+        Password 
       });
-console.log(response.data)
-      localStorage.setItem('token', response.data.token);
-      navigate('/');
+  
+      // Log the user data to see if the response contains user data
+      console.log(response.data.user);
+  
+      if (response && response.data.sucess && response.data.user) {
+        // Successful login
+        // Store the email in localStorage
+        console.log(response.data.user.Email)
+        localStorage.setItem('userEmail', Email);
+        
+        // Log the email stored in localStorage to check
+        console.log('Stored user email in localStorage:', localStorage.getItem('userEmail'));
+  
+        showAlert('success', 'Login successful, your OTP has been sent to your email!');
+        navigate('/verify-otp');
+      } else {
+        // If user is not registered
+        showAlert('info', 'User not registered. Redirecting to the register page.');
+        navigate('/register');
+      }
     } catch (error) {
-      setServerError(error.response?.data?.message || 'OTP verification failed');
+      showAlert('error', error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
-    <OtpContainer>
-      <div className="text-center mb-4">
-        <FiLock className="text-3xl text-indigo-600 mb-2 mx-auto" />
-        <h2 className="text-xl font-bold">Verify OTP</h2>
-      </div>
-
-      <TimerText className={timeLeft < 60 ? 'expired' : ''}>
-        <FiClock />
-        OTP valid for: {formatTime(timeLeft)}
-        {timeLeft === 0 && ' (Expired)'}
-      </TimerText>
-
-      <OtpInputGroup>
-        {otp.map((digit, index) => (
-          <OtpInput
-            key={index}
-            id={`otp-input-${index}`}
-            type="text"
-            maxLength="1"
-            value={digit}
-            onChange={(e) => handleOtpChange(index, e.target.value)}
-            placeholder="•"
-            disabled={timeLeft === 0}
+    <LoginContainer>
+      <LoginHeader>
+        <FaCity size={32} color="#4f46e5" />
+        <h2>Welcome to SmartCity</h2>
+        <p>Access your city services account</p>
+      </LoginHeader>
+      
+      <LoginForm onSubmit={handleSubmit}>
+        <InputGroup>
+          <IconStyled><FaEnvelope /></IconStyled>
+          <InputField
+            type="Email"
+            placeholder="Email address"
+            value={Email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
-        ))}
-      </OtpInputGroup>
+        </InputGroup>
 
-      {serverError && <div className="text-red-500 text-sm mb-4">{serverError}</div>}
+        <InputGroup>
+          <IconStyled><FaLock /></IconStyled>
+          <InputField
+            type="Password"
+            placeholder="Password"
+            value={Password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </InputGroup>
 
-      <VerifyButton 
-        onClick={handleVerify}
-        disabled={loading || timeLeft === 0}
-      >
-        {loading ? (
-          <ClipLoader size={20} color="#fff" />
-        ) : (
-          'Verify OTP'
-        )}
-      </VerifyButton>
+        <SubmitButton type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <FaSpinner className="spinner" />
+              Signing In...
+            </>
+          ) : (
+            'Sign In'
+          )}
+        </SubmitButton>
+      </LoginForm>
 
-      <p className="text-center mt-4 text-sm text-gray-600">
-        Didn't receive OTP?{' '}
-        <button 
-          className="text-indigo-600 hover:underline"
-          onClick={() => setTimeLeft(600)}
-        >
-          Resend OTP
-        </button>
-      </p>
-    </OtpContainer>
+      <SocialLogin>
+        <p>Or continue with</p>
+        <SocialButton>
+          <FaGoogle size={20} />
+          Google
+        </SocialButton>
+        <SocialButton>
+          <FaGithub size={20} />
+          GitHub
+        </SocialButton>
+      </SocialLogin>
+    </LoginContainer>
   );
 };
 

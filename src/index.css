@@ -10,7 +10,9 @@
 body {
   overflow: hidden;
   overflow-y: auto;
+ 
 }
+
 
 .helpline-item {
   display: flex;
@@ -102,15 +104,101 @@ body {
 
 }
 
+@media (max-width: 480px) {
+  body {
+    
+    
+ 
+  
+  }
 
-overflow-y: auto;
+  .grid-center {
+    display: grid !important;
+    place-items: center !important;  /* Shortcut for align + justify */
+    text-align: center !important;
+    padding: 1rem !important;
+  }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-&::-webkit-scrollbar {
-  display: none;
+  /* Optional: make sure children stack in column */
+  .grid-center > * {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
 }
+  p, a {
+    font-size: 0.875rem !important; /* ~14px */
+    line-height: 1.5 !important;
+  }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-scrollbar-width: none; /* Firefox */
--ms-overflow-style: none;  /* IE and Edge */
+  h1 {
+    font-size: 1.25rem !important; /* ~20px */
+    font-weight: 700 !important;
+  }
 
+  h2 {
+    font-size: 1.125rem !important; /* ~18px */
+    font-weight: 600 !important;
+  }
+
+  h3 {
+    font-size: 1rem !important; /* ~16px */
+    font-weight: 600 !important;
+  }
+
+  h4, h5, h6 {
+    font-size: 0.875rem !important; /* ~14px */
+    font-weight: 500 !important;
+  }
+
+  a {
+    text-decoration: none !important;
+
+  }
+
+  a:hover {
+    color: #007bff !important;
+    text-decoration: underline !important;
+  }
+  .places-slider .slick-prev:before,
+  .places-slider .slick-next:before {
+    color: #0d6efd;
+    font-size: 24px;
+  }
+  
+  .places-slider .slick-dots li button:before {
+    font-size: 12px;
+  }
+  
+  .hover-scale {
+    transition: transform 0.3s ease;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+  
+  .hover-scale:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+  .place-image {
+    height: 250px;
+    object-fit: cover;
+    object-position: center;
+  }
+  
+  .modal {
+    background-color: rgba(0,0,0,0.5);
+  }
+  
+  .reviews-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  
+a:hover{
+  text-decoration: none !important;
+  color: #e7d8d8  !important; 
+} 
+  
+ 

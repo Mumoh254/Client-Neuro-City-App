@@ -5,9 +5,12 @@ import {
 } from 'react-bootstrap';
 import { 
   Recycle, Clock, CheckCircle, Trophy, 
-  Coin, Globe, Lightbulb, GraphUp, Person 
+  Coin, Globe, Lightbulb, Person 
 } from 'react-bootstrap-icons';
 import styled from 'styled-components';
+import axios from 'axios';
+
+import { getUserIdFromToken  , getUserNameFromToken} from '../handler/tokenDecoder';
 
 
 
@@ -23,53 +26,104 @@ const EcoCard = styled(Card)`
   }
 `;
 
-const PlasticRecyclingApp= ({ theme = 'light' }) => {
+const PlasticRecyclingApp = ({ theme = 'light' }) => {
+  const [userId, setUserId] = useState('');
+const [username, setUsername] = useState('');
+const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    const userData = getUserNameFromToken();
+    if (userData) {
+      console.log(userData);
+      setUserId(userData.id);  // Initialize userId from token
+      setUsername(userData.name);
+      setUserRole(userData.role);
+    }
+  }, []);
+
   const [submissions, setSubmissions] = useState([]);
   const [user, setUser] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitAmount, setSubmitAmount] = useState('');
+  const [carbonData, setCarbonData] = useState(null);
 
   useEffect(() => {
-    // Mock data - replace with actual API calls
-    const mockUser = {
-      username: "EcoWarrior22",
-      totalKg: 145,
-      points: 1450,
-      level: 2,
-      nextLevel: 200,
-      rank: 42,
-      impact: 34 // CO2 saved in kg
-    };
-
-    const mockSubmissions = [
-      { id: 1, amount: 15, status: 'approved', date: '2024-03-15' },
-      { id: 2, amount: 10, status: 'pending', date: '2024-03-18' },
-      { id: 3, amount: 20, status: 'approved', date: '2024-03-20' }
-    ];
-
-    setTimeout(() => {
-      setUser(mockUser);
-      setSubmissions(mockSubmissions);
-      setLoading(false);
-    }, 1500);
+    if ('Notification' in window) {
+      Notification.requestPermission();
+    }
   }, []);
 
-  const handleSubmit = () => {
-    if (submitAmount > 0) {
-      const newSubmission = {
-        id: Date.now(),
-        amount: parseInt(submitAmount),
-        status: 'pending',
-        date: new Date().toISOString()
-      };
-      setSubmissions([newSubmission, ...submissions]);
-      setShowSubmitModal(false);
-      setSubmitAmount('');
+  const sendNotification = (title, options) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, options);
+    }
+  };
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      // First get user data
+      const userRes = await axios.get('/apiV1/smartcity-ke/user'); 
+      const userId = "smart_ke_WT_234173524"; // Use actual user ID from response
+
+      // Then fetch user-specific data
+      const [submissionsRes, leaderboardRes, carbonRes] = await Promise.all([
+        axios.get(`http://localhost:8000/apiV1/smartcity-ke/submission-requests?userId=${userId}`),
+        axios.get('http://localhost:8000/apiV1/smartcity-ke/leaderboard'),
+        axios.get('http://localhost:8000/apiV1/smartcity-ke/analytics-carbon')
+      ]);
+
+      // Update state with responses
+      setUser(userRes.data);
+      setSubmissions(submissionsRes.data);
+      setLeaderboard(leaderboardRes.data);
+      setCarbonData(carbonRes.data);
+
+    } catch (error) {
+      console.error('Error:', error.response?.data || error.message);
+      // Add error state handling here
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return (
+  fetchData();
+}, []);
+  
+
+  const handleSubmit = async () => {
+    if (submitAmount > 0) {
+      try {
+        const response = await axios.post('/api/submissions', {
+          amount: parseFloat(submitAmount)
+        });
+
+        setSubmissions([response.data, ...submissions]);
+        setUser(prev => ({
+          ...prev,
+          totalKg: prev.totalKg + response.data.amount,
+          points: prev.points + Math.floor(response.data.amount * 10),
+          impact: prev.impact + response.data.co2Saved
+        }));
+
+        setShowSubmitModal(false);
+        setSubmitAmount('');
+
+        sendNotification('Submission Received', {
+          body: `${response.data.amount}kg submission recorded!`,
+          icon: '/logo.png'
+        });
+      } catch (error) {
+        console.error('Submission failed:', error);
+        sendNotification('Submission Error', {
+          body: 'Failed to submit recycling data'
+        });
+      }
+    }
+  };
+
+  if (loading || !user) return (
     <div className="d-flex justify-content-center mt-5">
       <Spinner animation="border" variant="success" />
     </div>
@@ -78,7 +132,6 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
   return (
     <div className="container-lg py-4">
       <Row className="g-4 mb-4">
-        {/* User Profile Header */}
         <Col xs={12}>
           <EcoCard theme={theme}>
             <Card.Body className="py-4">
@@ -87,7 +140,7 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
                   <Person size={32} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="mb-1">{user.username}</h2>
+                  <h2 className="mb-1">{username}</h2>
                   <div className="text-muted">Global Rank: #{user.rank}</div>
                 </div>
                 <div className="ms-auto d-flex gap-3">
@@ -105,12 +158,11 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
           </EcoCard>
         </Col>
 
-        {/* Stats Row */}
         <Col md={4}>
           <EcoCard theme={theme} className="h-100">
             <Card.Body>
               <h5 className="d-flex align-items-center gap-2 mb-3">
-                <EcoCard className="text-success" /> Environmental Impact
+                <Globe className="text-success" /> Environmental Impact
               </h5>
               <div className="text-center py-4">
                 <div className="display-4 text-success">{user.impact}</div>
@@ -132,16 +184,21 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
                 <Trophy className="text-warning" /> Leaderboard
               </h5>
               <ListGroup variant="flush">
-                {[1, 2, 3].map(rank => (
-                  <ListGroup.Item key={rank} className="d-flex justify-content-between">
-                    <div>
-                      <Badge bg="success" className="me-2">{rank}</Badge>
-                      User {rank}
-                    </div>
-                    <div>{200 - (rank * 50)}kg</div>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
+  {Array.isArray(leaderboard) && leaderboard.length > 0 ? (
+    leaderboard.map((entry, index) => (
+      <ListGroup.Item key={entry.id} className="d-flex justify-content-between">
+        <div>
+          <Badge bg="success" className="me-2">{index + 1}</Badge>
+          {entry.username}
+        </div>
+        <div>{entry.totalKg}kg</div>
+      </ListGroup.Item>
+    ))
+  ) : (
+    <p>No leaderboard data available</p>
+  )}
+</ListGroup>
+
               <Button variant="outline-success" size="sm" className="mt-3 w-100">
                 View Full Leaderboard
               </Button>
@@ -156,7 +213,7 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
                 <Coin className="text-info" /> Rewards
               </h5>
               <div className="text-center mb-4">
-                <div className="h2 text-warning">1450</div>
+                <div className="h2 text-warning">{user.points}</div>
                 <small className="text-muted">Available Points</small>
               </div>
               <div className="d-grid gap-2">
@@ -172,15 +229,13 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
         </Col>
       </Row>
 
-      {/* Submission Section */}
       <Row className="g-4">
         <Col md={8}>
           <EcoCard theme={theme}>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h4>
-                  <Recycle className="me-2" />
-                  Recycling Activity
+                  <Recycle className="me-2" /> Recycling Activity
                 </h4>
                 <Button 
                   variant="success"
@@ -189,29 +244,33 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
                   <CheckCircle className="me-2" /> New Submission
                 </Button>
               </div>
-
               <ListGroup variant="flush">
-                {submissions.map(sub => (
-                  <ListGroup.Item 
-                    key={sub.id} 
-                    className="d-flex justify-content-between align-items-center"
-                  >
-                    <div>
-                      <div className="fw-bold">{sub.amount}kg Submission</div>
-                      <small className="text-muted">
-                        <Clock className="me-1" />
-                        {new Date(sub.date).toLocaleDateString()}
-                      </small>
-                    </div>
-                    <Badge 
-                      bg={sub.status === 'approved' ? 'success' : 'warning'} 
-                      pill
-                    >
-                      {sub.status}
-                    </Badge>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
+  {submissions && Array.isArray(submissions) && submissions.length > 0 ? (
+    submissions.map(sub => (
+      <ListGroup.Item 
+        key={sub.id} 
+        className="d-flex justify-content-between align-items-center"
+      >
+        <div>
+          <div className="fw-bold">{sub.amount}kg Submission</div>
+          <small className="text-muted">
+            <Clock className="me-1" />
+            {new Date(sub.date).toLocaleDateString()}
+          </small>
+        </div>
+        <Badge 
+          bg={sub.status === 'approved' ? 'success' : 'warning'} 
+          pill
+        >
+          {sub.status}
+        </Badge>
+      </ListGroup.Item>
+    ))
+  ) : (
+    <p>No submissions available</p>
+  )}
+</ListGroup>
+
             </Card.Body>
           </EcoCard>
         </Col>
@@ -222,50 +281,41 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
               <h5 className="d-flex align-items-center gap-2 mb-3">
                 <Lightbulb className="text-info" /> Eco Tips
               </h5>
-              <div className="alert alert-success small">
+              <Alert variant="success" className="small">
                 ♻️ Rinse containers before recycling to avoid contamination
-              </div>
-              <div className="alert alert-info small">
-                🌍 You've recycled the equivalent of {Math.floor(user.totalKg/5)} 
-                shopping bags of plastic
-              </div>
-              <div className="alert alert-warning small">
+              </Alert>
+              <Alert variant="info" className="small">
+                🌍 You've recycled the equivalent of {Math.floor(user.totalKg / 5)} shopping bags
+              </Alert>
+              <Alert variant="warning" className="small">
                 ⚡ Earn double points for weekend submissions!
-              </div>
+              </Alert>
             </Card.Body>
           </EcoCard>
         </Col>
       </Row>
 
-      {/* Submission Modal */}
       <Modal show={showSubmitModal} onHide={() => setShowSubmitModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>
-            <Recycle className="me-2" /> New Recycling Submission
-          </Modal.Title>
+          <Modal.Title>Submit Recycled Plastics</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Amount (kilograms)</Form.Label>
-              <Form.Control 
-                type="number" 
-                value={submitAmount}
-                onChange={(e) => setSubmitAmount(e.target.value)}
-                placeholder="Enter plastic weight in kg"
-              />
-            </Form.Group>
-            <div className="alert alert-info small">
-              📸 Remember to take photos of your recycling for verification!
-            </div>
-          </Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Enter amount in kg</Form.Label>
+            <Form.Control 
+              type="number" 
+              min="0.1" 
+              value={submitAmount}
+              onChange={e => setSubmitAmount(e.target.value)} 
+            />
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowSubmitModal(false)}>
             Cancel
           </Button>
           <Button variant="success" onClick={handleSubmit}>
-            Submit Recycling
+            Submit
           </Button>
         </Modal.Footer>
       </Modal>
@@ -274,11 +324,3 @@ const PlasticRecyclingApp= ({ theme = 'light' }) => {
 };
 
 export default PlasticRecyclingApp;
-// export default function App() {
-//   return (
-//     <>
-//       <PlasticRecyclingApp />
-//       <style>{styles}</style>
-//     </>
-//   );
-// }

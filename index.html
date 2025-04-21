@@ -7,24 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- SEO: Title & Meta -->
-    <title>City Neuro App | Smart City Navigation & Access to Community Hub, Social Amenities, Fight Corruption</title>
+    <title>City Neuro App | Smart City Navigation & Access to Community Hub</title>
 
     <meta name="description" content="City Neuro is a smart city solution for real-time navigation, safety, and public health support, helping citizens move smarter and safer." />
     <meta name="keywords" content="City Neuro, smart city, public safety, navigation, city health, urban technology, real-time maps, citizen support" />
-    <meta name="author" content="Welt  Tallis Development Team" />
+    <meta name="author" content="Welt Tallis Development Team" />
     <meta name="robots" content="index, follow" />
-    
-    <!-- Performance: Preconnect DNS -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://api.tomtom.com" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
+    <!-- PWA: Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#ffffff" />
 
     <!-- Favicon & App Icons -->
     <link rel="icon" href="/images/logo.png" type="image/png" />
     <link rel="apple-touch-icon" href="/images/logo.png" />
 
-    <!-- Web App Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <!-- Performance: Preconnect DNS -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://api.tomtom.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
 
     <!-- TomTom Maps CSS -->
     <link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps.css" />
@@ -32,7 +33,7 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
-    <!-- Bootstrap CSS (deferred for performance) -->
+    <!-- Bootstrap CSS -->
     <link 
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" 
       rel="stylesheet" 
@@ -40,23 +41,29 @@
       crossorigin="anonymous"
     />
   </head>
+
   <body>
     <div id="root"></div>
 
     <!-- TomTom Maps JS -->
     <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps-web.min.js" defer></script>
 
-    <!-- React App Entry -->
+    <!-- React Entry (Vite or ES Module) -->
     <script type="module" src="/src/main.jsx" defer></script>
+
+    <!-- Fallback (Optional) -->
     <script src="main.js"></script>
-    <!-- Service Worker Registration -->
+
+    <!-- PWA Service Worker Registration -->
     <script>
+    
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker
-            .register('./serviceworker.js')
-            .then((reg) => console.log('Service Worker registered:', reg.scope))
-            .catch((err) => console.error('Service Worker registration failed:', err));
+            .register('/serviceworker.js')  // 🔥 FIXED: ensure path starts with /
+            .then(reg => console.log('✅ Service Worker registered with scope:', reg.scope))
+            .catch(err => console.error('❌ Service Worker registration failed:', err));
         });
       }
     </script>
