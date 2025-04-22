@@ -16,42 +16,44 @@ import styled from 'styled-components';
 // Import components
 import VerifyOtp from './authFolder/verifyOtp';
 import LandingPage from './pages/landPage';
-import ParkingForm from './parking/park';
-import GarbageManagementSystem from "./garbage/garbageSearch";
-import ReviewsSection from './reviews/comunittySuport';
-import PublicAmenities from './public/publicamenities';
-import LiveTrackingMap from './devices/liveTracking';
-import TomTomTrafficMap from './weatherAndTraffice/tomtomTrafic';
-import AnalyticsDashboard from "./painpoints/painpoints";
-import RegistrationAnalytics from "./userData/userRegistration";
-import WeatherNairobi from './weatherAndTraffice/weather';
-import StagesData from './public/stages';
-import PlasticRecyclingApp from './garbage/plastics';
+import ParkingForm from './components/parking/park';
+import GarbageManagementSystem from "./components/garbage/garbageSearch";
+import ReviewsSection from './components/reviews/comunittySuport';
+import PublicAmenities from './components/public/publicamenities';
+import LiveTrackingMap from './components/devices/liveTracking';
+import TomTomTrafficMap from './components/weatherAndTraffice/tomtomTrafic';
+import AnalyticsDashboard from "./components/painpoints/painpoints";
+import RegistrationAnalytics from "./admin/userData/userRegistration";
+import WeatherNairobi from './components/weatherAndTraffice/weather';
+import StagesData from './components/public/stages';
+import PlasticRecyclingApp from './components/garbage/plastics';
 import EmergencyServices from './pages/emergency';
 import Register from './authFolder/register';
 import Login from './authFolder/login';
-import TermsAndConditions from './authFolder/termsConditions';
-import ReportCorruption from "./painpoints/reportCorruption";
-import SoftwareFeedback from './software/softwareFeedback';
-import Favourites from './favourites/favourites';
-import CorruptionDashboard from "./painpoints/corruptAnalytics";
-import InstallCount from "./userData/downloadsCount";
-import NewsFeed from './newsFeed/news';
-import CreateNews from './newsFeed/createNews';
-import ServicesAnalyticsDashboard from "./userData/serviceRegisterAnalytics";
+import TermsAndConditions from './components/cooprate-info/cooperate/termsConditions';
+import ReportCorruption from "./components/painpoints/reportCorruption";
+import SoftwareFeedback from './components/software/softwareFeedback';
+import Favourites from './components/favourites/favourites';
+import CorruptionDashboard from "./components/painpoints/corruptAnalytics";
+import InstallCount from "./admin/userData/downloadsCount";
+import NewsFeed from './components/newsFeed/news';
+import CreateNews from './components/newsFeed/createNews';
+import ServicesAnalyticsDashboard from "./admin/userData/serviceRegisterAnalytics";
 import { useAuth } from './Context/authContext';
-import ProtectedRoute from './components/protected';
+import ProtectedRoute from './components/protected/protected';
 import AdminDashboard from './admin/admin';
-import CorporateAnalytics from "./cooperate/cooprateAnalytics";
-import CommunityHub from './reviews/comunittySuport';
-import CreateService from './reviews/createService';
-import ServicesList from './reviews/servicesList';
-import { PageWithBack } from './handler/goBack';
-import PlacesCarousel from './favourites/places';
-import CreateJob  from "./jobs/createJob"
-import JobsList from './jobs/joblist';
+import CorporateAnalytics from "./components/cooprate-info/cooperate/cooprateAnalytics";
+import CommunityHub from './components/reviews/comunittySuport';
+import CreateService from './components/reviews/createService';
+import ServicesList from './components/reviews/servicesList';
+import { PageWithBack } from './components/handler/goBack';
+import PlacesCarousel from './components/favourites/places';
+import CreateJob  from "./components/jobs/createJob"
+import JobsList from './components/jobs/joblist';
 import ReviewSection from './chats/chats';
-import { getUserNameFromToken } from './handler/tokenDecoder';
+import { getUserNameFromToken } from './components/handler/tokenDecoder';
+
+
 // Styled Components
 
 const settings = {
@@ -280,6 +282,19 @@ const Backdrop = styled.div`
 `;
 
 function App() {
+
+  // In your main App component
+useEffect(() => {
+  const handleAuthChange = () => {
+    // Your logic to check auth state
+    const token = localStorage.getItem('token');
+    setAuthenticated(!!token);
+  };
+
+  window.addEventListener('authStateChanged', handleAuthChange);
+  return () => window.removeEventListener('authStateChanged', handleAuthChange);
+}, []);
+
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
@@ -374,14 +389,14 @@ function App() {
             </NavLink>
           )}
 
-          <NavLink to="/parking" onClick={() => setIsMenuOpen(false)}>
+          <NavLink to="/smart-parking" onClick={() => setIsMenuOpen(false)}>
             <FiMapPin /> Parking
           </NavLink>
-          <NavLink to="/garbage" onClick={() => setIsMenuOpen(false)}>
+          <NavLink to="/zero-garbage" onClick={() => setIsMenuOpen(false)}>
             <FaTrashRestoreAlt /> Garbage
           </NavLink>
-          <NavLink to="/comunity-hub" onClick={() => setIsMenuOpen(false)}>
-            <PiUserSoundFill /> Community Hub
+          <NavLink to="/comunity-suport" onClick={() => setIsMenuOpen(false)}>
+            <PiUserSoundFill />E-Community 
           </NavLink>
           <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
             <FiMap /> Amenities
@@ -405,7 +420,11 @@ function App() {
             <GiMoonClaws /> Terms
           </NavLink>
           <NavLink to="/software-guide-feedback" className="button">
-            <FaCircleInfo size={24} /> Software Guide
+            <FaCircleInfo size={20} /> Software Guide
+          </NavLink>
+
+          <NavLink to="/register" className="button">
+            <FiUserPlus size={20} /> Register
           </NavLink>
 
           <button onClick={handleLogout} className="logout-button">
@@ -426,14 +445,14 @@ function App() {
           <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
 
 
-          <Route path="/places" element={<PlacesCarousel />} />
+          <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />
       
           <Route path="/community-suport" element={<CommunityHub />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/traffic" element={<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
-            <Route path="/parking" element={<PageWithBack title="Parking Management"><ParkingForm /></PageWithBack>} />
-            <Route path="/garbage" element={<PageWithBack title="Waste Management"><GarbageManagementSystem /></PageWithBack>} />
+            <Route path="/smart-parking" element={<PageWithBack title="Parking Management"><ParkingForm /></PageWithBack>} />
+            <Route path="/zero-garbage" element={<PageWithBack title="Waste Management"><GarbageManagementSystem /></PageWithBack>} />
             <Route path="/plastics-recycles" element={<PageWithBack title="Plastic Recycling"><PlasticRecyclingApp /></PageWithBack>} />
             <Route path="/comunity-suport" element={<PageWithBack title="Community Support"><ReviewsSection /></PageWithBack>} />
             <Route path="/amenities" element={<PageWithBack title="Public Amenities"><PublicAmenities /></PageWithBack>} />
@@ -442,12 +461,13 @@ function App() {
             <Route path="/services/create" element={<PageWithBack title="Create Service"><CreateService /></PageWithBack>} />
             <Route path="/services/list-view" element={<PageWithBack title="Services Directory"><ServicesList /></PageWithBack>} />
             <Route path="/emergency" element={<PageWithBack title="Emergency Services"><EmergencyServices /></PageWithBack>} />
-            <Route path="/city-news-feed" element={<PageWithBack title="News-Feed"><NewsFeed /></PageWithBack>} />
+            <Route path="/e-city-news-feed" element={<PageWithBack title="News-Feed"><NewsFeed /></PageWithBack>} />
 
-            <Route path="/jobs-list" element={<PageWithBack title="Job-Lists"><JobsList /></PageWithBack>} />
+            <Route path="/get-jobs-list" element={<PageWithBack title="Job-Lists"><JobsList /></PageWithBack>} />
             
             <Route path="/e-chats" element={<PageWithBack title="E-Chats"><ReviewSection /></PageWithBack>} />
-     
+            <Route path="/nairobi-stages-routes" element={<PageWithBack title="E-Chats"><StagesData /></PageWithBack>} />
+          
              <Route path="/create-jobs" element={<PageWithBack title="City News">< CreateJob /></PageWithBack>} />
             <Route path="/peoples/favourites" element={<PageWithBack title="Nairobi Favorites"><Favourites /></PageWithBack>} />
             <Route path="/live-tracking" element={<PageWithBack title="Live Tracking"><LiveTrackingMap /></PageWithBack>} />
@@ -472,6 +492,7 @@ function App() {
             <Route path="/cooprate-registartrion-analytics" element={<PageWithBack title="Registration Analytics"><RegistrationAnalytics /></PageWithBack>} />
             <Route path="/coorporate/services-registration-analytics" element={<PageWithBack title="Service Analytics"><ServicesAnalyticsDashboard /></PageWithBack>} />
           </Route>
+       
         </Routes>
 
         {user && (

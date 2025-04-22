@@ -121,11 +121,12 @@ const TimerText = styled.span`
 `;
 
 const VerifyOtp = () => {
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
   const navigate = useNavigate();
   const location = useLocation();
   const userEmail = location.state?.email;
 
-  const [otp, setOtp] = useState(['', '', '', '', '', '']); // Change to 6 digits
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600);
 
@@ -142,11 +143,9 @@ const VerifyOtp = () => {
   };
 
   useEffect(() => {
-    if (!userEmail) {
-      if (location.pathname !== '/verify-otp') {
-        showAlert('error', 'Please login first');
-        navigate('/login');
-      }
+    if (!userEmail && !localStorage.getItem('userEmail')) {
+      showAlert('error', 'Please login first');
+      navigate('/login');
     }
 
     const timer = setInterval(() => {
@@ -154,7 +153,7 @@ const VerifyOtp = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [navigate, location, userEmail]);
+  }, [navigate, userEmail]);
 
   const handleInputChange = (index, value) => {
     if (/^\d+$/.test(value) || value === '') {
@@ -176,6 +175,7 @@ const VerifyOtp = () => {
       setOtp(newOtp);
     }
   };
+
   const handleVerify = async () => {
     const otpCode = otp.join('');
 
@@ -192,28 +192,22 @@ const VerifyOtp = () => {
     setLoading(true);
 
     try {
-      // Retrieve the email from localStorage
       const userEmail = localStorage.getItem('userEmail');
-      
-      // Ensure the email is available in localStorage
-      if (!userEmail) {
-        throw new Error('User email not found in localStorage');
-      }
-    
-      // Send OTP and email for verification
-      const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/verify-otp', {
+      if (!userEmail) throw new Error('User email not found');
+
+      const response = await axios.post(`${BASE_URL}/verify-otp`, {
         email: userEmail,
         otp: otpCode,
       });
-    
-      // Clear email from localStorage
+
       localStorage.removeItem('userEmail');
-      
-      // Store token and user data in localStorage
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
-    
-      // Role-based redirection
+
+      // Update auth state before navigation
+      const event = new Event('authStateChanged');
+      window.dispatchEvent(event);
+
       switch(response.data.role.toLowerCase()) {
         case 'admin':
           navigate('/admin-dashboard');
@@ -222,20 +216,21 @@ const VerifyOtp = () => {
           navigate('/corporate-analytics');
           break;
         default:
-          navigate('/');
+          navigate('/peoples/favourites');
       }
-    
+
       showAlert('success', 'Login successful!');
     } catch (error) {
       showAlert('error', error.response?.data?.message || 'OTP verification failed');
     } finally {
       setLoading(false);
     }
-  }    
+  };
 
   const handleResendOtp = async () => {
     try {
-      await axios.post('http://localhost:8000/apiV1/smartcity-ke/resend-otp', { email: userEmail });
+      const email = userEmail || localStorage.getItem('userEmail');
+      await axios.post(`${BASE_URL}/resend-otp`, { email });
       setTimeLeft(600);
       setOtp(['', '', '', '', '', '']);
       showAlert('success', 'New OTP sent to your email!');
@@ -254,7 +249,7 @@ const VerifyOtp = () => {
     <OtpContainer>
       <OtpHeader>
         <h2>Verify OTP</h2>
-        <p>Enter the 6-digit code sent to <span>{userEmail}</span></p>
+        <p>Enter the 6-digit code sent to <span>{userEmail || localStorage.getItem('userEmail')}</span></p>
       </OtpHeader>
 
       <OtpInputs onPaste={handlePaste}>

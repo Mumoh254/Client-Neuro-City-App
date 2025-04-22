@@ -77,11 +77,14 @@ const ReviewSection = () => {
 
   const STICKERS = ['👍', '❤️', '🚀', '💡', '🎉', '👏'];
 
+
+  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:8000/apiV1/smartcity-ke/posts');
+        const response = await axios.get(`${BASE_URl}/posts`);
         setPosts(response.data || []);
       } catch (err) {
         setError('Failed to load posts');
@@ -104,7 +107,7 @@ const ReviewSection = () => {
         author: { name: "Current User" }
       };
 
-      const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/posts', newPost);
+      const response = await axios.post( `${BASE_URl}/posts`, newPost);
       setPosts([response.data, ...posts]);
       setFormData({ content: '', stickers: [] });
       setShowReviewForm(false);
@@ -126,7 +129,7 @@ const ReviewSection = () => {
         return post;
       });
       setPosts(updatedPosts);
-      await axios.patch(`http://localhost:8000/apiV1/smartcity-ke/posts/${postId}/like`, {
+      await axios.patch(`${BASE_URl}/${postId}/like`, {
         userId: "user123"
       });
     } catch (err) {
@@ -146,7 +149,7 @@ const ReviewSection = () => {
       };
 
       const response = await axios.post(
-        `http://localhost:8000/apiV1/smartcity-ke/posts/${postId}/comments`,
+        `${BASE_URl}/posts/${postId}/comments`,
         newComment
       );
 

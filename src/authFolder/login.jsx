@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate  , Link} from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import styled from 'styled-components';
 import { FaCity, FaEnvelope, FaLock, FaSpinner, FaGoogle, FaGithub } from 'react-icons/fa';
+
+
+const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
 const LoginContainer = styled.div`
   max-width: 440px;
@@ -61,7 +64,7 @@ const IconStyled = styled.span`
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: #6366f1;
   font-size: 1.1rem;
 `;
 
@@ -119,7 +122,7 @@ const SocialLogin = styled.div`
   text-align: center;
 
   p {
-    color: #64748b;
+    color: #6366f1;
     font-size: 0.9rem;
     margin-bottom: 1rem;
   }
@@ -128,7 +131,7 @@ const SocialLogin = styled.div`
 const SocialButton = styled.button`
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #6366f1;
   border-radius: 10px;
   background: white;
   display: flex;
@@ -140,8 +143,9 @@ const SocialButton = styled.button`
   margin-bottom: 0.75rem;
 
   &:hover {
-    border-color: #6366f1;
-    background: #f8fafc;
+    border-color:  #f8fafc ;
+   color: #f8fafc;
+    background: #6366f1;
   }
 `;
 
@@ -168,27 +172,27 @@ const Login = () => {
     setLoading(true);
   
     try {
-      const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/login', { 
+      const response = await axios.post(`${BASE_URl}/login`, { 
         Email, 
         Password 
       });
   
-      // Log the user data to see if the response contains user data
+  
       console.log(response.data.user);
   
       if (response && response.data.sucess && response.data.user) {
         // Successful login
-        // Store the email in localStorage
+      
         console.log(response.data.user.Email)
         localStorage.setItem('userEmail', Email);
         
-        // Log the email stored in localStorage to check
+   
         console.log('Stored user email in localStorage:', localStorage.getItem('userEmail'));
   
         showAlert('success', 'Login successful, your OTP has been sent to your email!');
         navigate('/verify-otp');
       } else {
-        // If user is not registered
+      
         showAlert('info', 'User not registered. Redirecting to the register page.');
         navigate('/register');
       }
@@ -204,8 +208,8 @@ const Login = () => {
     <LoginContainer>
       <LoginHeader>
         <FaCity size={32} color="#4f46e5" />
-        <h2>Welcome to SmartCity</h2>
-        <p>Access your city services account</p>
+        <h2>Welcome to Neuro-City-Apps </h2>
+        <p>Access The city From Your  Fingertips </p>
       </LoginHeader>
       
       <LoginForm onSubmit={handleSubmit}>
@@ -241,7 +245,12 @@ const Login = () => {
             'Sign In'
           )}
         </SubmitButton>
+
+        
+                 
       </LoginForm>
+
+      
 
       <SocialLogin>
         <p>Or continue with</p>
@@ -249,12 +258,25 @@ const Login = () => {
           <FaGoogle size={20} />
           Google
         </SocialButton>
-        <SocialButton>
-          <FaGithub size={20} />
-          GitHub
-        </SocialButton>
+      
       </SocialLogin>
+
+      <div>
+         <p className="text-center mt-4 text-sm text-gray-600">
+                      Dont  Have  An Account?{' '}
+                      <Link to="/register" className="text-indigo-600 hover:underline">
+                      Register Here !
+                    </Link>
+        </p>   <p className="text-center mt-4 text-sm text-gray-600">
+                      Forgot  your Password ?{' '}
+                      <Link to="/register" className="text-indigo-600 hover:underline">
+                      Request Password Reset  !
+                    </Link>
+        </p>
+    </div>
     </LoginContainer>
+
+   
   );
 };
 

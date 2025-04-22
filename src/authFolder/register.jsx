@@ -109,9 +109,7 @@ const validationSchema = Yup.object().shape({
   Email: Yup.string()
     .email('Invalid email address')
     .required('Email is required'),
-  NationalId: Yup.string()
-    .matches(/^[A-Z0-9]{8,12}$/, 'Invalid National ID format'),
-   
+ 
   Gender: Yup.string()
     .required('Gender is required')
     .oneOf(['MALE', 'FEMALE', 'OTHER'], 'Invalid gender selection'),
@@ -123,6 +121,9 @@ const validationSchema = Yup.object().shape({
     .required('Confirm Password is required')
 });
 
+const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+
+
 const Register = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
@@ -130,14 +131,13 @@ const Register = () => {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       setServerError('');
-      const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/register', {
+      const response = await axios.post(`${BASE_URl}/register`, {
         ...values,
-        // Convert gender to uppercase if needed
-        Gender: values.Gender,
-        NationalId: parseInt(values.NationalId, 10)
+
+        Gender: values.Gender
       });
       localStorage.setItem('token', response.data.token);
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       setServerError(error.response?.data?.message || 'Registration failed');
     }
@@ -156,7 +156,6 @@ const Register = () => {
           Name: '',
           PhoneNumber: '',
           Email: '',
-          NationalId: '',
           Gender: '',
           Password: '',
           ConfirmPassword: ''
@@ -187,13 +186,7 @@ const Register = () => {
               <ErrorMessage name="Email" component={ErrorText} />
             </FormGroup>
 
-            {/* National ID Field */}
-            <FormGroup>
-              <IconWrapper><FiCreditCard /></IconWrapper>
-              <InputField name="NationalId" type="text" placeholder="National ID" />
-              <ErrorMessage name="NationalId" component={ErrorText} />
-            </FormGroup>
-
+        
             {/* Gender Field */}
             <FormGroup>
               <IconWrapper><FiUserCheck /></IconWrapper>

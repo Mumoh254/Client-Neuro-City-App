@@ -224,14 +224,14 @@ const LandingPage = () => {
     { 
       icon: <FiCompass />, 
       title: "Smart Parking", 
-      to: "/parking",
+      to: "/smart-parking",
       bg: '#6366f1',
       bg2: '#8b5cf6'
     },
     { 
       icon: <FiRepeat />, 
       title: "Waste Management", 
-      to: "/garbage",
+      to: "/zero-garbage",
       bg: '#10b981',
       bg2: '#059669'
     },
@@ -300,12 +300,13 @@ const LandingPage = () => {
       into a green, modern hub that embraces the future through tech."
     </p>
 
-    <div style={{ marginTop: "0.4rem" }}>
+    <div>
       <strong>Powered by Welt Tallis Corporation</strong>
       <p>Where Creativity Meets Innovation</p>
       <p>Peter Mumo</p>
-      <p>+254 700 535 5</p>
-      <p><em>The Neuro-City-app  System V1.0.0.1 — Last Updated</em></p>
+      <p>call: 0104148448</p>
+      <p>Whats-App: 0740045355</p>
+      <p>The Neuro-City-app  System V1.0.0.1 — Last Updated April 22 2025 </p>
     </div>
   </GovernorContent>
 </GovernorSection>
