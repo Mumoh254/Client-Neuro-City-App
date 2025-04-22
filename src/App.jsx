@@ -283,17 +283,6 @@ const Backdrop = styled.div`
 
 function App() {
 
-  // In your main App component
-useEffect(() => {
-  const handleAuthChange = () => {
-    // Your logic to check auth state
-    const token = localStorage.getItem('token');
-    setAuthenticated(!!token);
-  };
-
-  window.addEventListener('authStateChanged', handleAuthChange);
-  return () => window.removeEventListener('authStateChanged', handleAuthChange);
-}, []);
 
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);

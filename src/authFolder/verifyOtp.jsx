@@ -203,7 +203,7 @@ const VerifyOtp = () => {
       localStorage.removeItem('userEmail');
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
-
+      window.location.reload();
       // Update auth state before navigation
       const event = new Event('authStateChanged');
       window.dispatchEvent(event);
