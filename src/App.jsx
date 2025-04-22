@@ -465,7 +465,7 @@ console.log("true")
             <Route path="/emergency" element={<PageWithBack title="Emergency Services"><EmergencyServices /></PageWithBack>} />
             <Route path="/e-city-news-feed" element={<PageWithBack title="News-Feed"><NewsFeed /></PageWithBack>} />
 
-            <Route path="/get-jobs-list" element={<PageWithBack title="Job-Lists"><JobsList /></PageWithBack>} />
+            <Route path="/jobs-list" element={<PageWithBack title="Job-Lists"><JobsList /></PageWithBack>} />
             
             <Route path="/e-chats" element={<PageWithBack title="E-Chats"><ReviewSection /></PageWithBack>} />
             <Route path="/nairobi-stages-routes" element={<PageWithBack title="E-Chats"><StagesData /></PageWithBack>} />
