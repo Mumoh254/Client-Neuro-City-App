@@ -4,7 +4,7 @@ import axios from 'axios';
 import styled from 'styled-components';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import  {   getUserNameFromToken}   from '../handler/tokenDecoder'
 // Dummy logged-in user
 const loggedInUser = {
   id: 'smart_ke_WT_318784939',
@@ -26,6 +26,17 @@ const calculateCost = (hours) => {
 };
 
 const ParkingSystem = () => {
+
+    const [username, setUsername] = useState('');
+        useEffect(() => {
+          const userData = getUserNameFromToken();
+          if (userData) {
+            console.log(userData);
+            setUsername(userData.name);
+          }
+        }, []);
+
+
   const [parkingDetails, setParkingDetails] = useState({
     registrationNumber: '',
     duration: 1,
@@ -107,7 +118,7 @@ const ParkingSystem = () => {
         <Logo>
           <FaCar /> PARK MY RIDE
         </Logo>
-        <UserInfo>{loggedInUser.name}</UserInfo>
+        <UserInfo>{username}</UserInfo>
       </Header>
 
       <WelcomeBanner>
