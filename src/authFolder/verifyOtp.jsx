@@ -124,7 +124,7 @@ const VerifyOtp = () => {
   const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
   const navigate = useNavigate();
   const location = useLocation();
-  const userEmail = location.state?.email;
+  const storedEmail = location.state?.email || localStorage.getItem('userEmail');
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -143,7 +143,7 @@ const VerifyOtp = () => {
   };
 
   useEffect(() => {
-    if (!userEmail && !localStorage.getItem('userEmail')) {
+    if (!storedEmail) {
       showAlert('error', 'Please login first');
       navigate('/login');
     }
@@ -153,32 +153,30 @@ const VerifyOtp = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [navigate, userEmail]);
+  }, [navigate, storedEmail]);
 
   const handleInputChange = (index, value) => {
-    if (/^\d+$/.test(value) || value === '') {
+    if (/^\d?$/.test(value)) {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
 
       if (value && index < 5) {
-        document.getElementById(`otp-${index + 1}`).focus();
+        const next = document.getElementById(`otp-${index + 1}`);
+        if (next) next.focus();
       }
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasteData = e.clipboardData.getData('text/plain').slice(0, 6);
-    if (/^\d+$/.test(pasteData)) {
-      const newOtp = pasteData.split('').slice(0, 6);
-      setOtp(newOtp);
-    }
+    const pasteData = e.clipboardData.getData('text').slice(0, 6).replace(/\D/g, '');
+    const newOtp = pasteData.split('').slice(0, 6);
+    if (newOtp.length === 6) setOtp(newOtp);
   };
 
   const handleVerify = async () => {
     const otpCode = otp.join('');
-
     if (otpCode.length !== 6) {
       showAlert('error', 'Please enter a valid 6-digit OTP');
       return;
@@ -192,34 +190,30 @@ const VerifyOtp = () => {
     setLoading(true);
 
     try {
-      const userEmail = localStorage.getItem('userEmail');
-      if (!userEmail) throw new Error('User email not found');
-
       const response = await axios.post(`${BASE_URL}/verify-otp`, {
-        email: userEmail,
+        email: storedEmail,
         otp: otpCode,
       });
 
       localStorage.removeItem('userEmail');
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
-      window.location.reload();
-      // Update auth state before navigation
+      localStorage.setItem('authVerified', 'true');
+
       const event = new Event('authStateChanged');
       window.dispatchEvent(event);
 
-      switch(response.data.role.toLowerCase()) {
-        case 'admin':
+      setTimeout(() => {
+        const role = response.data.role.toLowerCase();
+        if (role === 'admin') {
           navigate('/admin-dashboard');
-          break;
-        case 'corporate':
+        } else if (role === 'corporate') {
           navigate('/corporate-analytics');
-          break;
-        default:
+        } else {
           navigate('/peoples/favourites');
-      }
+        }
+      }, 100);
 
-      showAlert('success', 'Login successful!');
     } catch (error) {
       showAlert('error', error.response?.data?.message || 'OTP verification failed');
     } finally {
@@ -229,8 +223,7 @@ const VerifyOtp = () => {
 
   const handleResendOtp = async () => {
     try {
-      const email = userEmail || localStorage.getItem('userEmail');
-      await axios.post(`${BASE_URL}/resend-otp`, { email });
+      await axios.post(`${BASE_URL}/resend-otp`, { email: storedEmail });
       setTimeLeft(600);
       setOtp(['', '', '', '', '', '']);
       showAlert('success', 'New OTP sent to your email!');
@@ -249,7 +242,7 @@ const VerifyOtp = () => {
     <OtpContainer>
       <OtpHeader>
         <h2>Verify OTP</h2>
-        <p>Enter the 6-digit code sent to <span>{userEmail || localStorage.getItem('userEmail')}</span></p>
+        <p>Enter the 6-digit code sent to <span>{storedEmail}</span></p>
       </OtpHeader>
 
       <OtpInputs onPaste={handlePaste}>
@@ -267,20 +260,13 @@ const VerifyOtp = () => {
       </OtpInputs>
 
       <VerifyButton onClick={handleVerify} disabled={loading}>
-        {loading ? (
-          <ClockLoader size={20} color="#fff" />
-        ) : (
-          'Verify OTP'
-        )}
+        {loading ? <ClockLoader size={20} color="#fff" /> : 'Verify OTP'}
       </VerifyButton>
 
       <div className="text-center mt-4">
         <TimerText>Code expires in: {formatTime(timeLeft)}</TimerText>
         <div className="mt-2">
-          <ResendLink
-            onClick={handleResendOtp}
-            disabled={timeLeft > 0}
-          >
+          <ResendLink onClick={handleResendOtp} disabled={timeLeft > 0}>
             Resend OTP {timeLeft > 0 && `(in ${formatTime(timeLeft)})`}
           </ResendLink>
         </div>

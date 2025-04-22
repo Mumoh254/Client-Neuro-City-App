@@ -283,6 +283,19 @@ const Backdrop = styled.div`
 
 function App() {
 
+const Navigate  =  useNavigate()
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem('token')
+  );
+console.log("true")
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+
+    window.addEventListener('authStateChanged', handleAuthChange);
+    return () => window.removeEventListener('authStateChanged', handleAuthChange);
+  }, []);
 
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -439,7 +452,7 @@ function App() {
           <Route path="/community-suport" element={<CommunityHub />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/traffic" element={<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
+            <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
             <Route path="/smart-parking" element={<PageWithBack title="Parking Management"><ParkingForm /></PageWithBack>} />
             <Route path="/zero-garbage" element={<PageWithBack title="Waste Management"><GarbageManagementSystem /></PageWithBack>} />
             <Route path="/plastics-recycles" element={<PageWithBack title="Plastic Recycling"><PlasticRecyclingApp /></PageWithBack>} />
@@ -458,7 +471,21 @@ function App() {
             <Route path="/nairobi-stages-routes" element={<PageWithBack title="E-Chats"><StagesData /></PageWithBack>} />
           
              <Route path="/create-jobs" element={<PageWithBack title="City News">< CreateJob /></PageWithBack>} />
-            <Route path="/peoples/favourites" element={<PageWithBack title="Nairobi Favorites"><Favourites /></PageWithBack>} />
+
+            <Route path="" element={<PageWithBack title="Nairobi Favorites"><Favourites /></PageWithBack>} />
+            <Route
+  path="/peoples/favourites"
+  element={
+    isAuthenticated ? (
+      <PageWithBack title="Fvaourites">
+        <Favourites />
+      </PageWithBack>
+    ) : (
+      <Navigate to="/login" />
+    )
+  }
+/>
+
             <Route path="/live-tracking" element={<PageWithBack title="Live Tracking"><LiveTrackingMap /></PageWithBack>} />
             <Route path="/community-painpoints-analysis" element={<PageWithBack title="Community Analytics"><AnalyticsDashboard /></PageWithBack>} />
             <Route path="/register-device" element={<PageWithBack title="Device Registration"><LiveTrackingMap /></PageWithBack>} />
