@@ -146,6 +146,7 @@ const VerifyOtp = () => {
     if (!storedEmail) {
       showAlert('error', 'Please login first');
       navigate('/login');
+      return; // prevent further logic if no email
     }
 
     const timer = setInterval(() => {
@@ -214,6 +215,7 @@ const VerifyOtp = () => {
         }
       }, 100);
 
+      
     } catch (error) {
       showAlert('error', error.response?.data?.message || 'OTP verification failed');
     } finally {
