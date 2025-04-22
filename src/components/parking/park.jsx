@@ -122,7 +122,7 @@ const ParkingSystem = () => {
       </Header>
 
       <WelcomeBanner>
-        <h1>Welcome, {loggedInUser.name}</h1>
+        <h1>Welcome, {username}</h1>
         <p>Start your parking session by entering your car details below.</p>
       </WelcomeBanner>
 
