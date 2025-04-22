@@ -27,19 +27,11 @@ const EcoCard = styled(Card)`
 `;
 
 const PlasticRecyclingApp = ({ theme = 'light' }) => {
-  const [userId, setUserId] = useState('');
+
 const [username, setUsername] = useState('');
 const [userRole, setUserRole] = useState('');
 
-  useEffect(() => {
-    const userData = getUserNameFromToken();
-    if (userData) {
-      console.log(userData);
-      setUserId(userData.id);  // Initialize userId from token
-      setUsername(userData.name);
-      setUserRole(userData.role);
-    }
-  }, []);
+
 
   const [submissions, setSubmissions] = useState([]);
   const [user, setUser] = useState(null);
@@ -60,12 +52,21 @@ const [userRole, setUserRole] = useState('');
       new Notification(title, options);
     }
   };
+
+    const [userId, setUserId] = useState(null);
+  
+    useEffect(() => {
+      const userId = getUserIdFromToken();
+      console.log('User ID:', userId);
+      setUserId(userId); 
+    }, []);
+   
 useEffect(() => {
   const fetchData = async () => {
     try {
       // First get user data
       const userRes = await axios.get('/apiV1/smartcity-ke/user'); 
-      const userId = "smart_ke_WT_234173524"; // Use actual user ID from response
+      const userId =  userId ; // Use actual user ID from response
 
       // Then fetch user-specific data
       const [submissionsRes, leaderboardRes, carbonRes] = await Promise.all([
