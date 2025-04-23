@@ -12,7 +12,7 @@ import { FaCircleInfo } from "react-icons/fa6";
 import { GiMoonClaws } from "react-icons/gi";
 import { SiGoogleanalytics } from "react-icons/si";
 import styled from 'styled-components';
-
+import { IoLogoDesignernews } from "react-icons/io5";
 // Import components
 import VerifyOtp from './authFolder/verifyOtp';
 import LandingPage from './pages/landPage';
@@ -52,8 +52,7 @@ import CreateJob  from "./components/jobs/createJob"
 import JobsList from './components/jobs/joblist';
 import ReviewSection from './chats/chats';
 import { getUserNameFromToken } from './components/handler/tokenDecoder';
-
-
+import Gems from './components/foods-gems/gems';
 // Styled Components
 
 const settings = {
@@ -421,9 +420,22 @@ console.log("true")
           <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
             <GiMoonClaws /> Terms
           </NavLink>
+
+
           <NavLink to="/software-guide-feedback" className="button">
             <FaCircleInfo size={20} /> Software Guide
           </NavLink>
+
+
+             
+          <NavLink to="/gems" className="button">
+            <FaCircleInfo size={20} /> gems
+          </NavLink>
+
+            <NavLink to="/software-guide-feedback" className="button">
+            <FaCircleInfo size={20} /> Software Guide
+          </NavLink>
+          
 
           <NavLink to="/register" className="button">
             <FiUserPlus size={20} /> Register
@@ -443,8 +455,11 @@ console.log("true")
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/must-visit-places" element={<PlacesCarousel />} />
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
+          <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
+
 
 
           <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />
@@ -471,8 +486,10 @@ console.log("true")
             <Route path="/nairobi-stages-routes" element={<PageWithBack title="E-Chats"><StagesData /></PageWithBack>} />
           
              <Route path="/create-jobs" element={<PageWithBack title="City News">< CreateJob /></PageWithBack>} />
-
-            <Route path="" element={<PageWithBack title="Nairobi Favorites"><Favourites /></PageWithBack>} />
+       
+            <Route path="/city-news-feed" element={<PageWithBack title="City News"><NewsFeed /></PageWithBack>} />
+          
+        
             <Route
   path="/peoples/favourites"
   element={

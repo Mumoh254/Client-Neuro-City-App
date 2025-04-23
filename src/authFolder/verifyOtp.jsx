@@ -206,7 +206,7 @@ const VerifyOtp = () => {
 
       setTimeout(() => {
         const role = response.data.role.toLowerCase();
-        if (role === 'admin') {
+        if (role === 'ADMIN') {
           navigate('/admin-dashboard');
         } else if (role === 'corporate') {
           navigate('/corporate-analytics');
@@ -215,7 +215,7 @@ const VerifyOtp = () => {
         }
       }, 100);
 
-      
+
     } catch (error) {
       showAlert('error', error.response?.data?.message || 'OTP verification failed');
     } finally {

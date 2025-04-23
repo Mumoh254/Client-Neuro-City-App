@@ -1,69 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Form, Button, Spinner, Alert,
-  Badge, Modal, ListGroup
+  Badge, Modal, ListGroup , Container
 } from 'react-bootstrap';
 import {
   FaComment, FaThumbsUp, FaPaperPlane, FaUser,
   FaCalendarAlt, FaPen
 } from 'react-icons/fa';
+
+import { 
+ 
+  FaRegThumbsUp, FaPlus, FaTimes
+} from 'react-icons/fa';
 import axios from 'axios';
 import styled from 'styled-components';
+import { getUserIdFromToken } from '../components/handler/tokenDecoder';
+import { getUserNameFromToken } from '../components/handler/tokenDecoder';
 
 const HubContainer = styled.div`
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: 100vh;
   padding-bottom: 120px;
 `;
 
 const PostBubble = styled.div`
-  background: ${props => props.$even ? '#DCF8C6' : '#FFFFFF'};
-  border-radius: 15px;
-  padding: 15px;
-  margin: 10px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  position: relative;
+  background: ${props => props.$even ? '#ffffff' : '#f8f9fa'};
+  border-radius: 20px;
+  padding: 2rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0,0,0,0.05);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
 `;
 
 const CommentBubble = styled.div`
   background: #f0f2f5;
   border-radius: 15px;
-  padding: 10px;
-  margin: 5px 0 5px 20px;
-  font-size: 0.9em;
+  padding: 1.25rem;
+  margin: 0.75rem 0 0.75rem 2rem;
+  font-size: 0.95em;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 1rem;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 10px solid #f0f2f5;
+  }
 `;
 
 const StickyReviewForm = styled.div`
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
   background: white;
-  padding: 20px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   z-index: 1000;
 `;
 
 const UserAvatar = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: #3498db;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 1.25rem;
 `;
 
-const ContentWrapper = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
+const ContentWrapper = styled(Container)`
+  max-width: 1200px;
+  padding: 2rem 1rem;
 `;
 
 const ReviewSection = () => {
   const [posts, setPosts] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -80,21 +110,45 @@ const ReviewSection = () => {
 
   const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${BASE_URl}/posts`);
-        setPosts(response.data || []);
-      } catch (err) {
-        setError('Failed to load posts');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPosts();
-  }, []);
 
+
+  
+      const [userId, setUserId] = useState(null);
+    
+      useEffect(() => {
+        const userId = getUserIdFromToken();
+        console.log('User ID:', userId);
+        setUserId(userId); 
+      }, []);
+
+      console.log(userId)
+
+      useEffect(() => {
+        const fetchPosts = async () => {
+          try {
+            setLoading(true);
+      
+            const { data } = await axios.get(`${BASE_URl}/posts`);
+            // Normalize: ensure an `id` field on each post
+            const normalized = (data || []).map(p => ({
+              ...p,
+              id: p.id ?? p._id   // Prisma/SQL uses `id`, Mongo often uses `_id`
+            }));
+      
+            setPosts(normalized);
+            console.log('Normalized posts:', normalized);
+      
+          } catch (err) {
+            console.error(err);
+            setError('Failed to load posts');
+          } finally {
+            setLoading(false);
+          }
+        };
+      
+        fetchPosts();
+      }, []);
+      
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -104,167 +158,184 @@ const ReviewSection = () => {
         likes: [],
         comments: [],
         createdAt: new Date().toISOString(),
-        author: { name: "Current User" }
+        authorId: userId 
       };
-
+console.log(newPost)
       const response = await axios.post( `${BASE_URl}/posts`, newPost);
+      console.log(newPost)
       setPosts([response.data, ...posts]);
       setFormData({ content: '', stickers: [] });
       setShowReviewForm(false);
       setSuccess('Review posted!');
     } catch (err) {
       setError('Failed to post review');
+      console.log(err)
     }
   };
-
   const handleLike = async (postId) => {
     try {
+      // Step 1: Optimistically update the UI
       const updatedPosts = posts.map(post => {
         if (post._id === postId) {
-          const likes = post.likes.includes("user123") 
-            ? post.likes.filter(id => id !== "user123")
-            : [...post.likes, "user123"];
+          const likes = post.likes.includes(userId)
+            ? post.likes.filter(id => id !== userId) // Unlike if already liked
+            : [...post.likes, userId]; // Add like if not already liked
           return { ...post, likes };
         }
         return post;
       });
-      setPosts(updatedPosts);
-      await axios.patch(`${BASE_URl}/${postId}/like`, {
-        userId: "user123"
+  
+      setPosts(updatedPosts); 
+  
+
+      const response = await axios.put(`${BASE_URl}/${postId}/like`, {
+        userId: userId
       });
+  
+     
+      const updatedPost = response.data;  
+  
+    
+      setPosts(posts.map(post => 
+        post._id === postId ? updatedPost : post
+      ));
+  
+
+      if (updatedPost.likes.includes(userId)) {
+        alert("You liked this post!");
+      } else {
+        alert("You unliked this post!");
+      }
     } catch (err) {
+
+      setPosts(posts);  
+      
+
       setError('Failed to update like');
     }
   };
+  
+  
 
   const handleCommentSubmit = async (postId) => {
+    const BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+    
     const content = commentTexts[postId];
     if (!content?.trim()) return;
-
+  
     try {
       const newComment = {
-        content,
-        author: { name: "Current User" },
+        content,              
+        userId: userId,    
         createdAt: new Date().toISOString()
       };
-
-      const response = await axios.post(
-        `${BASE_URl}/posts/${postId}/comments`,
-        newComment
-      );
-
+      
+      console.log(newComment); 
+      
+      const response = await axios.post(`${BASE_URl}/${postId}/comments`, newComment);
+      
       setPosts(posts.map(post => 
         post._id === postId 
           ? { ...post, comments: [...post.comments, response.data] }
           : post
       ));
+      
       setCommentTexts({ ...commentTexts, [postId]: '' });
       setSuccess('Comment posted successfully!');
     } catch (err) {
+      console.log(err);
       setError('Failed to post comment');
     }
   };
 
   const PostCard = ({ post, index }) => (
     <PostBubble $even={index % 2 === 0}>
-      <div className="d-flex align-items-center mb-2">
-        <UserAvatar>
-          {post.author?.name?.[0] || <FaUser />}
-        </UserAvatar>
-        <div className="ms-3">
-          <h5 className="mb-0">{post.author?.name || 'Anonymous'}</h5>
-          <small className="text-muted">
-            {new Date(post.createdAt).toLocaleDateString()}
-          </small>
+      <div className="d-flex align-items-start gap-3 mb-3">
+        <UserAvatar>{post.author?.Name[0] || 'A'}</UserAvatar>
+        <div className="flex-grow-1">
+          <div className="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 className="mb-0 fw-semibold text-primary">{post.author?.Name}</h5>
+              <small className="text-muted">
+                {new Date(post.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </small>
+            </div>
+            <Badge bg="light" text="primary" className="fs-6">
+              {post.role}
+            </Badge>
+          </div>
+          <p className="mt-3 mb-4 fs-5 text-dark">{post.content}</p>
+          
+          <div className="d-flex gap-3 align-items-center">
+            <Button 
+              variant="outline-primary" 
+              className="d-flex align-items-center gap-2"
+              onClick={() => handleLike(post.id)}
+            >
+              {post.likes?.includes(userId) ? <FaThumbsUp /> : <FaRegThumbsUp />}
+              <span>{post.likes?.length || 0}</span>
+            </Button>
+
+            <Button 
+              variant="outline-secondary" 
+              className="d-flex align-items-center gap-2"
+              onClick={() => setShowComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+            >
+              <FaComment />
+              <span>{post.comments?.length || 0}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <p className="mb-2">{post.content}</p>
-
-      {post.stickers?.length > 0 && (
-        <div className="stickers mb-2">
-          {post.stickers.map((sticker, i) => (
-            <span key={i} className="me-2">{sticker}</span>
-          ))}
-        </div>
-      )}
-
-      <div className="d-flex align-items-center justify-content-between">
-        <div className="d-flex gap-2">
-          <Button 
-            variant="link" 
-            className="p-0"
-            onClick={() => handleLike(post._id)}
-          >
-            <FaThumbsUp style={{ color: post.likes?.includes("user123") ? '#3498db' : '#6c757d' }} /> 
-            {post.likes?.length || 0}
-          </Button>
-          <Button 
-            variant="link" 
-            className="p-0"
-            onClick={() => setShowComments(prev => ({
-              ...prev,
-              [post._id]: !prev[post._id]
-            }))}
-          >
-            {showComments[post._id] ? 'Hide Comments' : 'Show Comments'} ({post.comments?.length || 0})
-          </Button>
-        </div>
-      </div>
-
-      {showComments[post._id] && (
-        <>
-          <div className="comments mt-3">
-            {post.comments?.length > 0 ? (
-              post.comments.map(comment => (
-                <CommentBubble key={comment._id}>
-                  <div className="d-flex align-items-center mb-1">
-                    <small className="fw-bold me-2">{comment.author?.name}</small>
+      {showComments[post.id] && (
+        <div className="mt-4">
+          <h6 className="mb-3 fw-semibold text-muted">Community Perspectives</h6>
+          <div className="comments">
+            {post.comments?.map((comment, index) => (
+              <CommentBubble key={index}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <UserAvatar style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>
+                    {comment.author?.Name[0]}
+                  </UserAvatar>
+                  <div>
+                    <h6 className="mb-0 fw-semibold">{comment.author?.Name}</h6>
                     <small className="text-muted">
                       {new Date(comment.createdAt).toLocaleDateString()}
                     </small>
                   </div>
-                  <p className="mb-0">{comment.content}</p>
-                </CommentBubble>
-              ))
-            ) : (
-              <small className="text-muted">No comments yet.</small>
-            )}
+                </div>
+                <p className="mb-0">{comment.content}</p>
+              </CommentBubble>
+            ))}
           </div>
 
-          <div className="comment-input mt-3">
+          <div className="mt-4 d-flex gap-2">
             <Form.Control
               as="textarea"
               rows={2}
-              value={commentTexts[post._id] || ''}
+              value={commentTexts[post.id] || ''}
               onChange={(e) => setCommentTexts(prev => ({
                 ...prev,
-                [post._id]: e.target.value
+                [post.id]: e.target.value
               }))}
-              placeholder="Write a comment..."
-              className="mb-2"
+              placeholder="Add your perspective..."
+              className="flex-grow-1"
+              style={{ borderRadius: '15px' }}
             />
-            <div className="d-flex justify-content-end gap-2">
-              <Button 
-                variant="outline-secondary" 
-                size="sm"
-                onClick={() => setShowComments(prev => ({
-                  ...prev,
-                  [post._id]: false
-                }))}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="primary" 
-                size="sm"
-                onClick={() => handleCommentSubmit(post._id)}
-              >
-                Post Comment
-              </Button>
-            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => handleCommentSubmit(post.id)}
+              style={{ borderRadius: '15px', padding: '0.5rem 1.5rem' }}
+            >
+              Post
+            </Button>
           </div>
-        </>
+        </div>
       )}
     </PostBubble>
   );
@@ -272,79 +343,85 @@ const ReviewSection = () => {
   return (
     <HubContainer>
       <ContentWrapper>
-        {error && <Alert variant="danger" dismissible>{error}</Alert>}
-        {success && <Alert variant="success" dismissible>{success}</Alert>}
+        {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
+        {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
-        <div className="mb-4 d-flex justify-content-between align-items-center">
-          <h2>Community Reviews</h2>
+        <div className="d-flex justify-content-between align-items-center mb-5 p-4 bg-white rounded-3 shadow-sm">
+          <div>
+            <h1 className="display-5 fw-bold mb-2 text-primary">Free Speech & The E-Chats</h1>
+            <p className="lead text-muted mb-0">Community-Driven Urban Solutions</p>
+          </div>
           <Button 
             variant="primary" 
             onClick={() => setShowReviewForm(true)}
+            className="d-flex align-items-center gap-2 py-2 px-4 rounded-pill"
           >
-            <FaPen className="me-2" /> Write Review
+            <FaPen className="fs-5" />
+            <span className="d-none d-md-inline">Start Discussion</span>
           </Button>
         </div>
 
         {posts.map((post, index) => (
-          <PostCard key={post._id} post={post} index={index} />
+          <PostCard key={post.id} post={post} index={index} />
         ))}
 
         {showReviewForm && (
           <StickyReviewForm>
-            <Card>
-              <Card.Body>
-                <Form onSubmit={handleReviewSubmit}>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={formData.content}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      content: e.target.value
-                    }))}
-                    placeholder="Share your experience..."
-                    className="mb-2"
-                  />
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="d-flex gap-2 flex-wrap">
-                      {STICKERS.map((sticker, i) => (
-                        <Button
-                          key={i}
-                          variant="outline-secondary"
-                          className="p-1"
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            stickers: [...prev.stickers, sticker]
-                          }))}
-                        >
-                          {sticker}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="d-flex gap-2">
+            <div className="position-relative">
+              <Button 
+                variant="link" 
+                onClick={() => setShowReviewForm(false)}
+                className="position-absolute top-0 end-0 p-2"
+              >
+                <FaTimes className="fs-5 text-secondary" />
+              </Button>
+              
+              <h5 className="mb-4 fw-semibold text-primary">New Civic Discussion</h5>
+              <Form onSubmit={handleReviewSubmit}>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  value={formData.content}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Share your urban innovation idea or civic concern..."
+                  className="mb-3 border-0 shadow-sm rounded-3 p-3"
+                  style={{ minHeight: '120px' }}
+                />
+                
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="d-flex gap-2 flex-wrap">
+                    {STICKERS.map((sticker, i) => (
                       <Button
-                        variant="outline-danger"
-                        onClick={() => {
-                          setShowReviewForm(false);
-                          setFormData({ content: '', stickers: [] });
-                        }}
+                        key={i}
+                        variant="outline-primary"
+                        className="rounded-circle p-2"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          stickers: [...prev.stickers, sticker]
+                        }))}
                       >
-                        Cancel
+                        {sticker}
                       </Button>
-                      <Button type="submit" variant="primary">
-                        <FaPaperPlane /> Post
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                </Form>
-              </Card.Body>
-            </Card>
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    className="rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+                  >
+                    <FaPaperPlane className="fs-5" />
+                    Publish Idea
+                  </Button>
+                </div>
+              </Form>
+            </div>
           </StickyReviewForm>
         )}
 
         {loading && (
-          <div className="text-center p-5">
-            <Spinner animation="border" variant="primary" />
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" className="me-2" />
+            <span className="text-muted">Loading Community Insights...</span>
           </div>
         )}
       </ContentWrapper>

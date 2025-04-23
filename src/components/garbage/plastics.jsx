@@ -31,7 +31,7 @@ const PlasticRecyclingApp = ({ theme = 'light' }) => {
 const [username, setUsername] = useState('');
 const [userRole, setUserRole] = useState('');
 
-
+const   BASE_URL  =  'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke'
 
   const [submissions, setSubmissions] = useState([]);
   const [user, setUser] = useState(null);
@@ -66,20 +66,22 @@ useEffect(() => {
     try {
       // First get user data
       const userRes = await axios.get('/apiV1/smartcity-ke/user'); 
-      const userId =  userId ; // Use actual user ID from response
+      const userId2 =  userId; // Use actual user ID from response
 
       // Then fetch user-specific data
       const [submissionsRes, leaderboardRes, carbonRes] = await Promise.all([
-        axios.get(`http://localhost:8000/apiV1/smartcity-ke/submission-requests?userId=${userId}`),
-        axios.get('http://localhost:8000/apiV1/smartcity-ke/leaderboard'),
-        axios.get('http://localhost:8000/apiV1/smartcity-ke/analytics-carbon')
+        axios.get(`${BASE_URL}/submission-requests?userId=${userId}`),
+        axios.get(`${BASE_URL}/leaderboard`),
+        axios.get(`${BASE_URL}/analytics-carbon`),
       ]);
 
       // Update state with responses
       setUser(userRes.data);
       setSubmissions(submissionsRes.data);
       setLeaderboard(leaderboardRes.data);
-      setCarbonData(carbonRes.data);
+      setCarbonData(leaderboardRes.data);
+
+      console.log(carbonRes.data)
 
     } catch (error) {
       console.error('Error:', error.response?.data || error.message);
@@ -92,37 +94,38 @@ useEffect(() => {
   fetchData();
 }, []);
   
+const handleSubmit = async () => {
+  if (submitAmount > 0) {
+    try {
+      const response = await axios.post(`${BASE_URL}/submission`, {
+        userId: userId, // or user.id depending on your setup
+        amount: parseFloat(submitAmount),
+      });
 
-  const handleSubmit = async () => {
-    if (submitAmount > 0) {
-      try {
-        const response = await axios.post('/api/submissions', {
-          amount: parseFloat(submitAmount)
-        });
+      setSubmissions([response.data, ...submissions]);
+      setUser(prev => ({
+        ...prev,
+        totalKg: prev.totalKg + response.data.amount,
+        points: prev.points + Math.floor(response.data.amount * 10),
+        impact: prev.impact + response.data.co2Saved
+      }));
 
-        setSubmissions([response.data, ...submissions]);
-        setUser(prev => ({
-          ...prev,
-          totalKg: prev.totalKg + response.data.amount,
-          points: prev.points + Math.floor(response.data.amount * 10),
-          impact: prev.impact + response.data.co2Saved
-        }));
+      setShowSubmitModal(false);
+      setSubmitAmount('');
 
-        setShowSubmitModal(false);
-        setSubmitAmount('');
-
-        sendNotification('Submission Received', {
-          body: `${response.data.amount}kg submission recorded!`,
-          icon: '/logo.png'
-        });
-      } catch (error) {
-        console.error('Submission failed:', error);
-        sendNotification('Submission Error', {
-          body: 'Failed to submit recycling data'
-        });
-      }
+      sendNotification('Submission Received', {
+        body: `${response.data.amount}kg submission recorded!`,
+        icon: '/logo.png'
+      });
+    } catch (error) {
+      console.error('Submission failed:', error);
+      sendNotification('Submission Error', {
+        body: 'Failed to submit recycling data'
+      });
     }
-  };
+  }
+};
+
 
   if (loading || !user) return (
     <div className="d-flex justify-content-center mt-5">
