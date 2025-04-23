@@ -399,6 +399,12 @@ console.log("true")
           <NavLink to="/comunity-suport" onClick={() => setIsMenuOpen(false)}>
             <PiUserSoundFill />E-Community 
           </NavLink>
+
+          <NavLink to="/e-city-news-feed" onClick={() => setIsMenuOpen(false)}>
+            <IoLogoDesignernews   />News & Updates
+          </NavLink>
+
+     
           <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
             <FiMap /> Amenities
           </NavLink>

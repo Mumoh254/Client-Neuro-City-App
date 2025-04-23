@@ -14,7 +14,7 @@ Chart.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEleme
 
 // Styled Components
 const Container = styled.div`
-  padding: 2rem;
+  padding: 1rem;
 `;
 
 const AnalyticsContainer = styled.div`
@@ -66,56 +66,81 @@ const ActionButton = styled.button`
 `;
 
 const NewsFeed = () => {
-
-  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+  const SOCKET_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com";
 
   const [news, setNews] = useState([]);
   const [engagements, setEngagements] = useState([]);
   const [analytics, setAnalytics] = useState({});
-  const [socket] = useState(() => io(`${BASE_URl}:5000`));
-
+  const [loading, setLoading] = useState(true);
+  const socket = io(SOCKET_URL);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [newsRes, engagementsRes, analyticsRes] = await Promise.all([
-          axios.get(`{BASE_URL/get-news`),
-          axios.get(`${BASE_URl}/engagements`),
-          axios.get(`${BASE_URl}/api/analytics`)
+        const newsRes = await axios.get(`${BASE_URL}/get-news`);
+        const fetchedNews = Array.isArray(newsRes.data) ? newsRes.data : [];
+  
+        const newsWithSentiment = fetchedNews.map(post => ({
+          ...post,
+          likes: post.feedsLikes || [],
+          dislikes: post.commentFeeds || [],
+          sentiment: calculateSentiment(post.feedsLikes?.length || 0, post.commentFeeds?.length || 0)
+        }));
+  
+        setNews(newsWithSentiment);
+        console.log("✅ News loaded:", newsWithSentiment);
+  
+        // Now fetch engagements & analytics
+        const [engagementsRes, analyticsRes] = await Promise.all([
+          axios.get(`${BASE_URL}/engagements`),
+          axios.get(`${BASE_URL}/get-comprehensive-analytics`)
         ]);
-        
-        setNews(newsRes.data.map(addSentiment));
-        setEngagements(engagementsRes.data);
-        setAnalytics(analyticsRes.data);
+  
+        setEngagements(engagementsRes.data || []);
+        setAnalytics(analyticsRes.data || {});
       } catch (error) {
-        Swal.fire('Error!', 'Failed to load data', 'error');
+        Swal.fire("Error", "Failed to load city updates", "error");
+        console.error("❌ Error loading news or analytics:", error);
+      } finally {
+        setLoading(false);
       }
     };
+  
     fetchData();
   }, []);
+  
 
+  // Setup socket listeners
   useEffect(() => {
     socket.on('news-update', updatedPost => {
-      setNews(prev => prev.map(post => 
-        post.id === updatedPost.id ? addSentiment(updatedPost) : post
-      ));
+      setNews(prev =>
+        prev.map(post =>
+          post.id === updatedPost.id ? addSentiment(updatedPost) : post
+        )
+      );
     });
 
     socket.on('engagement-update', updatedEngagement => {
-      setEngagements(prev => prev.map(eng => 
-        eng.id === updatedEngagement.id ? updatedEngagement : eng
-      ));
+      setEngagements(prev =>
+        prev.map(eng =>
+          eng.id === updatedEngagement.id ? updatedEngagement : eng
+        )
+      );
     });
 
     socket.on('analytics-update', newAnalytics => {
       setAnalytics(newAnalytics);
     });
 
-    return () => socket.disconnect();
-  }, [socket]);
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
+  // Add sentiment field to post
   const addSentiment = (post) => ({
     ...post,
-    sentiment: calculateSentiment(post.likes.length, post.dislikes.length)
+    sentiment: calculateSentiment(post.likes?.length || 0, post.dislikes?.length || 0)
   });
 
   const calculateSentiment = (likes, dislikes) => {
@@ -127,34 +152,43 @@ const NewsFeed = () => {
 
   const handleInteraction = async (type, id, option = null) => {
     try {
-      await axios.post(`${BASE_URl}/${type}/${id}/react`, {
-        userId: "current_user_id",
-        option: option
+      await axios.post(`${BASE_URL}/${type}/${id}/react`, {
+        userId: userId, 
+        option
       });
     } catch (error) {
-      Swal.fire('Error!', 'Action failed', 'error');
+      Swal.fire('Error!', 'Interaction failed', 'error');
+      console.error("Interaction error:", error);
     }
   };
 
+  const handleLikeNews   =  async  ()=>{
+    try {
+      
+      
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const newsChartData = {
-    labels: analytics.mostLiked?.map(post => post.title),
+    labels: analytics.mostLiked?.map(post => post.title) || [],
     datasets: [{
       label: 'Approval Rating',
       data: analytics.mostLiked?.map(post => {
         const dislikedPost = analytics.mostDisliked?.find(d => d.id === post.id);
         const dislikes = dislikedPost?.dislikes || 0;
         return (post.likes / (post.likes + dislikes)) * 100;
-      }),
+      }) || [],
       backgroundColor: '#10B981'
     }]
   };
 
   const engagementChartData = (engagement) => ({
-    labels: Object.keys(engagement.options),
+    labels: Object.keys(engagement.options || {}),
     datasets: [{
       label: 'Votes',
-      data: Object.values(engagement.options).map(opt => 
-        engagement.votes[opt]?.length || 0
+      data: Object.values(engagement.options || {}).map(opt =>
+        engagement.votes?.[opt]?.length || 0
       ),
       backgroundColor: ['#6366f1', '#10b981', '#f59e0b']
     }]

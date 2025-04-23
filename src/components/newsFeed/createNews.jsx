@@ -3,8 +3,17 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Form, Container, Card, Spinner, Row, Col } from 'react-bootstrap';
 import Swal from 'sweetalert2';
-
+import { getUserIdFromToken } from '../handler/tokenDecoder';
 const CreateNews = () => {
+
+  const [userId, setUserId] = useState(null);
+  
+    useEffect(() => {
+      const userId = getUserIdFromToken();
+      setUserId(userId);
+  
+    }, []);
+  
 
   const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
@@ -24,7 +33,7 @@ const CreateNews = () => {
   // Fetch all news
   const fetchNews = async () => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/get-news`);
+      const { data } = await axios.get(`${BASE_URl}/get-news`);
       setNews(data);
     } catch (error) {
       Swal.fire('Error!', 'Failed to load news', 'error');
@@ -57,6 +66,7 @@ const CreateNews = () => {
     return links;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -64,18 +74,20 @@ const CreateNews = () => {
     const formDataToSend = new FormData();
     formDataToSend.append('title', formData.title);
     formDataToSend.append('content', formData.content);
+    formDataToSend.append('userId', userId); // ✅ match backend
+
     formDataToSend.append('category', formData.category);
     formDataToSend.append('socialLinks', JSON.stringify(parseSocialLinks(formData.socialLinks)));
     if (formData.media) formDataToSend.append('media', formData.media);
-  
-    // ✅ Add the author ID
-    formDataToSend.append('userId', 'smart_ke_WT_947225819');
+ 
+    // ✅ Fixed: provide key + value
+    formDataToSend.append('author', userId);
   
     try {
       const url = editMode 
         ? `${BASE_URl}/create-news/${formData.id}`
-        : `${BASE_URL}/create-news`;
-  
+        : `${BASE_URl}/create-news`;
+        console.log(formData)
       const { data } = await axios[editMode ? 'put' : 'post'](url, formDataToSend, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -90,7 +102,6 @@ const CreateNews = () => {
     }
   };
   
-
   // Edit news
   const handleEdit = (newsItem) => {
     setFormData({

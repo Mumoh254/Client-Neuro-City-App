@@ -1,21 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card, Form, Button, Spinner, Alert,
-  Badge, Modal, ListGroup , Container
+  Badge, Modal, ListGroup, Container
 } from 'react-bootstrap';
 import {
   FaComment, FaThumbsUp, FaPaperPlane, FaUser,
-  FaCalendarAlt, FaPen
-} from 'react-icons/fa';
-
-import { 
- 
-  FaRegThumbsUp, FaPlus, FaTimes
+  FaPen, FaRegThumbsUp, FaPlus, FaTimes
 } from 'react-icons/fa';
 import axios from 'axios';
 import styled from 'styled-components';
-import { getUserIdFromToken } from '../components/handler/tokenDecoder';
-import { getUserNameFromToken } from '../components/handler/tokenDecoder';
+import { getUserIdFromToken, getUserNameFromToken } from '../components/handler/tokenDecoder';
 
 const HubContainer = styled.div`
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -57,6 +51,30 @@ const CommentBubble = styled.div`
     border-bottom: 8px solid transparent;
     border-right: 10px solid #f0f2f5;
   }
+
+  .reaction-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  
+  .reaction-btn {
+    border: none;
+    background: none;
+    padding: 2px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    font-size: 1.2rem;
+  }
+  
+  .reaction-btn:hover {
+    transform: scale(1.2);
+  }
+  
+  .reaction-btn.active {
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.2));
+  }
 `;
 
 const StickyReviewForm = styled.div`
@@ -93,7 +111,6 @@ const ContentWrapper = styled(Container)`
 
 const ReviewSection = () => {
   const [posts, setPosts] = useState([]);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -104,148 +121,135 @@ const ReviewSection = () => {
     content: '',
     stickers: []
   });
+  const [userId, setUserId] = useState(null);
+  const [commentReactions, setCommentReactions] = useState({});
+  const commentInputRef = useRef(null);
 
-  const STICKERS = ['👍', '❤️', '🚀', '💡', '🎉', '👏'];
+  const REACTIONS = ['👍', '❤️', '😂', '😲', '😢', '👎', '👏', '🎉', '💩', '🤔'];
+  const STICKERS = ['🚀', '💡', '🌟', '✨', '🔥', '💯', '✅', '❌', '⚠️', '🌈'];
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+
+  useEffect(() => {
+    const userId = getUserIdFromToken();
+    setUserId(userId);
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(`${BASE_URL}/posts`);
+      const normalized = (data || []).map(p => ({ ...p, id: p.id ?? p._id }));
+      setPosts(normalized);
+    } catch (err) {
+      setError('Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
-  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
-
-
-
-  
-      const [userId, setUserId] = useState(null);
+  const handleCommentInputChange = (postId, value) => {
+    setCommentTexts(prev => ({
+      ...prev,
+      [postId]: value
+    }));
     
-      useEffect(() => {
-        const userId = getUserIdFromToken();
-        console.log('User ID:', userId);
-        setUserId(userId); 
-      }, []);
-
-      console.log(userId)
-
-      useEffect(() => {
-        const fetchPosts = async () => {
-          try {
-            setLoading(true);
-      
-            const { data } = await axios.get(`${BASE_URl}/posts`);
-            // Normalize: ensure an `id` field on each post
-            const normalized = (data || []).map(p => ({
-              ...p,
-              id: p.id ?? p._id   // Prisma/SQL uses `id`, Mongo often uses `_id`
-            }));
-      
-            setPosts(normalized);
-            console.log('Normalized posts:', normalized);
-      
-          } catch (err) {
-            console.error(err);
-            setError('Failed to load posts');
-          } finally {
-            setLoading(false);
-          }
-        };
-      
-        fetchPosts();
-      }, []);
-      
+    // Maintain focus after state update
+    setTimeout(() => {
+      if (commentInputRef.current) {
+        commentInputRef.current.focus();
+      }
+    }, 0);
+  }; 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
       const newPost = {
         content: formData.content,
         stickers: formData.stickers,
+        authorId: userId,
         likes: [],
-        comments: [],
-        createdAt: new Date().toISOString(),
-        authorId: userId 
+        comments: []
       };
-console.log(newPost)
-      const response = await axios.post( `${BASE_URl}/posts`, newPost);
-      console.log(newPost)
+
+      const response = await axios.post(`${BASE_URL}/posts`, newPost);
       setPosts([response.data, ...posts]);
       setFormData({ content: '', stickers: [] });
       setShowReviewForm(false);
       setSuccess('Review posted!');
     } catch (err) {
       setError('Failed to post review');
-      console.log(err)
     }
   };
+
   const handleLike = async (postId) => {
     try {
-      // Step 1: Optimistically update the UI
       const updatedPosts = posts.map(post => {
-        if (post._id === postId) {
+        if (post.id === postId) {
           const likes = post.likes.includes(userId)
-            ? post.likes.filter(id => id !== userId) // Unlike if already liked
-            : [...post.likes, userId]; // Add like if not already liked
+            ? post.likes.filter(id => id !== userId)
+            : [...post.likes, userId];
           return { ...post, likes };
         }
         return post;
       });
-  
-      setPosts(updatedPosts); 
-  
 
-      const response = await axios.put(`${BASE_URl}/${postId}/like`, {
-        userId: userId
-      });
-  
-     
-      const updatedPost = response.data;  
-  
-    
-      setPosts(posts.map(post => 
-        post._id === postId ? updatedPost : post
-      ));
-  
-
-      if (updatedPost.likes.includes(userId)) {
-        alert("You liked this post!");
-      } else {
-        alert("You unliked this post!");
-      }
+      setPosts(updatedPosts);
+      await axios.put(`${BASE_URL}/${postId}/like`, { userId });
     } catch (err) {
-
-      setPosts(posts);  
-      
-
       setError('Failed to update like');
     }
   };
-  
-  
 
   const handleCommentSubmit = async (postId) => {
-    const BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
-    
     const content = commentTexts[postId];
     if (!content?.trim()) return;
-  
+
     try {
       const newComment = {
-        content,              
-        userId: userId,    
+        content,
+        userId,
         createdAt: new Date().toISOString()
       };
-      
-      console.log(newComment); 
-      
-      const response = await axios.post(`${BASE_URl}/${postId}/comments`, newComment);
-      
+
+      const response = await axios.post(`${BASE_URL}/${postId}/comments`, newComment);
       setPosts(posts.map(post => 
-        post._id === postId 
+        post.id === postId 
           ? { ...post, comments: [...post.comments, response.data] }
           : post
       ));
-      
       setCommentTexts({ ...commentTexts, [postId]: '' });
-      setSuccess('Comment posted successfully!');
+      setSuccess('Comment posted!');
     } catch (err) {
-      console.log(err);
       setError('Failed to post comment');
     }
+  };
+
+  const handleCommentReaction = async (postId, commentId, reaction) => {
+    try {
+      const updatedReactions = { ...commentReactions };
+      const reactionKey = `${postId}-${commentId}`;
+      
+      if (updatedReactions[reactionKey] === reaction) {
+        delete updatedReactions[reactionKey];
+      } else {
+        updatedReactions[reactionKey] = reaction;
+      }
+      
+      setCommentReactions(updatedReactions);
+      await axios.put(`${BASE_URL}/comments/${commentId}/react`, { userId, reaction });
+    } catch (err) {
+      setError('Failed to save reaction');
+    }
+  };
+
+  const handleStickerSelect = (sticker) => {
+    setFormData(prev => ({
+      ...prev,
+      stickers: [...prev.stickers, sticker],
+      content: prev.content + sticker
+    }));
   };
 
   const PostCard = ({ post, index }) => (
@@ -296,26 +300,43 @@ console.log(newPost)
         <div className="mt-4">
           <h6 className="mb-3 fw-semibold text-muted">Community Perspectives</h6>
           <div className="comments">
-            {post.comments?.map((comment, index) => (
-              <CommentBubble key={index}>
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <UserAvatar style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>
-                    {comment.author?.Name[0]}
-                  </UserAvatar>
-                  <div>
-                    <h6 className="mb-0 fw-semibold">{comment.author?.Name}</h6>
-                    <small className="text-muted">
-                      {new Date(comment.createdAt).toLocaleDateString()}
-                    </small>
+            {post.comments?.map((comment, index) => {
+              const reactionKey = `${post.id}-${comment.id}`;
+              const currentReaction = commentReactions[reactionKey];
+
+              return (
+                <CommentBubble key={index}>
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <UserAvatar style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>
+                      {comment.author?.Name[0]}
+                    </UserAvatar>
+                    <div>
+                      <h6 className="mb-0 fw-semibold">{comment.author?.Name}</h6>
+                      <small className="text-muted">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </small>
+                    </div>
                   </div>
-                </div>
-                <p className="mb-0">{comment.content}</p>
-              </CommentBubble>
-            ))}
+                  <p className="mb-0">{comment.content}</p>
+                  <div className="reaction-bar">
+                    {REACTIONS.map((reaction) => (
+                      <button
+                        key={reaction}
+                        className={`reaction-btn ${currentReaction === reaction ? 'active' : ''}`}
+                        onClick={() => handleCommentReaction(post.id, comment.id, reaction)}
+                      >
+                        {reaction}
+                      </button>
+                    ))}
+                  </div>
+                </CommentBubble>
+              );
+            })}
           </div>
 
           <div className="mt-4 d-flex gap-2">
             <Form.Control
+              ref={commentInputRef}
               as="textarea"
               rows={2}
               value={commentTexts[post.id] || ''}
@@ -395,10 +416,7 @@ console.log(newPost)
                         key={i}
                         variant="outline-primary"
                         className="rounded-circle p-2"
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          stickers: [...prev.stickers, sticker]
-                        }))}
+                        onClick={() => handleStickerSelect(sticker)}
                       >
                         {sticker}
                       </Button>

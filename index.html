@@ -56,7 +56,10 @@
 
     <!-- PWA Service Worker Registration -->
     <script>
-    
+    document.querySelector("form").addEventListener("submit", function(e) {
+  e.preventDefault();
+});
+
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
