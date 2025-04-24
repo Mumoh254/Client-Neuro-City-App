@@ -158,54 +158,61 @@
 
     <!-- PWA Install Prompt Handling -->
     <script>
+const BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
-const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+let deferredPrompt;
 
-      let deferredPrompt;
+// Detect if app is already installed
+const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
+if (!isAppInstalled) {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
 
-  const installButton = document.getElementById('install-button');
-  installButton.style.display = 'block';
+    const installButton = document.getElementById('install-button');
+    installButton.style.display = 'block';
 
-  installButton.addEventListener('click', () => {
-    deferredPrompt.prompt();
+    installButton.addEventListener('click', () => {
+      deferredPrompt.prompt();
 
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
 
-        // 👉 Track install by calling backend
-        fetch(`${BASE_URl}/track-install`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            platform: navigator.platform
+          // Track the install
+          fetch(`${BASE_URl}/track-install`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              timestamp: new Date().toISOString(),
+              userAgent: navigator.userAgent,
+              platform: navigator.platform
+            })
           })
-        })
-        .then(res => res.json())
-        .then(data => {
-          console.log('✅ Install tracked:', data);
-        })
-        .catch(err => {
-          console.error('❌ Error tracking install:', err);
-        });
+          .then(res => res.json())
+          .then(data => {
+            console.log('✅ Install tracked:', data);
+          })
+          .catch(err => {
+            console.error('❌ Error tracking install:', err);
+          });
 
-      } else {
-        console.log('User dismissed the install prompt');
-      }
+        } else {
+          console.log('User dismissed the install prompt');
+        }
 
-      deferredPrompt = null;
-      installButton.style.display = 'none';
+        deferredPrompt = null;
+        installButton.style.display = 'none';
+      });
     });
   });
-});
+} else {
+  // Hide install button if app is already installed
+  document.getElementById('install-container').style.display = 'none';
+}
     </script>
   </body>
 </html>
