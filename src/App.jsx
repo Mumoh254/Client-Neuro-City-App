@@ -6,6 +6,7 @@ import {
   FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook, FiRadio,
   FiMessageCircle, FiUserPlus, FiArrowLeft, FiArrowRight
 } from 'react-icons/fi';
+import { BsChatSquareQuoteFill } from "react-icons/bs";
 import { PiUserSoundFill } from "react-icons/pi";
 import { FaInternetExplorer, FaTrashRestoreAlt, FaHome, FaRecycle, FaPeopleCarry } from "react-icons/fa";
 import { FaCircleInfo } from "react-icons/fa6";
@@ -407,6 +408,10 @@ console.log("true")
             <IoLogoDesignernews   />News & Updates
           </NavLink>
 
+
+          <NavLink to="/e-chats" onClick={() => setIsMenuOpen(false)}>
+            <BsChatSquareQuoteFill  /> E-Chats
+          </NavLink>
      
           <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
             <FiMap /> Amenities
@@ -428,13 +433,6 @@ console.log("true")
           </NavLink>
           <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
             <GiMoonClaws /> Terms
-          </NavLink>
-
-
-    
-             
-          <NavLink to="/gems" className="button">
-            <FaCircleInfo size={20} /> gems
           </NavLink>
 
             <NavLink to="/software-guide-feedback" className="button">
@@ -494,7 +492,7 @@ console.log("true")
             <Route path="/jobs-list" element={<PageWithBack title="Job-Lists"><JobsList /></PageWithBack>} />
             
             <Route path="/e-chats" element={<PageWithBack title="E-Chats"><ReviewSection /></PageWithBack>} />
-            <Route path="/nairobi-stages-routes" element={<PageWithBack title="E-Chats"><StagesData /></PageWithBack>} />
+            <Route path="/nairobi-stages-routes" element={<PageWithBack title="Stages  &  Routes "><StagesData /></PageWithBack>} />
           
              <Route path="/create-jobs" element={<PageWithBack title="City News">< CreateJob /></PageWithBack>} />
        
@@ -529,7 +527,6 @@ console.log("true")
             <Route path="/cooprate-registartrion-analytics" element={<PageWithBack title="Registration Analytics"><RegistrationAnalytics /></PageWithBack>} />
             <Route path="/coorporate/services-registration-analytics" element={<PageWithBack title="Service Analytics"><ServicesAnalyticsDashboard /></PageWithBack>} />
           </Route>
-
           <Route element={<ProtectedRoute roles={["corporate"]} />}>
             <Route path="/corporate-install-counts" element={<PageWithBack title="Install Analytics"><InstallCount /></PageWithBack>} />
             <Route path="/corporate-analytics" element={<PageWithBack title="Corporate Insights"><CorporateAnalytics /></PageWithBack>} />
