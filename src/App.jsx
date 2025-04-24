@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fi';
 import { BsChatSquareQuoteFill } from "react-icons/bs";
 import { PiUserSoundFill } from "react-icons/pi";
-import { FaInternetExplorer, FaTrashRestoreAlt, FaHome, FaRecycle, FaPeopleCarry } from "react-icons/fa";
+import { FaInternetExplorer, FaTrashRestoreAlt, FaHome, FaRecycle,  FaDownload  , FaPeopleCarry } from "react-icons/fa";
 import { FaCircleInfo } from "react-icons/fa6";
 import { GiMoonClaws } from "react-icons/gi";
 import { SiGoogleanalytics } from "react-icons/si";
@@ -54,7 +54,8 @@ import JobsList from './components/jobs/joblist';
 import ReviewSection from './chats/chats';
 import { getUserNameFromToken } from './components/handler/tokenDecoder';
 import Gems from './components/foods-gems/gems';
-import InstallPrompt from './components/handler/installPrompt';
+import Download from './components/downloader/download';
+
 // Styled Components
 
 const settings = {
@@ -464,7 +465,9 @@ console.log("true")
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
           <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
+          <Route path="/download-neuro-app" element={<PageWithBack ><Download /></PageWithBack>} />
 
+    
           <Route path="/community-suport" element={<CommunityHub />} />
 
           <Route element={<ProtectedRoute />}>
@@ -547,8 +550,14 @@ console.log("true")
             <NavLink to="/plastics-recycles">
               <FaTrashRestoreAlt /> Recycle
             </NavLink>
+
             <NavLink to="/comunity-suport">
               <FaPeopleCarry /> Support
+            </NavLink>
+
+            
+            <NavLink to="/download-neuro-app">
+              <FaDownload  /> Download
             </NavLink>
 
             <NavLink to="/report/coruption-Real-time/analytics">
