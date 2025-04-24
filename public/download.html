@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f6fa;
+      text-align: center;
+      padding: 50px;
+    }
+
+    h1 {
+      color: #2f3640;
+    }
+
+    .download-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      font-size: 18px;
+      color: white;
+      background-color: #06b10f;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .download-btn:hover {
+      background-color: #048d0c;
+    }
+
+    .note {
+      margin-top: 20px;
+      color: #718093;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Download Your File</h1>
+  <a class="download-btn" href="/path/to/your/file.zip" download>
+    Download Now
+  </a>
+
+  <p class="note">Click the button to start your download. If it doesn't work, right-click and choose "Save link as".</p>
+  <link rel="stylesheet" href="/assets/css/download-button.css" />
+  <script src="/public/download.js" defer></script>
+  
+</body>
+</html>

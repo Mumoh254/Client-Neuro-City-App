@@ -45,7 +45,9 @@
 
   <body>
     <div id="root"></div>
-    <button id="installBtn" style="display: none;">Install App</button>
+    <button id="install-button" style="display:none;">Install App</button>
+
+    
 
     <!-- TomTom Maps JS -->
     <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps-web.min.js" defer></script>
@@ -58,9 +60,6 @@
 
     <!-- PWA Service Worker Registration -->
     <script>
-    document.querySelector("form").addEventListener("submit", function(e) {
-  e.preventDefault();
-});
 
 
       if ('serviceWorker' in navigator) {

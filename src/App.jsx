@@ -53,6 +53,7 @@ import JobsList from './components/jobs/joblist';
 import ReviewSection from './chats/chats';
 import { getUserNameFromToken } from './components/handler/tokenDecoder';
 import Gems from './components/foods-gems/gems';
+import InstallPrompt from './components/handler/installPrompt';
 // Styled Components
 
 const settings = {
@@ -283,37 +284,40 @@ const Backdrop = styled.div`
 function App() {
   let deferredPrompt;
 
+  // Listen for the 'beforeinstallprompt' event
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the default mini-infobar from appearing
+    // Prevent the default browser prompt
     e.preventDefault();
-    
-    // Store the event for later
+
+    // Store the event for later use
     deferredPrompt = e;
-  
-    // Show the install button
+
+    // Show your custom install button
     const installButton = document.getElementById('install-button');
-    if (installButton) {
-      installButton.style.display = 'block';
-  
-      installButton.addEventListener('click', () => {
-        // Show the install prompt
-        deferredPrompt.prompt();
-  
-        // Wait for the user's response
-        deferredPrompt.userChoice.then((choiceResult) => {
+    installButton.style.display = 'block';  // Show the button
+
+    // Add an event listener for the install button click
+    installButton.addEventListener('click', () => {
+      // Show the native install prompt
+      deferredPrompt.prompt();
+
+      // Wait for the user to respond to the prompt
+      deferredPrompt.userChoice
+        .then((choiceResult) => {
           if (choiceResult.outcome === 'accepted') {
-            console.log('✅ User accepted the A2HS prompt');
+            console.log('User accepted the install prompt');
           } else {
-            console.log('❌ User dismissed the A2HS prompt');
+            console.log('User dismissed the install prompt');
           }
-  
           // Reset the deferred prompt
           deferredPrompt = null;
+
+          // Optionally, hide the install button after the prompt
           installButton.style.display = 'none';
         });
-      });
-    }
+    });
   });
+
   
 const Navigate  =  useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -354,6 +358,8 @@ console.log("true")
     }, []);
   
   return (
+
+    
     <AppContainer>
       <MobileMenuButton onClick={() => setIsMenuOpen(!isMenuOpen)}>
         {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -486,8 +492,10 @@ console.log("true")
         </Sidebar>
       )}
       
+    
+
+
       <MainContent>
-     
 
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -596,6 +604,7 @@ console.log("true")
           </BottomNav>
         )}
       </MainContent>
+
     </AppContainer>
   );
 }
