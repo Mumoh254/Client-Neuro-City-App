@@ -2,11 +2,10 @@ const CACHE_NAME = "community-hub-v2";
 const OFFLINE_URL = "/offline.html";
 const INSTALL_CACHE = [
   '/',
-  '/index.html',
-  '/manifest.json',
-  '/static/js/main.js',
-  '/logo192.png',
-  '/logo512.png',
+        '/index.html',
+        '/manifest.json',
+        '/logo192.png',
+        '/src/main.jsx'
 ];
 
 

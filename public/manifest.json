@@ -1,27 +1,27 @@
 {
-  "short_name": "Neuro-App",
   "name": "Neuro City App - Community Platform",
+  "short_name": "CityNeuro",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a365d",
+  "orientation": "portrait-primary",
   "description": "Smart city community engagement platform for urban services and civic participation",
   "icons": [
     {
       "src": "/images/nairobi.png",
-      "type": "image/png",
       "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
       "src": "/images/nairobi.png",
-      "type": "image/png",
       "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/?source=pwa",
-  "scope": "/",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "theme_color": "#1a365d",
-  "background_color": "#ffffff",
   "categories": ["social", "news", "government"],
   "screenshots": [
     {
