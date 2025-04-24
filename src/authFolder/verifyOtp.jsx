@@ -68,7 +68,15 @@ const OtpDigit = styled.input`
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
+
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
 `;
+
 
 const VerifyButton = styled.button`
   width: 100%;
@@ -203,17 +211,17 @@ const VerifyOtp = () => {
 
       const event = new Event('authStateChanged');
       window.dispatchEvent(event);
-
       setTimeout(() => {
         const role = response.data.role.toLowerCase();
-        if (role === 'ADMIN') {
-          navigate('/admin-dashboard');
+        if (role === 'admin') {
+          window.location.href = '/admin-dashboard';
         } else if (role === 'corporate') {
-          navigate('/corporate-analytics');
+          window.location.href = '/corporate-analytics';
         } else {
-          navigate('/peoples/favourites');
+          window.location.href = '/peoples/favourites';
         }
       }, 100);
+      
 
 
     } catch (error) {

@@ -28,8 +28,6 @@ const EcoCard = styled(Card)`
 
 const PlasticRecyclingApp = ({ theme = 'light' }) => {
 
-const [username, setUsername] = useState('');
-const [userRole, setUserRole] = useState('');
 
 const   BASE_URL  =  'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke'
 

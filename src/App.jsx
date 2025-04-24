@@ -441,7 +441,7 @@ console.log("true")
           <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
             <FiMap /> Amenities
           </NavLink>
-          <NavLink to="/analytics" onClick={() => setIsMenuOpen(false)}>
+          <NavLink to="/community-painpoints-analysis" onClick={() => setIsMenuOpen(false)}>
             <SiGoogleanalytics /> Analytics
           </NavLink>
           <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
@@ -507,12 +507,20 @@ console.log("true")
 
           <Route element={<ProtectedRoute />}>
             <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
-            <Route path="/smart-parking" element={<PageWithBack title="Parking Management"><ParkingForm /></PageWithBack>} />
+            <Route path="/smart-parking" element={<PageWithBack ><ParkingForm /></PageWithBack>} />
             <Route path="/zero-garbage" element={<PageWithBack title="Waste Management"><GarbageManagementSystem /></PageWithBack>} />
-            <Route path="/plastics-recycles" element={<PageWithBack title="Plastic Recycling"><PlasticRecyclingApp /></PageWithBack>} />
+            <Route 
+  path="/plastics-recycles" 
+  element={
+    <PageWithBack title={`Hello ${username} Help Build a clean City , Recycle Plasics`}>
+      <PlasticRecyclingApp />
+    </PageWithBack>
+  }
+/>
+
             <Route path="/comunity-suport" element={<PageWithBack title="Community Support"><ReviewsSection /></PageWithBack>} />
             <Route path="/amenities" element={<PageWithBack title="Public Amenities"><PublicAmenities /></PageWithBack>} />
-            <Route path="/weather" element={<PageWithBack title="Weather Forecast"><WeatherNairobi /></PageWithBack>} />
+            <Route path="/weather" element={<PageWithBack title={`Hello ${username} , Know  Your Weather`}><WeatherNairobi /></PageWithBack>} />
             <Route path="/stages" element={<PageWithBack title="Transport Stages"><StagesData /></PageWithBack>} />
             <Route path="/services/create" element={<PageWithBack title="Create Service"><CreateService /></PageWithBack>} />
             <Route path="/services/list-view" element={<PageWithBack title="Services Directory"><ServicesList /></PageWithBack>} />
@@ -543,16 +551,16 @@ console.log("true")
 />
 
             <Route path="/live-tracking" element={<PageWithBack title="Live Tracking"><LiveTrackingMap /></PageWithBack>} />
-            <Route path="/community-painpoints-analysis" element={<PageWithBack title="Community Analytics"><AnalyticsDashboard /></PageWithBack>} />
+            <Route path="/community-painpoints-analysis" element={<PageWithBack title="   Community  Pain  Points  E-Analysis  -  Mosts  Engeged  Posts . "><AnalyticsDashboard /></PageWithBack>} />
             <Route path="/register-device" element={<PageWithBack title="Device Registration"><LiveTrackingMap /></PageWithBack>} />
-            <Route path="/report/coruption-Real-time/analytics" element={<PageWithBack title="Corruption Reports"><ReportCorruption /></PageWithBack>} />
+            <Route path="/report/coruption-Real-time/analytics" element={<PageWithBack title={`Hellow ${username} Help  Fight  Corruption in the city.`}><ReportCorruption /></PageWithBack>} />
           </Route>
 
           <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
             <Route path="/admin-dashboard" element={<PageWithBack title="AdminDashboard"><AdminDashboard /></PageWithBack>} />
             <Route path="/create-news" element={<PageWithBack title="Create News"><CreateNews /></PageWithBack>} />
             <Route path="/corruption-dashboard" element={<PageWithBack title="Corruption Analytics"><CorruptionDashboard /></PageWithBack>} />
-            <Route path="/corporate-install-counts" element={<PageWithBack title="Install Analytics"><InstallCount /></PageWithBack>} />
+            <Route path="/corporate-install-counts" element={<PageWithBack title="corporate-install-counts"><InstallCount /></PageWithBack>} />
             <Route path="/corporate-analytics" element={<PageWithBack title="Corporate Insights"><CorporateAnalytics /></PageWithBack>} />
             <Route path="/cooprate-registartrion-analytics" element={<PageWithBack title="Registration Analytics"><RegistrationAnalytics /></PageWithBack>} />
             <Route path="/coorporate/services-registration-analytics" element={<PageWithBack title="Service Analytics"><ServicesAnalyticsDashboard /></PageWithBack>} />

@@ -122,7 +122,7 @@ const AnalyticsDashboard = () => {
   <div>
     <h2 className="mb-0 text-slate-800  w-75 px-5 d-flex align-items-center">
       <FiActivity className="me-2" style={{ color: '#6366f1' }} />
-      City Insights Dashboard
+   
     </h2>
     <p className="text-muted mb-0">Citizen engagement analytics and trends</p>
   </div>
