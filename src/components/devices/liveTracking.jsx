@@ -105,7 +105,7 @@ const LiveTrackingMap = () => {
 
   useEffect(() => {
     const connectWebSocket = () => {
-      ws.current = new WebSocket(`ws:${BASE_URl}/tracking`);
+      ws.current = new WebSocket(`wss:${BASE_URl}/tracking`);
 
       ws.current.onopen = () => {
         setConnectionStatus('connected');
