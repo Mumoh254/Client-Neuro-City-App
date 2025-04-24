@@ -31,6 +31,18 @@ const PlasticRecyclingApp = ({ theme = 'light' }) => {
 const [username, setUsername] = useState('');
 const [userRole, setUserRole] = useState('');
 
+
+
+    useEffect(() => {
+      const userData = getUserNameFromToken();
+      if (userData) {
+        console.log(userData);
+    
+        setUsername(userData.name);
+
+      }
+    }, []);
+    
 const   BASE_URL  =  'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke'
 
   const [submissions, setSubmissions] = useState([]);
