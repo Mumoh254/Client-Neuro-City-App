@@ -2,144 +2,224 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- Viewport for Responsive Design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO: Title & Meta -->
     <title>City Neuro App | Smart City Navigation & Access to Community Hub</title>
     <meta name="description" content="City Neuro is a smart city solution for real-time navigation, safety, and public health support, helping citizens move smarter and safer." />
     <meta name="keywords" content="City Neuro, smart city, public safety, navigation, city health, urban technology, real-time maps, citizen support" />
     <meta name="author" content="Welt Tallis Development Team" />
     <meta name="robots" content="index, follow" />
 
+    <!-- PWA: Web App Manifest -->
     <link rel="manifest" href="/manifest.json" />
+
     <meta name="theme-color" content="#1a365d">
+
+    <!-- Favicon & App Icons -->
     <link rel="icon" href="/images/logo.png" type="image/png" />
     <link rel="apple-touch-icon" href="/images/logo.png" />
 
+    <!-- Performance: Preconnect DNS -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://api.tomtom.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
+    <!-- TomTom Maps CSS -->
     <link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps.css" />
+
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-    <style>
-      @keyframes floatUp {
-        from {
-          opacity: 0;
-          transform: translate(-50%, 100%);
-        }
-        to {
-          opacity: 1;
-          transform: translate(-50%, 0);
-        }
-      }
+    <!-- Bootstrap CSS -->
+    <link 
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" 
+      rel="stylesheet" 
+      integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" 
+      crossorigin="anonymous"
+    />
 
-      @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-      }
-
-      #install-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
-      }
-
-      #install-button:active {
-        transform: scale(0.98);
-      }
-
-      #cancel-button {
-        margin-top: 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 0.5rem 1.5rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        font-weight: bold;
-      }
-
-      #cancel-button:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-    </style>
+    
+<style>
+  @keyframes floatUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 100%);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  #install-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  }
+  
+  #install-button:active {
+    transform: scale(0.98);
+  }
+  </style>
+  
   </head>
+
   <body>
     <div id="root"></div>
 
-    <div id="install-container" style="position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; animation: floatUp 0.8s forwards;">
-      <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 1.5rem 2rem; border-radius: 1.5rem; box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2); border: 2px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px);">
-        <div style="color: white; margin-bottom: 1rem; font-family: 'Arial Rounded MT Bold', sans-serif;">
-          <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">🎉 Welcome to Neuro Apps! 🎉</div>
-          <div style="opacity: 0.9">Enjoy a faster, smoother experience Powered By Welt Tallis</div>
-        </div>
-        <button id="install-button" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; border: none; border-radius: 1rem; background: white; color: #6366f1; font-weight: bold; cursor: pointer; transition: all 0.3s ease; animation: pulse 2s infinite; font-size: 1.1rem;">
-          <span>✨ Install Now</span>
-        </button>
-        <br />
-        <button id="cancel-button">Cancel</button>
+
+  <div id="install-container" style="
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  text-align: center;
+  animation: floatUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+">
+  <div style="
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    padding: 1.5rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+    border: 2px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+  ">
+    <div style="
+      color: white;
+      margin-bottom: 1rem;
+      font-family: 'Arial Rounded MT Bold', sans-serif;
+    ">
+      <div style="
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      ">
+        🎉 Welcome to Neuro Apps! 🎉
+      </div>
+      <div style="opacity: 0.9">
+        Enjoy a faster, smoother experience  Powered  By Welt  Tallis 
       </div>
     </div>
+    
+    <button id="install-button" style="
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 1rem;
+      background: white;
+      color: #6366f1;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      animation: pulse 2s infinite;
+      font-size: 1.1rem;
+    ">
+      <span>✨ Install Now</span>
+    </button>
+  </div>
+</div>
 
+    <!-- TomTom Maps JS -->
     <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps-web.min.js" defer></script>
+
+    <!-- React Entry (Vite or ES Module) -->
     <script type="module" src="/src/main.jsx" defer></script>
+
+    <!-- Fallback (Optional) -->
     <script src="main.js"></script>
 
+    <!-- PWA Service Worker Registration -->
     <script>
+      
+
+
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker
-            .register('/serviceworker.js')
-            .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+            .register('/serviceworker.js')  // 🔥 FIXED: ensure path starts with /
+            .then(reg => console.log('✅ Service Worker registered with scope:', reg.scope))
             .catch(err => console.error('❌ Service Worker registration failed:', err));
         });
       }
     </script>
 
+    <!-- PWA Install Prompt Handling -->
     <script>
-      const BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+      const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+      
       let deferredPrompt;
-
-      const installContainer = document.getElementById('install-container');
-      const installButton = document.getElementById('install-button');
-      const cancelButton = document.getElementById('cancel-button');
-
-      const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      const dismissedBefore = localStorage.getItem('installDismissed');
-
-      if (isAppInstalled || dismissedBefore) {
-        installContainer.style.display = 'none';
-      } else {
-        window.addEventListener('beforeinstallprompt', (e) => {
-          e.preventDefault();
-          deferredPrompt = e;
-          installButton.style.display = 'inline-flex';
-
-          installButton.addEventListener('click', () => {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-              if (choiceResult.outcome === 'accepted') {
-                fetch(`${BASE_URl}/track-install`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform
-                  })
-                })
-                .then(res => res.json())
-                .then(data => console.log('✅ Install tracked:', data))
-                .catch(err => console.error('❌ Tracking failed:', err));
-              }
-              installContainer.style.display = 'none';
-              deferredPrompt = null;
-            });
-          });
-
-          cancelButton.addEventListener('click', () => {
-            installContainer.style.display = 'none';
-            localStorage.setItem('installDismissed', 'true');
-          });
-        });
+      
+      // Check if already installed
+      const isInstalled = localStorage.getItem('appInstalled') || 
+                          window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone;
+      
+      if (isInstalled) {
+        document.getElementById('install-container').style.display = 'none';
       }
-    </script>
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        if (isInstalled) return;
+        
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        const installContainer = document.getElementById('install-container');
+        const installButton = document.getElementById('install-button');
+        
+        installContainer.style.display = 'block';
+      
+        installButton.addEventListener('click', async () => {
+          if (!deferredPrompt) return;
+          
+          try {
+            const { outcome } = await deferredPrompt.prompt();
+            
+            if (outcome === 'accepted') {
+              console.log('User accepted install');
+              
+              // Track installation
+              await fetch(`${BASE_URL}/track-install`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  timestamp: new Date().toISOString(),
+                  userAgent: navigator.userAgent,
+                  platform: navigator.platform
+                })
+              });
+              
+              localStorage.setItem('appInstalled', 'true');
+            }
+            
+            installContainer.style.display = 'none';
+            deferredPrompt = null;
+            
+          } catch (error) {
+            console.error('Install failed:', error);
+            installContainer.style.display = 'none';
+          }
+        });
+      });
+      
+      // Handle successful installation
+      window.addEventListener('appinstalled', () => {
+        localStorage.setItem('appInstalled', 'true');
+        document.getElementById('install-container').style.display = 'none';
+      });
+      </script>
   </body>
 </html>
