@@ -281,7 +281,40 @@ const Backdrop = styled.div`
 `;
 
 function App() {
+  let deferredPrompt;
 
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the default mini-infobar from appearing
+    e.preventDefault();
+    
+    // Store the event for later
+    deferredPrompt = e;
+  
+    // Show the install button
+    const installButton = document.getElementById('install-button');
+    if (installButton) {
+      installButton.style.display = 'block';
+  
+      installButton.addEventListener('click', () => {
+        // Show the install prompt
+        deferredPrompt.prompt();
+  
+        // Wait for the user's response
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('✅ User accepted the A2HS prompt');
+          } else {
+            console.log('❌ User dismissed the A2HS prompt');
+          }
+  
+          // Reset the deferred prompt
+          deferredPrompt = null;
+          installButton.style.display = 'none';
+        });
+      });
+    }
+  });
+  
 const Navigate  =  useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem('token')

@@ -1,79 +1,69 @@
-const CACHE_NAME = "community-hub-v1";
-const OFFLINE_URL = "offline.html";
-
-const ASSETS = [
+const CACHE_NAME = "community-hub-v2";
+const OFFLINE_URL = "/offline.html";
+const INSTALL_CACHE = [
   '/',
   '/index.html',
-  '/offline.html',
-  '/logo192.png',
   '/manifest.json',
-  '/static/js/main.chunk.js',
-  '/static/js/0.chunk.js',
-  '/static/js/bundle.js',
-  '/peoples/favourites',
-  '/reviews',
-  '/amenities'
+  '/static/js/main.js',
+  '/logo192.png',
+  '/logo512.png'
 ];
 
-// Install event 
+// Improved install event with core assets
 self.addEventListener("install", (event) => {
+  self.skipWaiting(); // Force activate new SW immediately
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("[Service Worker] Caching all assets");
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(INSTALL_CACHE))
+      .then(() => console.log("[SW] Core assets cached"))
   );
 });
 
-// network falling back to cache
+// Unified fetch handler with network-first strategy
 self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  
+  // Network first for navigation requests
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Cache-first for assets
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request).then((response) => {
-        return response || caches.match(OFFLINE_URL);
-      });
-    })
-  );
-});
-
-// Activate event - clear old caches
-self.addEventListener("activate", (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((cache) => {
-          if (!cacheWhitelist.includes(cache)) {
-            console.log(`[Service Worker] Deleting old cache: ${cache}`);
-            return caches.delete(cache);
-          }
-        })
-      )
-    )
-  );
-});
-
-// Push event - show notifications
-self.addEventListener("push", (event) => {
-  const data = event.data?.json() || {};
-  self.registration.showNotification(data.title || "Notification", {
-    body: data.body || "You have a new message.",
-    icon: '/logo.png'
-  });
-});
-
-
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request).then((response) => {
-        if (response) return response;
-
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+    caches.match(request)
+      .then(cached => cached || fetch(request))
+      .catch(() => {
+        if (request.headers.get('Accept').includes('text/html')) {
+          return caches.match(OFFLINE_URL);
         }
-        return caches.match(OFFLINE_URL);
-      });
+      })
+  );
+});
+
+// Cleanup old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => 
+      Promise.all(
+        keys.map(key => (key !== CACHE_NAME ? caches.delete(key) : null))
+      )
+    ).then(() => self.clients.claim()) // Take control immediately after cleanup
+  );
+});
+
+// Push notifications
+self.addEventListener("push", event => {
+  const data = event.data?.json() || {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || "New Update", {
+      body: data.body || "Check out what's new!",
+      icon: '/logo192.png',
+      badge: '/badge.png',
+      vibrate: [200, 100, 200]
     })
   );
 });
@@ -81,6 +71,9 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow('https://yourdomain.com/jobs')
+    clients.openWindow(event.notification.data?.url || '/')
   );
 });
+
+
+

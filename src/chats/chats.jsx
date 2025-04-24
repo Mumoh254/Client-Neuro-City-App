@@ -10,7 +10,7 @@ import {
 import axios from 'axios';
 import styled from 'styled-components';
 import { getUserIdFromToken, getUserNameFromToken } from '../components/handler/tokenDecoder';
-
+import { debounce } from 'lodash';
 const HubContainer = styled.div`
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: 100vh;
@@ -117,6 +117,8 @@ const ReviewSection = () => {
   const [showComments, setShowComments] = useState({});
   const [commentTexts, setCommentTexts] = useState({});
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const commentInputRefs = useRef({}); // Replace previous commentInputRef
+
   const [formData, setFormData] = useState({
     content: '',
     stickers: []
@@ -148,13 +150,13 @@ const ReviewSection = () => {
     }
   };
 
-
   const handleCommentInputChange = (postId, value) => {
     setCommentTexts(prev => ({
       ...prev,
       [postId]: value
     }));
-    
+  
+ 
     // Maintain focus after state update
     setTimeout(() => {
       if (commentInputRef.current) {
@@ -252,7 +254,7 @@ const ReviewSection = () => {
     }));
   };
 
-  const PostCard = ({ post, index }) => (
+  const PostCard = React.memo(({ post, index }) => (
     <PostBubble $even={index % 2 === 0}>
       <div className="d-flex align-items-start gap-3 mb-3">
         <UserAvatar>{post.author?.Name[0] || 'A'}</UserAvatar>
@@ -335,19 +337,16 @@ const ReviewSection = () => {
           </div>
 
           <div className="mt-4 d-flex gap-2">
-            <Form.Control
-              ref={commentInputRef}
-              as="textarea"
-              rows={2}
-              value={commentTexts[post.id] || ''}
-              onChange={(e) => setCommentTexts(prev => ({
-                ...prev,
-                [post.id]: e.target.value
-              }))}
-              placeholder="Add your perspective..."
-              className="flex-grow-1"
-              style={{ borderRadius: '15px' }}
-            />
+          <Form.Control
+  ref={(el) => (commentInputRefs.current[post.id] = el)}
+  as="textarea"
+  rows={2}
+  value={commentTexts[post.id] || ''}
+  onChange={(e) => handleCommentInputChange(post.id, e.target.value)} // Use handler function
+  placeholder="Add your perspective..."
+  className="flex-grow-1"
+  style={{ borderRadius: '15px' }}
+/>
             <Button 
               variant="primary" 
               onClick={() => handleCommentSubmit(post.id)}
@@ -359,7 +358,7 @@ const ReviewSection = () => {
         </div>
       )}
     </PostBubble>
-  );
+));
 
   return (
     <HubContainer>
