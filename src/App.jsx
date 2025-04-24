@@ -282,43 +282,7 @@ const Backdrop = styled.div`
 `;
 
 function App() {
-  let deferredPrompt;
 
-  // Listen for the 'beforeinstallprompt' event
-  window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the default browser prompt
-    e.preventDefault();
-
-    // Store the event for later use
-    deferredPrompt = e;
-
-    // Show your custom install button
-    const installButton = document.getElementById('install-button');
-    installButton.style.display = 'block';  // Show the button
-
-    // Add an event listener for the install button click
-    installButton.addEventListener('click', () => {
-      // Show the native install prompt
-      deferredPrompt.prompt();
-
-      // Wait for the user to respond to the prompt
-      deferredPrompt.userChoice
-        .then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          } else {
-            console.log('User dismissed the install prompt');
-          }
-          // Reset the deferred prompt
-          deferredPrompt = null;
-
-          // Optionally, hide the install button after the prompt
-          installButton.style.display = 'none';
-        });
-    });
-  });
-
-  
 const Navigate  =  useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem('token')
