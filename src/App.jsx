@@ -431,11 +431,7 @@ console.log("true")
           </NavLink>
 
 
-          <NavLink to="/software-guide-feedback" className="button">
-            <FaCircleInfo size={20} /> Software Guide
-          </NavLink>
-
-
+    
              
           <NavLink to="/gems" className="button">
             <FaCircleInfo size={20} /> gems
@@ -466,15 +462,11 @@ console.log("true")
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/must-visit-places" element={<PlacesCarousel />} />
+          <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
           <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
 
-
-
-          <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />
-      
           <Route path="/community-suport" element={<CommunityHub />} />
 
           <Route element={<ProtectedRoute />}>
@@ -490,7 +482,7 @@ console.log("true")
   }
 />
 
-            <Route path="/comunity-suport" element={<PageWithBack title="Community Support"><ReviewsSection /></PageWithBack>} />
+            <Route path="/comunity-suport" element={<PageWithBack titl={`Welcome ${username} , to E-Comunity HUb `}><ReviewsSection /></PageWithBack>} />
             <Route path="/amenities" element={<PageWithBack title="Public Amenities"><PublicAmenities /></PageWithBack>} />
             <Route path="/weather" element={<PageWithBack title={`Hello ${username} , Know  Your Weather`}><WeatherNairobi /></PageWithBack>} />
             <Route path="/stages" element={<PageWithBack title="Transport Stages"><StagesData /></PageWithBack>} />

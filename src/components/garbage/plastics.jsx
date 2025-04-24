@@ -28,6 +28,8 @@ const EcoCard = styled(Card)`
 
 const PlasticRecyclingApp = ({ theme = 'light' }) => {
 
+const [username, setUsername] = useState('');
+const [userRole, setUserRole] = useState('');
 
 const   BASE_URL  =  'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke'
 
@@ -58,6 +60,23 @@ const   BASE_URL  =  'https://neuro-apps-api-express-js-production-redy.onrender
       console.log('User ID:', userId);
       setUserId(userId); 
     }, []);
+
+
+     // Fetch user ID from localStorage
+  useEffect(() => {
+   
+    if (userId) {
+      setUser(userId); // Set the userId from localStorage
+    }
+  }, []);
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      Notification.requestPermission();
+    }
+  }, []);
+
+ 
    
 useEffect(() => {
   const fetchData = async () => {

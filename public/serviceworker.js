@@ -9,7 +9,7 @@ const INSTALL_CACHE = [
   '/logo512.png',
 ];
 
-// Install event - Cache the core assets
+
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -20,42 +20,42 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Fetch event - Network-first for navigation requests, Cache-first for assets
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
 
-  // Network-first for navigation requests
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .catch(() => caches.match('/index.html')) // Fallback to index.html if network fails
+        .catch(() => caches.match('/index.html')) 
     );
     return;
   }
 
-  // Cache-first for other assets (e.g., images, JS, CSS)
+
   event.respondWith(
     caches.match(request)
       .then(cached => {
         if (cached) {
-          return cached;  // Return cached response if exists
+          return cached;  
         }
-        // Otherwise, fetch from network and cache the response
+   
         return fetch(request)
           .then(networkResponse => {
-            // Clone the response because the body can only be consumed once
+       
             const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME)
               .then(cache => cache.put(request, responseClone))
               .catch(error => console.error("[SW] Error caching response", error));
             return networkResponse;
           })
-          .catch(() => caches.match(OFFLINE_URL)); // Fallback to offline page if network fails
+          .catch(() => caches.match(OFFLINE_URL)); 
       })
   );
 });
 
-// Activate event - Clean up old caches
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then(keys => 
@@ -63,11 +63,11 @@ self.addEventListener("activate", (event) => {
         keys.map(key => {
           if (key !== CACHE_NAME) {
             console.log(`[SW] Deleting outdated cache: ${key}`);
-            return caches.delete(key); // Delete old caches
+            return caches.delete(key); 
           }
         })
       )
-    ).then(() => self.clients.claim()) // Take control of the page immediately
+    ).then(() => self.clients.claim())
       .catch(error => console.error("[SW] Error during activation", error))
   );
 });
