@@ -1,25 +1,37 @@
 import { useEffect, useState } from 'react';
 
-
+import { getUserNameFromToken } from '../handler/tokenDecoder';
 
 const Download = () => {
-  const [username, setUserName] = useState('Guest');
+  const [username, setUserName] = useState('');
+
+
+  
+  useEffect(() => {
+    const userData = getUserNameFromToken();
+    if (userData) {
+      console.log(userData);
+  
+      setUserName(userData.name);
+
+    }
+  }, []);
+
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstall = (e) => {
-      // Prevent the default browser prompt and store the event for later
+
       e.preventDefault();
       console.log('📦 beforeinstallprompt event captured');
       setDeferredPrompt(e);
     };
 
-    // Listen for the 'beforeinstallprompt' event
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
-      // Clean up the event listener when the component is unmounted
+
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
   }, []);
@@ -30,7 +42,7 @@ const Download = () => {
     
     if (deferredPrompt) {
       try {
-        // Show the custom installation prompt
+  
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
 
@@ -44,7 +56,7 @@ const Download = () => {
       } catch (error) {
         console.error('Installation error:', error);
       } finally {
-        setDeferredPrompt(null); // Clear the deferred prompt once it is used
+        setDeferredPrompt(null); 
       }
     } else {
       const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);

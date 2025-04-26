@@ -425,8 +425,8 @@ console.log("true")
             <BsChatSquareQuoteFill  /> E-Chats
           </NavLink>
      
-          <NavLink to="/amenities" onClick={() => setIsMenuOpen(false)}>
-            <FiMap /> Amenities
+          <NavLink to="/report/coruption-Real-time/analytics" onClick={() => setIsMenuOpen(false)}>
+            <FiMap /> Corruption
           </NavLink>
           <NavLink to="/community-painpoints-analysis" onClick={() => setIsMenuOpen(false)}>
             <SiGoogleanalytics /> Analytics
@@ -437,6 +437,12 @@ console.log("true")
           <NavLink to="/traffic" onClick={() => setIsMenuOpen(false)}>
             <FiNavigation /> Traffic
           </NavLink>
+
+
+          <NavLink to="/plastics-recycles">
+              <FaTrashRestoreAlt /> Recycle
+            </NavLink> 
+          
           <NavLink to="/peoples/favourites" onClick={() => setIsMenuOpen(false)}>
             <FaInternetExplorer /> Explore
           </NavLink>
