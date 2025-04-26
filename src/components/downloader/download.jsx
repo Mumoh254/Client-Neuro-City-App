@@ -38,7 +38,6 @@ const Download = () => {
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
-  
   const handleInstall = async () => {
     if (deferredPrompt) {
       try {
@@ -55,16 +54,20 @@ const Download = () => {
         console.error('Installation error:', error);
       }
     } else {
+      // Better browser detection
+      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+      const isEdge = /Edg/.test(navigator.userAgent);
+  
       if (window.matchMedia('(display-mode: standalone)').matches) {
         alert('App is already installed!');
-      } else if (navigator.userAgent.includes('Chrome') || navigator.userAgent.includes('Edge')) {
-        alert('Installation is available only on Chrome or Edge browsers.');
+      } else if (isChrome || isEdge) {
+        alert('Installation not available yet — try refreshing or check the install prompt.');
       } else {
-        alert('Installation is not available. Please use Chrome or Edge on desktop, or Android Chrome.');
+        alert('Installation is only supported on Chrome or Edge browsers.');
       }
     }
   };
-
+  
   const trackInstall = async () => {
     try {
       const response = await fetch(`${BASE_URL}/track-install`, {
