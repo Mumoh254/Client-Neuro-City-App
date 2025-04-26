@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getUserNameFromToken } from '../handler/tokenDecoder';
 
-// Use the environment variable for API base URL
 const BASE_URL = "process.env.REACT_APP_API_URL";
 
 const Download = () => {
@@ -10,34 +9,19 @@ const Download = () => {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Retrieve and set user name
-    const user = getUserNameFromToken();
-    if (user?.name) setUserName(user.name);
-
     const handleBeforeInstall = (e) => {
       e.preventDefault();
-      setDeferredPrompt(e);
       console.log('📦 beforeinstallprompt event captured');
+      setDeferredPrompt(e);
     };
-
-    const handleAppInstalled = () => {
-      console.log('✅ App was installed');
-      setIsInstalled(true);
-    };
-
+  
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    // Check standalone mode
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-    }
-
+  
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
+  
   const handleInstall = async () => {
     if (deferredPrompt) {
       try {
@@ -46,6 +30,7 @@ const Download = () => {
         
         if (outcome === 'accepted') {
           console.log('✅ App installed successfully');
+          setIsInstalled(true);
           trackInstall();
         } else {
           console.log('❌ App installation dismissed');
@@ -54,7 +39,6 @@ const Download = () => {
         console.error('Installation error:', error);
       }
     } else {
-      // Better browser detection
       const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
       const isEdge = /Edg/.test(navigator.userAgent);
   
@@ -85,10 +69,11 @@ const Download = () => {
   return (
     <div className="installation-container">
       <h1>Hello {username}, Welcome to Neuro-City-Apps</h1>
+
       <button 
         className="install-button"
         onClick={handleInstall}
-        disabled={isInstalled}
+        disabled={!deferredPrompt || isInstalled}
       >
         {isInstalled ? 'App Installed ✓' : 'Install App Now'}
       </button>
