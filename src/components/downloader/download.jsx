@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getUserNameFromToken } from '../handler/tokenDecoder';
 
-const BASE_URL = "process.env.REACT_APP_API_URL";
+
 
 const Download = () => {
   const [username, setUserName] = useState('Guest');
@@ -10,24 +9,31 @@ const Download = () => {
 
   useEffect(() => {
     const handleBeforeInstall = (e) => {
+      // Prevent the default browser prompt and store the event for later
       e.preventDefault();
       console.log('📦 beforeinstallprompt event captured');
       setDeferredPrompt(e);
     };
-  
+
+    // Listen for the 'beforeinstallprompt' event
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-  
+
     return () => {
+      // Clean up the event listener when the component is unmounted
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
   }, []);
-  
+
   const handleInstall = async () => {
+
+
+    
     if (deferredPrompt) {
       try {
+        // Show the custom installation prompt
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        
+
         if (outcome === 'accepted') {
           console.log('✅ App installed successfully');
           setIsInstalled(true);
@@ -37,11 +43,13 @@ const Download = () => {
         }
       } catch (error) {
         console.error('Installation error:', error);
+      } finally {
+        setDeferredPrompt(null); // Clear the deferred prompt once it is used
       }
     } else {
       const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
       const isEdge = /Edg/.test(navigator.userAgent);
-  
+
       if (window.matchMedia('(display-mode: standalone)').matches) {
         alert('App is already installed!');
       } else if (isChrome || isEdge) {
@@ -51,8 +59,11 @@ const Download = () => {
       }
     }
   };
-  
+
   const trackInstall = async () => {
+
+    const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"; 
+
     try {
       const response = await fetch(`${BASE_URL}/track-install`, {
         method: 'POST',
@@ -70,7 +81,8 @@ const Download = () => {
     <div className="installation-container">
       <h1>Hello {username}, Welcome to Neuro-City-Apps</h1>
 
-      <button 
+      {/* Custom Install Button */}
+      <button
         className="install-button"
         onClick={handleInstall}
         disabled={!deferredPrompt || isInstalled}

@@ -1,7 +1,7 @@
 {
   "name": "Neuro City App - Community Platform",
   "short_name": "CityNeuro",
-  "start_url": "https://neuro-city-apps.netlify.app/#/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",

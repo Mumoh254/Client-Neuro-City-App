@@ -59,6 +59,8 @@ const ChargeType = styled.div`
 
 
 export default function EVCharging() {
+
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
   const navigate = useNavigate();
   const [stations, setStations] = useState([]);
   const [selectedChargeType, setSelectedChargeType] = useState(null);
@@ -69,7 +71,7 @@ export default function EVCharging() {
   useEffect(() => {
     const fetchStations = async () => {
       try {
-        const response = await fetch('/api/stations');
+        const response = await fetch(`${BASE_URL}/get-ev-station`);
         if (!response.ok) throw new Error('Failed to fetch stations');
         const data = await response.json();
         setStations(data.data);
