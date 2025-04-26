@@ -6,6 +6,7 @@ import {
   FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook, FiRadio,
   FiMessageCircle, FiUserPlus, FiArrowLeft, FiArrowRight
 } from 'react-icons/fi';
+import { RiBatteryChargeFill } from "react-icons/ri";
 import { BsChatSquareQuoteFill } from "react-icons/bs";
 import { PiUserSoundFill } from "react-icons/pi";
 import { FaInternetExplorer, FaTrashRestoreAlt, FaHome, FaRecycle,  FaDownload  , FaPeopleCarry } from "react-icons/fa";
@@ -55,7 +56,7 @@ import ReviewSection from './chats/chats';
 import { getUserNameFromToken } from './components/handler/tokenDecoder';
 import Gems from './components/foods-gems/gems';
 import Download from './components/downloader/download';
-
+import  EVCharging   from  "./components/Green-Energy/Evs-Cars/findEvsStations"
 // Styled Components
 
 const settings = {
@@ -130,7 +131,7 @@ const MobileMenuButton = styled.button`
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.45rem;
   display: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   @media (max-width: 768px) {
@@ -144,7 +145,7 @@ const Sidebar = styled.nav`
   overflow-y: auto;
   overflow-x: hidden;
   background: #ffffff;
-  padding: 1rem;
+  padding:0.45rem;
   box-shadow: 2px 0 8px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
   position: fixed;
@@ -217,20 +218,21 @@ const Sidebar = styled.nav`
     &:hover {
       background: #fee2e2;
       color: #dc2626;
+      
     }
   }
 `;
 
 const MainContent = styled.main`
   flex: 1;
-  padding: 2rem;
+  padding: 0.25rem;
   margin-left: 240px;
   min-height: calc(100vh - 80px);
   position: relative;
   
   @media (max-width: 768px) {
     margin-left: 0;
-    padding: 1rem;
+    padding: 0.25rem;
     padding-top: 4rem;
     padding-bottom: 80px;
   }
@@ -245,24 +247,25 @@ const BottomNav = styled.nav`
   background: #ffffff;
   display: flex;
   justify-content: space-around;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
 
   a {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.25rem;
     color: #64748b;
     text-decoration: none;
     font-size: 0.75rem;
+  
     
     &.active {
       color: #6366f1;
     }
     
     svg {
-      font-size: 1.25rem;
+      font-size: 0.75rem;
       margin-bottom: 0.25rem;
     }
   }
@@ -398,6 +401,14 @@ console.log("true")
           <NavLink to="/smart-parking" onClick={() => setIsMenuOpen(false)}>
             <FiMapPin /> Parking
           </NavLink>
+
+          
+          <NavLink to="/ev-fast-charging" onClick={() => setIsMenuOpen(false)}>
+            <RiBatteryChargeFill /> EV-Charge
+          </NavLink>
+
+
+        
           <NavLink to="/zero-garbage" onClick={() => setIsMenuOpen(false)}>
             <FaTrashRestoreAlt /> Garbage
           </NavLink>
@@ -459,6 +470,8 @@ console.log("true")
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/ev-fast-charging" element={<EVCharging   />} />
+           
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />

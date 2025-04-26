@@ -312,27 +312,7 @@ const LandingPage = () => {
 </GovernorSection>
 
 
-        <BottomNav>
-          <NavItem to="/traffic">
-            <FiNavigation />
-            <span>Traffic</span>
-          </NavItem>
-          
-          <NavItem to="/city-news-feed">
-            <FiRadio />
-            <span>News</span>
-          </NavItem>
-
-          <NavItem to="/register">
-            <FiUserPlus />
-            <span>Register</span>
-          </NavItem>
-
-          <NavItem to="/report/coruption-Real-time/analytics">
-            <FiMessageCircle />
-            <span>Corruption</span>
-          </NavItem>
-        </BottomNav>
+      
       </DashboardContainer>
     </>
   );

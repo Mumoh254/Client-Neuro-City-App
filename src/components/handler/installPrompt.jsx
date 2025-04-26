@@ -3,6 +3,7 @@ import { Button, Alert } from 'react-bootstrap';
 import axios from 'axios';
 
 const InstallPrompt = () => {
+  
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
   const [alreadyInstalled, setAlreadyInstalled] = useState(false);

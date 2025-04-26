@@ -204,3 +204,97 @@ a:hover{
     color: #0d6efd !important;
   }
  
+
+  /* This hides the scrollbars but scrolling still works */
+body {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* Internet Explorer 10+ */
+  overflow: -moz-scrollbars-none;
+}
+
+body::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari, and Opera */
+}
+
+
+.installation-container {
+  text-align: center;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+}
+
+h1 {
+  color: #1a365d;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+.install-button {
+  background-color: #1a365d;
+  color: white;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.install-button:hover {
+  background-color: #06b10f;
+}
+
+.install-button:focus {
+  outline: none;
+}
+
+/* Developer & Contact Section */
+.developer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  margin-top: 50px;
+}
+
+.developer-section img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.developer-section h2 {
+  font-size: 1.5rem;
+  color: #1a365d;
+  margin-bottom: 10px;
+}
+
+.developer-section p {
+  font-size: 1rem;
+  color: #333;
+  margin: 5px 0;
+}
+
+.company-section {
+  background-color: #1a365d;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-radius: 8px;
+  margin-top: 30px;
+}
+
+.company-section h3 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+.company-section p {
+  font-size: 1rem;
+  margin-top: 5px;
+}
