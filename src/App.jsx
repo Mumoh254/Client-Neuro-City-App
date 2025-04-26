@@ -6,6 +6,7 @@ import {
   FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook, FiRadio,
   FiMessageCircle, FiUserPlus, FiArrowLeft, FiArrowRight
 } from 'react-icons/fi';
+import { LuLogOut } from "react-icons/lu";
 import { RiBatteryChargeFill } from "react-icons/ri";
 import { BsChatSquareQuoteFill } from "react-icons/bs";
 import { PiUserSoundFill } from "react-icons/pi";
@@ -412,6 +413,7 @@ console.log("true")
           <NavLink to="/zero-garbage" onClick={() => setIsMenuOpen(false)}>
             <FaTrashRestoreAlt /> Garbage
           </NavLink>
+
           <NavLink to="/comunity-suport" onClick={() => setIsMenuOpen(false)}>
             <PiUserSoundFill />E-Community 
           </NavLink>
@@ -463,7 +465,7 @@ console.log("true")
           </NavLink>
 
           <button onClick={handleLogout} className="logout-button">
-            <FiX /> Logout
+            <LuLogOut /> Logout
           </button>
         </Sidebar>
       )}
