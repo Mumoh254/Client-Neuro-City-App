@@ -2,22 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    
     <!-- Viewport for Responsive Design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <!-- SEO: Title & Meta -->
     <title>City Neuro App | Smart City Navigation & Access to Community Hub</title>
     <meta name="description" content="City Neuro is a smart city solution for real-time navigation, safety, and public health support, helping citizens move smarter and safer." />
     <meta name="keywords" content="City Neuro, smart city, public safety, navigation, city health, urban technology, real-time maps, citizen support" />
     <meta name="author" content="Welt Tallis Development Team" />
     <meta name="robots" content="index, follow" />
-
     <!-- PWA: Web App Manifest -->
     <link rel="manifest" href="/manifest.json" />
 
     <meta name="theme-color" content="#1a365d">
-
     <!-- Favicon & App Icons -->
     <link rel="icon" href="/images/logo.png" type="image/png" />
     <link rel="apple-touch-icon" href="/images/logo.png" />
@@ -26,8 +22,6 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://api.tomtom.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
-
-
 
     <!-- In your index.html -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -43,7 +37,6 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
     <!-- Bootstrap CSS -->
     <link 
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" 
@@ -57,18 +50,17 @@
     <div id="root"></div>
 
     
-    <button id="install-button" style="display:none;">Install App</button>
+  
 
-    <!-- TomTom Maps JS -->
     <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps-web.min.js" defer></script>
 
-    <!-- React Entry (Vite or ES Module) -->
+
     <script type="module" src="/src/main.jsx" defer></script>
 
-    <!-- Fallback (Optional) -->
+   
     <script src="main.js"></script>
 
-    <!-- PWA Service Worker Registration -->
+
     <script>
       
 
@@ -77,7 +69,7 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker
-            .register('/serviceworker.js')  // 🔥 FIXED: ensure path starts with /
+            .register('/serviceworker.js') 
             .then(reg => console.log('✅ Service Worker registered with scope:', reg.scope))
             .catch(err => console.error('❌ Service Worker registration failed:', err));
         });
@@ -86,7 +78,8 @@
 
 
     <script>
-  
+
+
     </script>
   </body>
 </html>

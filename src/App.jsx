@@ -554,15 +554,14 @@ console.log("true")
 
         {user && (
           <BottomNav>
-            <NavLink to="/" end>
-              <FiHome /> Home
-            </NavLink>
+                    <NavLink to="/plastics-recycles">
+              <FaTrashRestoreAlt /> Recycle
+            </NavLink> 
+          
             <NavLink to="/peoples/favourites">
               <FaInternetExplorer /> Explore
             </NavLink>
-            <NavLink to="/plastics-recycles">
-              <FaTrashRestoreAlt /> Recycle
-            </NavLink>
+    
 
             <NavLink to="/comunity-suport">
               <FaPeopleCarry /> Support
@@ -573,9 +572,10 @@ console.log("true")
               <FaDownload  /> Download
             </NavLink>
 
-            <NavLink to="/report/coruption-Real-time/analytics">
-              <FaPeopleCarry /> Corruption
+            <NavLink to="/" end>
+              <FiHome /> Home
             </NavLink>
+         
           </BottomNav>
         )}
       </MainContent>

@@ -1,54 +1,71 @@
 import { useEffect, useState } from 'react';
 import { getUserNameFromToken } from '../handler/tokenDecoder';
 
+// Use the environment variable for API base URL
+const BASE_URL = "process.env.REACT_APP_API_URL";
+
 const Download = () => {
-  const [username, setUserName] = useState('');
+  const [username, setUserName] = useState('Guest');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Get user name from the token (for personalized greeting)
-    const userName = getUserNameFromToken();
-    setUserName(userName?.name || 'Guest');
+    // Retrieve and set user name
+    const user = getUserNameFromToken();
+    if (user?.name) setUserName(user.name);
 
-    // Listen for the beforeinstallprompt event
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the default behavior to show the install prompt
+    const handleBeforeInstall = (e) => {
       e.preventDefault();
-      setDeferredPrompt(e); // Save the prompt event to trigger later
-    });
+      setDeferredPrompt(e);
+      console.log('📦 beforeinstallprompt event captured');
+    };
 
-    // Cleanup listener when the component is unmounted
+    const handleAppInstalled = () => {
+      console.log('✅ App was installed');
+      setIsInstalled(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Check standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
     return () => {
-      window.removeEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        setDeferredPrompt(e);
-      });
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
-
+  
   const handleInstall = async () => {
-    // Ensure deferredPrompt is available
     if (deferredPrompt) {
-      // Trigger the install prompt
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-
-      if (outcome === 'accepted') {
-        console.log('✅ App installed successfully');
-        trackInstall();
-      } else {
-        console.log('❌ App installation dismissed');
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('✅ App installed successfully');
+          trackInstall();
+        } else {
+          console.log('❌ App installation dismissed');
+        }
+      } catch (error) {
+        console.error('Installation error:', error);
       }
-
-      // Clear the deferredPrompt after prompt is shown
-      setDeferredPrompt(null);
     } else {
-      console.log('❗ Installation prompt not available');
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        alert('App is already installed!');
+      } else if (navigator.userAgent.includes('Chrome') || navigator.userAgent.includes('Edge')) {
+        alert('Installation is available only on Chrome or Edge browsers.');
+      } else {
+        alert('Installation is not available. Please use Chrome or Edge on desktop, or Android Chrome.');
+      }
     }
   };
 
   const trackInstall = async () => {
-    // Tracking installation (optional)
     try {
       const response = await fetch(`${BASE_URL}/track-install`, {
         method: 'POST',
@@ -65,26 +82,28 @@ const Download = () => {
   return (
     <div className="installation-container">
       <h1>Hello {username}, Welcome to Neuro-City-Apps</h1>
-
-      {/* Always show the install button */}
-      <button onClick={handleInstall} className="install-button">
-        Install App
+      <button 
+        className="install-button"
+        onClick={handleInstall}
+        disabled={isInstalled}
+      >
+        {isInstalled ? 'App Installed ✓' : 'Install App Now'}
       </button>
 
-      {/* Developer Section */}
       <div className="developer-section">
         <img src="/images/dev.png" alt="Developer" />
         <h2>Peter Mumo</h2>
         <p>CEO & Founder Welt Tallis</p>
         <p>Developer & Creator of Neuro-City-Apps</p>
-        <p>Contact: peteritumo2030@gmail.com</p>
-        <p>Phone: +254740045355</p>
+        <div className="contact-info">
+          <p>📧 peteritumo2030@gmail.com</p>
+          <p>📱 +254740045355</p>
+        </div>
       </div>
 
-      {/* Company Promotion Section */}
       <div className="company-section">
-        <h3>Promoted by Welt Tallis Group .</h3>
-        <p>We Believe in the Power of Technology to Change  Human Life.</p>
+        <h3>Promoted by Welt Tallis Group</h3>
+        <p>We Believe in the Power of Technology to Change Human Life.</p>
       </div>
     </div>
   );

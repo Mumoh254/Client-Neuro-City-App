@@ -121,7 +121,7 @@ color: #e0e7ff;
 
 const GovernorSection = styled.div`
   background: linear-gradient(135deg, #1a4393 0%, #2a8c4a 100%);
-  border-radius: 24px;
+
   margin: 4rem 0;
   padding: 3rem;
   color: white;
@@ -173,51 +173,6 @@ const GovernorContent = styled.div`
   }
 `;
 
-const BottomNav = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 1rem;
-  display: flex;
-  justify-content: space-around;
-  z-index: 1000;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-  backdrop-filter: blur(12px);
-
-  @media (min-width: 769px) {
-   
-  }
-`;
-
-const NavItem = styled(NavLink)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem;
-  color: #64748b;
-  text-decoration: none;
-  transition: all 0.2s ease;
-
-  &.active {
-    color: #6366f1;
-    
-    svg {
-      transform: translateY(-4px);
-    }
-  }
-
-  svg {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-    transition: all 0.2s ease;
-  }
-
-  span {
-    font-size: 0.75rem;
-  }
-`;
 
 const LandingPage = () => {
   const services = [
