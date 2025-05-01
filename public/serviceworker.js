@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `city-neuro-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 const INSTALL_CACHE = [
@@ -33,10 +33,17 @@ self.addEventListener('activate', (event) => {
     }).then(() => self.clients.claim())
   );
 });
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   
+  // Skip non-HTTP requests and browser extensions
+  if (!request.url.startsWith('http') || 
+      request.url.startsWith('chrome-extension://')) {
+    return;
+  }
 
+  // Network-first for navigation
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -50,7 +57,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-
+  // Cache-first for assets
   event.respondWith(
     caches.match(request).then(cached => {
       return cached || fetch(request).then(networkResponse => {
@@ -88,19 +95,4 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
-});
-
-// Background sync (unchanged)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-updates') {
-    event.waitUntil(
-      fetch(`${BASE_URL}/sync-data`)
-        .then((response) => response.json())
-        .then((data) => {
-          caches.open(CACHE_NAME)
-            .then((cache) => cache.put('/api/sync-data', new Response(JSON.stringify(data))));
-        })
-        .catch((error) => console.error('Sync failed:', error))
-    );
-  }
 });
