@@ -1,79 +1,77 @@
-const CACHE_VERSION = 'v3';
-const CACHE_NAME = `community-hub-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v4';
+const CACHE_NAME = `city-neuro-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
-const BASE_URL = 'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke';
-
 const INSTALL_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/images/logo.png',
+  '/manifest.webmanifest',
   '/src/main.jsx',
-  '/images/nairobi.png',
   '/styles.css',
-  '/offline.html',
+  '/images/logo-192.png',
+  '/images/logo-512.png',
+  OFFLINE_URL
 ];
 
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(INSTALL_CACHE))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
 self.addEventListener('fetch', (event) => {
-  if (!event.request.url.startsWith('http') || 
-      event.request.url.includes('chrome-extension://')) {
-    return;
-  }
-
   const { request } = event;
+  
 
-  // Network-first for navigation
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then(networkResponse => {
           const clone = networkResponse.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => cache.put(request, clone))
-            .catch(err => console.warn('Cache put error:', err));
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
           return networkResponse;
         })
-        .catch(() => {
-          return caches.match(request)
-            .then(cached => cached || caches.match(OFFLINE_URL));
-        })
-    );
-    return;
-  }
-
-  // API handling
-  if (request.url.includes('/apiV1/')) {
-    event.respondWith(
-        fetch(request)
-          .then(response => {
-            const clone = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => cache.put(request, clone))
-              .catch(err => console.warn('API cache error:', err));
-            return response;
-          })
-          .catch(() => caches.match(request))
+        .catch(() => caches.match(request).then(cached => cached || caches.match(OFFLINE_URL)))
     );
     return;
   }
 
 
-  // Cache-first for assets
   event.respondWith(
     caches.match(request).then(cached => {
       return cached || fetch(request).then(networkResponse => {
         const clone = networkResponse.clone();
-        caches.open(CACHE_NAME)
-          .then(cache => cache.put(request, clone))
-          .catch(err => console.warn('Asset cache error:', err));
+        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
         return networkResponse;
-      }).catch(() => caches.match(OFFLINE_URL));
+      }).catch(() => {
+        if (request.headers.get('Accept').includes('text/html')) {
+          return caches.match(OFFLINE_URL);
+        }
+      });
     })
   );
 });
 
-// Rest of your event handlers remain the same...
-// Push notifications (unchanged)
+self.addEventListener('message', (event) => {
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
   event.waitUntil(

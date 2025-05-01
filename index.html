@@ -43,6 +43,60 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" 
         integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" 
         crossorigin="anonymous" />
+
+    <style>
+        /* Loading Spinner Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 0.25em solid #1a365d;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay p {
+            margin-top: 1rem;
+            color: #1a365d;
+            font-weight: 500;
+        }
+
+        /* Network Toast Styles */
+        .network-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+        }
+
+        .network-toast.online { background: #2d9c6f; }
+        .network-toast.offline { background: #ef4444; }
+    </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -62,19 +116,35 @@
     <!-- Service Worker Registration -->
     <script>
         (function() {
-            // Loading state management
             const loadingEl = document.getElementById('loading');
-            
+            let registration;
+
+            function showUpdateNotification() {
+                if (registration && registration.waiting) {
+                    if (confirm('A new version is available. Refresh to update?')) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                }
+            }
+
+            function showToast(message, type) {
+                const toast = document.createElement('div');
+                toast.className = `network-toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', async () => {
                     try {
-                        const reg = await navigator.serviceWorker.register('/serviceworker.js', {
+                        registration = await navigator.serviceWorker.register('/serviceworker.js', {
                             updateViaCache: 'none',
                             scope: '/'
                         });
 
-                        reg.addEventListener('updatefound', () => {
-                            const newWorker = reg.installing;
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                     showUpdateNotification();
@@ -82,7 +152,7 @@
                             });
                         });
 
-                        if (reg.waiting) {
+                        if (registration.waiting) {
                             showUpdateNotification();
                         }
 
@@ -96,28 +166,14 @@
 
                     } catch (error) {
                         console.error('Service Worker registration failed:', error);
+                        showToast('Service Worker failed to load', 'offline');
                     } finally {
                         loadingEl.style.display = 'none';
                     }
                 });
 
-                // Network status detection
-                window.addEventListener('online', () => showToast('Internet connection restored'));
-                window.addEventListener('offline', () => showToast('You are currently offline'));
-            }
-
-            function showUpdateNotification() {
-                if (confirm('A new version is available. Refresh to update?')) {
-                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                }
-            }
-
-            function showToast(message) {
-                const toast = document.createElement('div');
-                toast.className = `network-toast ${navigator.onLine ? 'online' : 'offline'}`;
-                toast.textContent = message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
+                window.addEventListener('online', () => showToast('Internet connection restored', 'online'));
+                window.addEventListener('offline', () => showToast('You are currently offline', 'offline'));
             }
         })();
     </script>
