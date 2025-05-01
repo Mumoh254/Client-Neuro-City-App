@@ -1,8 +1,9 @@
-const CACHE_NAME = "community-hub-v2";
-const OFFLINE_URL = "/offline.html";
-const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `community-hub-${CACHE_VERSION}`;
+const OFFLINE_URL = '/offline.html';
+const BASE_URL = 'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke';
 
-// URLs to cache during the installation process
+// URLs to cache during installation (add content hashes in production)
 const INSTALL_CACHE = [
   '/',
   '/index.html',
@@ -11,21 +12,43 @@ const INSTALL_CACHE = [
   '/src/main.jsx',
   '/images/nairobi.png',
   '/styles.css',
-  '/offline.html', // Ensure offline page is cached
+  '/offline.html',
+  // Add hashed assets (e.g., '/main.a1b2c3.js') in production
 ];
 
+// Install and cache core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(INSTALL_CACHE))
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(INSTALL_CACHE))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  const request = event.request;
+// Activate and clean old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => 
+      Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log(`Clearing old cache: ${cache}`);
+            return caches.delete(cache);
+          }
+        })
+      )
+    )
+    .then(() => self.clients.claim())
+    .catch((error) => console.error('Activation failed:', error))
+  );
+});
 
-  // Handle API requests or dynamic content fetching
-  if (request.url.includes('/apiV1/')) {
-    // For requests to /jobs and /get-news endpoints
+// Network-first for HTML, cache-first for assets
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Network-first for HTML pages
+  if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
@@ -34,50 +57,41 @@ self.addEventListener('fetch', (event) => {
             .then((cache) => cache.put(request, responseClone));
           return networkResponse;
         })
-        .catch(() => caches.match(request))  // Return cached response if offline
+        .catch(() => caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL)))
     );
-  } else {
-    // Handle assets (static files)
-    event.respondWith(
-      caches.match(request)
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return fetch(request)
-            .then((networkResponse) => {
-              const responseClone = networkResponse.clone();
-              if (request.url.startsWith('http')) {
-                caches.open(CACHE_NAME)
-                  .then((cache) => cache.put(request, responseClone));
-              }
-              return networkResponse;
-            })
-            .catch(() => caches.match(OFFLINE_URL));  // Fallback to offline page
-        })
-    );
+    return;
   }
-});
 
-self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker...');
-  event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('[SW] Deleting old cache:', cache);
-            return caches.delete(cache);
-          }
+  // API requests
+  if (request.url.includes('/apiV1/')) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => cache.put(request, responseClone));
+          return networkResponse;
         })
-      )
-    )
-    .then(() => self.clients.claim())
-    .catch((error) => console.error('[SW] Error during activation', error))
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const networkFetch = fetch(request).then((networkResponse) => {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME)
+          .then((cache) => cache.put(request, responseClone));
+        return networkResponse;
+      });
+      return cached || networkFetch.catch(() => caches.match(OFFLINE_URL));
+    })
   );
 });
 
-// Handle push notifications
+// Push notifications (unchanged)
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
   event.waitUntil(
@@ -86,22 +100,17 @@ self.addEventListener('push', (event) => {
       icon: '/logo192.png',
       badge: '/badge.png',
       vibrate: [200, 100, 200],
-      data: {
-        url: data.url || '/',
-      },
+      data: { url: data.url || '/' },
     })
   );
 });
 
-// Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data?.url || '/')
-  );
+  event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
 });
 
-// Handle background sync
+// Background sync (unchanged)
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-updates') {
     event.waitUntil(
@@ -109,11 +118,9 @@ self.addEventListener('sync', (event) => {
         .then((response) => response.json())
         .then((data) => {
           caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put('/api/sync-data', new Response(JSON.stringify(data)));
-            });
+            .then((cache) => cache.put('/api/sync-data', new Response(JSON.stringify(data))));
         })
-        .catch((error) => console.error('[SW] Sync error:', error))
+        .catch((error) => console.error('Sync failed:', error))
     );
   }
 });
