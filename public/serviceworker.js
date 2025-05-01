@@ -14,36 +14,7 @@ const INSTALL_CACHE = [
   '/offline.html',
 ];
 
-// Install Event
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(INSTALL_CACHE))
-      .then(() => self.skipWaiting())
-      .catch(err => console.error('Install failed:', err))
-  );
-});
-
-// Activate Event
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames.map(cache => {
-        if (cache !== CACHE_NAME) {
-          console.log(`Deleting old cache: ${cache}`);
-          return caches.delete(cache);
-        }
-        return null;
-      })
-    ))
-    .then(() => self.clients.claim())
-    .catch(err => console.error('Activation failed:', err))
-  );
-});
-
-// Fetch Event (Updated with error handling)
 self.addEventListener('fetch', (event) => {
-  // Skip non-HTTP(S) requests
   if (!event.request.url.startsWith('http') || 
       event.request.url.includes('chrome-extension://')) {
     return;
@@ -62,8 +33,10 @@ self.addEventListener('fetch', (event) => {
             .catch(err => console.warn('Cache put error:', err));
           return networkResponse;
         })
-        .catch(() => caches.match(request)
-          .then(cached => cached || caches.match(OFFLINE_URL))
+        .catch(() => {
+          return caches.match(request)
+            .then(cached => cached || caches.match(OFFLINE_URL));
+        })
     );
     return;
   }
@@ -71,18 +44,19 @@ self.addEventListener('fetch', (event) => {
   // API handling
   if (request.url.includes('/apiV1/')) {
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => cache.put(request, clone))
-            .catch(err => console.warn('API cache error:', err));
-          return response;
-        })
-        .catch(() => caches.match(request))
+        fetch(request)
+          .then(response => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put(request, clone))
+              .catch(err => console.warn('API cache error:', err));
+            return response;
+          })
+          .catch(() => caches.match(request))
     );
     return;
   }
+
 
   // Cache-first for assets
   event.respondWith(
