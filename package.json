@@ -27,6 +27,7 @@
     "framer-motion": "^12.7.3",
     "html-to-image": "^1.11.13",
     "i18next": "^24.2.3",
+    "javascript-time-ago": "^2.5.11",
     "jwt-decode": "^3.1.2",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^1.13.3",

@@ -1,115 +1,140 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
-  Card, Form, Button, Spinner, Alert,
-  Badge, Modal, ListGroup, Container
+  Button, Form, Spinner, Alert,
+  Badge, Container, OverlayTrigger,
+  Tooltip, Dropdown
 } from 'react-bootstrap';
 import {
-  FaComment, FaThumbsUp, FaPaperPlane, FaUser,
-  FaPen, FaRegThumbsUp, FaPlus, FaTimes
+  FaComment, FaThumbsUp, FaPaperPlane,
+  FaPen, FaRegThumbsUp, FaTimes, FaMoon, FaSun,
+  FaHeart, FaRegComment, FaBell, FaTrash
 } from 'react-icons/fa';
 import axios from 'axios';
-import styled from 'styled-components';
-import { getUserIdFromToken, getUserNameFromToken } from '../components/handler/tokenDecoder';
-import { debounce } from 'lodash';
+import styled, { ThemeContext } from 'styled-components';
+import { getUserIdFromToken } from '../components/handler/tokenDecoder';
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en';
+
+TimeAgo.addDefaultLocale(en);
+const timeAgo = new TimeAgo('en-US');
+
+// Styled components
 const HubContainer = styled.div`
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: ${props => props.theme.background};
   min-height: 100vh;
-  padding-bottom: 120px;
+  padding: 0.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 `;
 
 const PostBubble = styled.div`
-  background: ${props => props.$even ? '#ffffff' : '#f8f9fa'};
-  border-radius: 20px;
-  padding: 2rem;
-  margin: 1rem 0;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(0,0,0,0.05);
-
+  background: ${props => props.isOdd ? props.theme.oddPostBg : props.theme.postBg};
+  color: ${props => props.theme.text};
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin: 0.3rem 0;
+  border: 1px solid ${props => props.theme.border};
+  transition: all 0.15s ease;
+  line-height: 1.35;
+  font-size: 0.8125rem;
+  position: relative;
+  
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    transform: translateY(-0.5px);
+    box-shadow: ${props => props.theme.shadow};
   }
 `;
 
 const CommentBubble = styled.div`
-  background: #f0f2f5;
-  border-radius: 15px;
-  padding: 1.25rem;
-  margin: 0.75rem 0 0.75rem 2rem;
-  font-size: 0.95em;
+  background: ${props => props.theme.commentBg};
+  color: ${props => props.theme.text};
+  border-radius: 6px;
+  padding: 0.6rem;
+  margin: 0.3rem 0 0.3rem 1.2rem;
+  font-size: 0.75rem;
   position: relative;
+  border: 1px solid ${props => props.theme.commentBorder};
+  line-height: 1.3;
   
   &::before {
     content: '';
     position: absolute;
-    left: -1rem;
-    top: 1rem;
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-right: 10px solid #f0f2f5;
-  }
-
-  .reaction-bar {
-    display: flex;
-    gap: 4px;
-    margin-top: 8px;
-  }
-  
-  .reaction-btn {
-    border: none;
-    background: none;
-    padding: 2px;
-    cursor: pointer;
-    transition: transform 0.2s;
-    font-size: 1.2rem;
-  }
-  
-  .reaction-btn:hover {
-    transform: scale(1.2);
-  }
-  
-  .reaction-btn.active {
-    transform: scale(1.3);
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.2));
+    left: -0.6rem;
+    top: 0.5rem;
+    border: 5px solid transparent;
+    border-right-color: ${props => props.theme.commentBg};
   }
 `;
 
 const StickyReviewForm = styled.div`
   position: fixed;
-  bottom: 2rem;
+  bottom: 0.6rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 90%;
-  max-width: 800px;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  width: 96%;
+  max-width: 560px;
+  background: ${props => props.theme.formBg};
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid ${props => props.theme.border};
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   z-index: 1000;
 `;
 
 const UserAvatar = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  background: ${props => props.color || props.theme.avatarBg};
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1.5px solid ${props => props.theme.avatarBorder};
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 `;
 
-const ContentWrapper = styled(Container)`
-  max-width: 1200px;
-  padding: 2rem 1rem;
-`;
+// Themes
+const lightTheme = {
+  background: '#fafafa',
+  postBg: '#ffffff',
+  oddPostBg: '#f8f9fa',
+  commentBg: '#f0f2f5',
+  commentBorder: 'rgba(0,0,0,0.04)',
+  formBg: '#ffffff',
+  text: '#2d3436',
+  border: 'rgba(0,0,0,0.08)',
+  avatarBg: '#6366f1',
+  avatarBorder: 'rgba(255,255,255,0.2)',
+  shadow: '0 1px 3px rgba(0,0,0,0.03)'
+};
+
+const darkTheme = {
+  background: '#0a0a0a',
+  postBg: '#161616',
+  oddPostBg: '#202020',
+  commentBg: '#2a2a2a',
+  commentBorder: 'rgba(255,255,255,0.06)',
+  formBg: '#1a1a1a',
+  text: '#e0e0e0',
+  border: 'rgba(255,255,255,0.08)',
+  avatarBg: '#4f46e5',
+  avatarBorder: 'rgba(0,0,0,0.3)',
+  shadow: '0 1px 4px rgba(0,0,0,0.12)'
+};
+
+const REACTIONS = ['👍', '❤️', '😂', '😲', '😢'];
+const STICKERS = ['🚀', '💡', '🌟', '🔥', '💯'];
+const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+
+const getAvatarColor = (char) => {
+  const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  return colors[char.charCodeAt(0) % colors.length];
+};
 
 const ReviewSection = () => {
+  const [darkMode, setDarkMode] = useState(false);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -117,32 +142,53 @@ const ReviewSection = () => {
   const [showComments, setShowComments] = useState({});
   const [commentTexts, setCommentTexts] = useState({});
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const commentInputRefs = useRef({}); // Replace previous commentInputRef
-
-  const [formData, setFormData] = useState({
-    content: '',
-    stickers: []
-  });
   const [userId, setUserId] = useState(null);
-  const [commentReactions, setCommentReactions] = useState({});
-  const commentInputRef = useRef(null);
-
-  const REACTIONS = ['👍', '❤️', '😂', '😲', '😢', '👎', '👏', '🎉', '💩', '🤔'];
-  const STICKERS = ['🚀', '💡', '🌟', '✨', '🔥', '💯', '✅', '❌', '⚠️', '🌈'];
-  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+  const [notifiedPosts, setNotifiedPosts] = useState(new Set());
+  const [formData, setFormData] = useState({ content: '', stickers: [] });
+  const [editPostId, setEditPostId] = useState(null);
 
   useEffect(() => {
     const userId = getUserIdFromToken();
     setUserId(userId);
     fetchPosts();
+    checkNotificationPermission();
+    const interval = setInterval(fetchPosts, 60000);
+    return () => clearInterval(interval);
   }, []);
+
+  const checkNotificationPermission = async () => {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      await Notification.requestPermission();
+    }
+  };
+
+  const sendNotification = (post) => {
+    if (Notification.permission === 'granted') {
+      new Notification(`New Post from ${post.author.Name}`, {
+        body: post.content.substring(0, 50) + (post.content.length > 50 ? '...' : ''),
+        icon: 'https://cdn-icons-png.flaticon.com/512/1250/1250689.png'
+      });
+    }
+  };
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
       const { data } = await axios.get(`${BASE_URL}/posts`);
-      const normalized = (data || []).map(p => ({ ...p, id: p.id ?? p._id }));
-      setPosts(normalized);
+      const newPosts = data.map(p => ({ ...p, id: p.id ?? p._id }));
+      
+      const now = new Date();
+      newPosts.forEach(post => {
+        const postDate = new Date(post.createdAt);
+        const diffMinutes = (now - postDate) / (1000 * 60);
+        
+        if (diffMinutes <= 10 && !notifiedPosts.has(post.id)) {
+          sendNotification(post);
+          setNotifiedPosts(prev => new Set([...prev, post.id]));
+        }
+      });
+
+      setPosts(newPosts);
     } catch (err) {
       setError('Failed to load posts');
     } finally {
@@ -150,303 +196,358 @@ const ReviewSection = () => {
     }
   };
 
-
-  const handleCommentInputChange = (postId, value) => {
-  setCommentTexts(prev => ({
-    ...prev,
-    [postId]: value
-  }));
-};
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
-      const newPost = {
+      const { data } = await axios.post(`${BASE_URL}/posts`, {
         content: formData.content,
-        stickers: formData.stickers,
-        authorId: userId,
-        likes: [],
-        comments: []
-      };
-
-      const response = await axios.post(`${BASE_URL}/posts`, newPost);
-      setPosts([response.data, ...posts]);
+        author: userId
+      });
+      setPosts(prev => [data, ...prev]);
       setFormData({ content: '', stickers: [] });
       setShowReviewForm(false);
-      setSuccess('Review posted!');
+      setSuccess('Post created successfully');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError('Failed to post review');
+      setError('Failed to create post');
+    }
+  };
+
+  const handleCommentSubmit = async (postId) => {
+    try {
+      const commentContent = commentTexts[postId];
+      const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
+        content: commentContent,
+        author: userId
+      });
+      
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? 
+        { ...post, comments: [...post.comments, data] } : post
+      ));
+      setCommentTexts(prev => ({ ...prev, [postId]: '' }));
+    } catch (err) {
+      setError('Failed to add comment');
     }
   };
 
   const handleLike = async (postId) => {
     try {
-      const updatedPosts = posts.map(post => {
-        if (post.id === postId) {
-          const likes = post.likes.includes(userId)
-            ? post.likes.filter(id => id !== userId)
-            : [...post.likes, userId];
-          return { ...post, likes };
-        }
-        return post;
-      });
-
-      setPosts(updatedPosts);
-      await axios.put(`${BASE_URL}/${postId}/like`, { userId });
+      const { data } = await axios.post(`${BASE_URL}/posts/${postId}/like`, { userId });
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? { ...post, likes: data.likes } : post
+      ));
     } catch (err) {
       setError('Failed to update like');
     }
   };
 
-  const handleCommentSubmit = async (postId) => {
-    const content = commentTexts[postId];
-    if (!content?.trim()) return;
-
+  const handleDeletePost = async (postId) => {
     try {
-      const newComment = {
-        content,
-        userId,
-        createdAt: new Date().toISOString()
-      };
-
-      const response = await axios.post(`${BASE_URL}/${postId}/comments`, newComment);
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, comments: [...post.comments, response.data] }
-          : post
-      ));
-      setCommentTexts({ ...commentTexts, [postId]: '' });
-      setSuccess('Comment posted!');
+      await axios.delete(`${BASE_URL}/posts/${postId}`);
+      setPosts(prev => prev.filter(post => post.id !== postId));
+      setSuccess('Post deleted successfully');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError('Failed to post comment');
+      setError('Failed to delete post');
     }
   };
 
   const handleCommentReaction = async (postId, commentId, reaction) => {
     try {
-      const updatedReactions = { ...commentReactions };
-      const reactionKey = `${postId}-${commentId}`;
+      const { data } = await axios.post(
+        `${BASE_URL}/posts/${postId}/comments/${commentId}/react`,
+        { reaction }
+      );
       
-      if (updatedReactions[reactionKey] === reaction) {
-        delete updatedReactions[reactionKey];
-      } else {
-        updatedReactions[reactionKey] = reaction;
-      }
-      
-      setCommentReactions(updatedReactions);
-      await axios.put(`${BASE_URL}/comments/${commentId}/react`, { userId, reaction });
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? {
+          ...post,
+          comments: post.comments.map(comment => 
+            comment.id === commentId ? { ...comment, reactions: data.reactions } : comment
+          )
+        } : post
+      ));
     } catch (err) {
-      setError('Failed to save reaction');
+      setError('Failed to add reaction');
     }
   };
 
-  const handleStickerSelect = (sticker) => {
-    setFormData(prev => ({
-      ...prev,
-      stickers: [...prev.stickers, sticker],
-      content: prev.content + sticker
-    }));
-  };
+  const PostCard = React.memo(({ post, index }) => {
+    const theme = useContext(ThemeContext);
+    const inputRef = useRef(null);
+    const [localComment, setLocalComment] = useState('');
+    const userInitial = post.author?.Name?.[0] || 'A';
+    const avatarColor = getAvatarColor(userInitial);
 
+    useEffect(() => {
+      if (showComments[post.id]) {
+        inputRef.current?.focus();
+        setLocalComment(commentTexts[post.id] || '');
+      }
+    }, [showComments[post.id]]);
 
+    const handleSubmit = () => {
+      setCommentTexts(prev => ({ ...prev, [post.id]: localComment }));
+      handleCommentSubmit(post.id);
+      setLocalComment('');
+    };
 
-const PostCard = React.memo(({ post, index }) => {
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (showComments[post.id] && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showComments[post.id]]); // Only trigger when comment visibility changes
-  return (
-    <PostBubble $even={index % 2 === 0}>
-      <div className="d-flex align-items-start gap-3 mb-3">
-        <UserAvatar>{post.author?.Name[0] || 'A'}</UserAvatar>
-        <div className="flex-grow-1">
-          <div className="d-flex justify-content-between align-items-start">
-            <div>
-              <h5 className="mb-0 fw-semibold text-primary">{post.author?.Name}</h5>
-              <small className="text-muted">
-                {new Date(post.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </small>
+    return (
+      <PostBubble theme={theme} isOdd={index % 2 !== 0}>
+        <div className="d-flex align-items-start gap-2 mb-2">
+          <UserAvatar color={avatarColor}>{userInitial}</UserAvatar>
+          <div className="flex-grow-1">
+            <div className="d-flex justify-content-between align-items-start">
+              <div>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-medium">{post.author?.Name}</span>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={<Tooltip>{new Date(post.createdAt).toLocaleString()}</Tooltip>}
+                  >
+                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>
+                      {timeAgo.format(new Date(post.createdAt))}
+                    </span>
+                  </OverlayTrigger>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <Badge bg="secondary" className="fs-7 rounded-pill">
+                  {post.role}
+                </Badge>
+                {post.author?._id === userId && (
+                  <Dropdown>
+                    <Dropdown.Toggle variant="link" className="p-0">
+                      <FaTrash className="text-danger" style={{ fontSize: '0.8rem' }} />
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => handleDeletePost(post.id)}>
+                        Delete Post
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                )}
+              </div>
             </div>
-            <Badge bg="light" text="primary" className="fs-6">
-              {post.role}
-            </Badge>
-          </div>
-          <p className="mt-3 mb-4 fs-5 text-dark">{post.content}</p>
-          
-          <div className="d-flex gap-3 align-items-center">
-            <Button 
-              variant="outline-primary" 
-              className="d-flex align-items-center gap-2"
-              onClick={() => handleLike(post.id)}
-            >
-              {post.likes?.includes(userId) ? <FaThumbsUp /> : <FaRegThumbsUp />}
-              <span>{post.likes?.length || 0}</span>
-            </Button>
-
-            <Button 
-              variant="outline-secondary" 
-              className="d-flex align-items-center gap-2"
-              onClick={() => setShowComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
-            >
-              <FaComment />
-              <span>{post.comments?.length || 0}</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {showComments[post.id] && (
-        <div className="mt-4">
-          <h6 className="mb-3 fw-semibold text-muted">Community Perspectives</h6>
-          <div className="comments">
-            {post.comments?.map((comment, index) => {
-              const reactionKey = `${post.id}-${comment.id}`;
-              const currentReaction = commentReactions[reactionKey];
-
-              return (
-                <CommentBubble key={index}>
-                  <div className="d-flex align-items-center gap-2 mb-2">
-                    <UserAvatar style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>
-                      {comment.author?.Name[0]}
-                    </UserAvatar>
-                    <div>
-                      <h6 className="mb-0 fw-semibold">{comment.author?.Name}</h6>
-                      <small className="text-muted">
-                        {new Date(comment.createdAt).toLocaleDateString()}
-                      </small>
-                    </div>
-                  </div>
-                  <p className="mb-0">{comment.content}</p>
-                  <div className="reaction-bar">
-                    {REACTIONS.map((reaction) => (
-                      <button
-                        key={reaction}
-                        className={`reaction-btn ${currentReaction === reaction ? 'active' : ''}`}
-                        onClick={() => handleCommentReaction(post.id, comment.id, reaction)}
-                      >
-                        {reaction}
-                      </button>
-                    ))}
-                  </div>
-                </CommentBubble>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 d-flex gap-2">
-               <Form.Control
-      ref={inputRef}
-      as="textarea"
-      rows={2}
-      value={commentTexts[post.id] || ''}
-      onChange={(e) => handleCommentInputChange(post.id, e.target.value)}
-      placeholder="Add your perspective..."
-      className="flex-grow-1"
-      style={{ borderRadius: '15px' }}
-    />
-            <Button 
-              variant="primary" 
-              onClick={() => handleCommentSubmit(post.id)}
-              style={{ borderRadius: '15px', padding: '0.5rem 1.5rem' }}
-            >
-              Post
-            </Button>
-          </div>
-        </div>
-      )}
-    </PostBubble>
-  );
-});
-
-  return (
-    <HubContainer>
-      <ContentWrapper>
-        {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-        {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
-
-        <div className="d-flex justify-content-between align-items-center mb-5 p-4 bg-white rounded-3 shadow-sm">
-          <div>
-            <h1 className="display-5 fw-bold mb-2 text-primary">Free Speech & The E-Chats</h1>
-            <p className="lead text-muted mb-0">Community-Driven Urban Solutions</p>
-          </div>
-          <Button 
-            variant="primary" 
-            onClick={() => setShowReviewForm(true)}
-            className="d-flex align-items-center gap-2 py-2 px-4 rounded-pill"
-          >
-            <FaPen className="fs-5" />
-            <span className="d-none d-md-inline">Start Discussion</span>
-          </Button>
-        </div>
-
-        {posts.map((post, index) => (
-          <PostCard key={post.id} post={post} index={index} />
-        ))}
-
-        {showReviewForm && (
-          <StickyReviewForm>
-            <div className="position-relative">
+            <p className="mt-1 mb-2">{post.content}</p>
+            
+            <div className="d-flex gap-3 align-items-center">
               <Button 
                 variant="link" 
-                onClick={() => setShowReviewForm(false)}
-                className="position-absolute top-0 end-0 p-2"
+                className="p-0 text-muted d-flex align-items-center gap-1 hover-effect"
+                onClick={() => handleLike(post.id)}
               >
-                <FaTimes className="fs-5 text-secondary" />
+                {post.likes?.includes(userId) ? 
+                  <FaThumbsUp className="text-primary" /> : 
+                  <FaRegThumbsUp />}
+                <small style={{ fontSize: '0.7rem' }}>{post.likes?.length || 0}</small>
               </Button>
-              
-              <h5 className="mb-4 fw-semibold text-primary">New Civic Discussion</h5>
-              <Form onSubmit={handleReviewSubmit}>
-                <Form.Control
-                  as="textarea"
-                  rows={4}
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Share your urban innovation idea or civic concern..."
-                  className="mb-3 border-0 shadow-sm rounded-3 p-3"
-                  style={{ minHeight: '120px' }}
-                />
-                
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="d-flex gap-2 flex-wrap">
-                    {STICKERS.map((sticker, i) => (
-                      <Button
-                        key={i}
-                        variant="outline-primary"
-                        className="rounded-circle p-2"
-                        onClick={() => handleStickerSelect(sticker)}
-                      >
-                        {sticker}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    className="rounded-pill px-4 py-2 d-flex align-items-center gap-2"
-                  >
-                    <FaPaperPlane className="fs-5" />
-                    Publish Idea
-                  </Button>
-                </div>
-              </Form>
-            </div>
-          </StickyReviewForm>
-        )}
 
-        {loading && (
-          <div className="text-center py-5">
-            <Spinner animation="border" variant="primary" className="me-2" />
-            <span className="text-muted">Loading Community Insights...</span>
+              <Button 
+                variant="link" 
+                className="p-0 text-muted d-flex align-items-center gap-1 hover-effect"
+                onClick={() => setShowComments(prev => ({
+                  ...prev, 
+                  [post.id]: !prev[post.id]
+                }))}
+              >
+                <FaRegComment />
+                <small style={{ fontSize: '0.7rem' }}>{post.comments?.length || 0}</small>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {showComments[post.id] && (
+          <div className="mt-2">
+            <div className="comments">
+              {post.comments?.map((comment, index) => {
+                const commentInitial = comment.author?.Name?.[0] || 'U';
+                const commentColor = getAvatarColor(commentInitial);
+
+                return (
+                  <CommentBubble key={index} theme={theme}>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="d-flex align-items-center gap-2">
+                        <UserAvatar 
+                          color={commentColor}
+                          style={{ width: '24px', height: '24px', fontSize: '0.7rem' }}
+                        >
+                          {commentInitial}
+                        </UserAvatar>
+                        <small className="fw-medium">{comment.author?.Name}</small>
+                      </div>
+                      <small className="text-muted" style={{ fontSize: '0.65rem' }}>
+                        {timeAgo.format(new Date(comment.createdAt))}
+                      </small>
+                    </div>
+                    <p className="mb-0">{comment.content}</p>
+                    <div className="reaction-bar mt-1">
+                      {REACTIONS.map(reaction => (
+                        <button
+                          key={reaction}
+                          className="btn btn-link p-0 me-2 fs-7"
+                          onClick={() => handleCommentReaction(post.id, comment._id, reaction)}
+                        >
+                          {reaction}
+                        </button>
+                      ))}
+                    </div>
+                  </CommentBubble>
+                );
+              })}
+            </div>
+
+            <div className="mt-2 d-flex gap-2">
+              <Form.Control
+                ref={inputRef}
+                as="textarea"
+                rows={1}
+                value={localComment}
+                onChange={(e) => setLocalComment(e.target.value)}
+                placeholder="Add comment..."
+                className="flex-grow-1 rounded-pill"
+                style={{ 
+                  fontSize: '0.75rem', 
+                  padding: '0.4rem 0.8rem',
+                  background: theme.commentBg,
+                  border: 'none'
+                }}
+              />
+              <Button 
+                variant="primary" 
+                onClick={handleSubmit}
+                className="rounded-pill px-2"
+                size="sm"
+                style={{ fontSize: '0.75rem' }}
+              >
+                Post
+              </Button>
+            </div>
           </div>
         )}
-      </ContentWrapper>
-    </HubContainer>
+      </PostBubble>
+    );
+  });
+
+  return (
+    <ThemeContext.Provider value={darkMode ? darkTheme : lightTheme}>
+      <HubContainer>
+        <Container className="position-relative" style={{ maxWidth: '800px' }}>
+          <div className="d-flex gap-2 position-absolute top-0 end-0 mt-2 me-2">
+            <Button 
+              variant="link" 
+              onClick={() => setDarkMode(!darkMode)}
+              style={{ fontSize: '0.9rem' }}
+            >
+              {darkMode ? <FaSun /> : <FaMoon />}
+            </Button>
+            <Button
+              variant="link"
+              onClick={checkNotificationPermission}
+              style={{ fontSize: '0.9rem' }}
+            >
+              <FaBell />
+            </Button>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mb-3 p-2">
+            <div>
+              <h6 className="mb-0 fw-bold">Free Speech Hub</h6>
+              <small className="text-muted" style={{ fontSize: '0.7rem' }}>Express yourself freely</small>
+            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => setShowReviewForm(true)}
+              className="rounded-pill px-2"
+              size="sm"
+              style={{ fontSize: '0.75rem' }}
+            >
+              <FaPen className="me-1" />
+              New Post
+            </Button>
+          </div>
+
+          {error && <Alert variant="danger" className="py-2">{error}</Alert>}
+          {success && <Alert variant="success" className="py-2">{success}</Alert>}
+
+          {loading ? (
+            <div className="text-center mt-4">
+              <Spinner animation="border" variant="primary" />
+            </div>
+          ) : (
+            posts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
+            ))
+          )}
+
+          {showReviewForm && (
+            <StickyReviewForm theme={darkMode ? darkTheme : lightTheme}>
+              <div className="position-relative">
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowReviewForm(false)}
+                  className="position-absolute top-0 end-0 p-1"
+                >
+                  <FaTimes className="fs-6" />
+                </Button>
+                
+                <h6 className="mb-2 fw-bold" style={{ fontSize: '0.875rem' }}>Create Post</h6>
+                <Form onSubmit={handleReviewSubmit}>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    value={formData.content}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      content: e.target.value 
+                    }))}
+                    placeholder="Share your thoughts..."
+                    className="mb-2 rounded-2"
+                    style={{ 
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '0.75rem',
+                      lineHeight: '1.4'
+                    }}
+                  />
+                  
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="d-flex gap-1">
+                      {STICKERS.map((sticker, i) => (
+                        <Button
+                          key={i}
+                          variant="outline-secondary"
+                          className="rounded-circle p-1"
+                          style={{ fontSize: '0.75rem' }}
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            content: prev.content + sticker
+                          }))}
+                        >
+                          {sticker}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      className="rounded-pill px-2"
+                      size="sm"
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      <FaPaperPlane className="me-1" />
+                      Post
+                    </Button>
+                  </div>
+                </Form>
+              </div>
+            </StickyReviewForm>
+          )}
+        </Container>
+      </HubContainer>
+    </ThemeContext.Provider>
   );
 };
 
