@@ -3,9 +3,12 @@ import { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, NavLink, useNavigate } from 'react-router-dom';
 import {
   FiHome, FiMapPin, FiNavigation, FiAlertCircle, FiCloud, FiMenu, FiX,
-  FiUser, FiTrash2, FiStar, FiMap, FiActivity, FiSettings, FiBook, FiRadio,
-  FiMessageCircle, FiUserPlus, FiArrowLeft, FiArrowRight
+  FiUser, FiTrash2, FiStar, FiMap
 } from 'react-icons/fi';
+
+import { GrCloudSoftware } from "react-icons/gr";
+import { IoEyeSharp } from "react-icons/io5";
+
 import { LuLogOut } from "react-icons/lu";
 import { RiBatteryChargeFill } from "react-icons/ri";
 import { BsChatSquareQuoteFill } from "react-icons/bs";
@@ -306,17 +309,14 @@ function App() {
             <FaHome /> Home
           </NavLink>
 
-          <NavLink to="/smart-parking" onClick={() => setIsMenuOpen(false)}>
+          <NavLink to="/parking-card" onClick={() => setIsMenuOpen(false)}>
             <FiMapPin /> Parking
           </NavLink>
 
-          <NavLink to="/parking-card" onClick={() => setIsMenuOpen(false)}>
+          <NavLink to="/park" onClick={() => setIsMenuOpen(false)}>
             <RiBatteryChargeFill /> Parks
           </NavLink>
 
-          <NavLink to="/zero-garbage" onClick={() => setIsMenuOpen(false)}>
-            <FaTrashRestoreAlt /> Garbage
-          </NavLink>
 
           <NavLink to="/comunity-suport" onClick={() => setIsMenuOpen(false)}>
             <PiUserSoundFill />E-Community 
@@ -326,8 +326,44 @@ function App() {
             <IoLogoDesignernews />News & Updates
           </NavLink>
 
+
+
+          <NavLink to="/report-corruption" onClick={() => setIsMenuOpen(false)}>
+            <IoEyeSharp /> Corruption
+          </NavLink>
+
+
+          
+          <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
+            <FiCloud /> Weather 
+          </NavLink>
+
+
+          <NavLink to="/traffic" onClick={() => setIsMenuOpen(false)}>
+            <FiNavigation /> Traffic
+          </NavLink>
+
+
           <NavLink to="/e-chats" onClick={() => setIsMenuOpen(false)}>
             <BsChatSquareQuoteFill /> E-Chats
+          </NavLink>
+
+
+          <NavLink to="/plastics-recycles" onClick={() => setIsMenuOpen(false)}>
+            <FaRecycle />Recycle 
+          </NavLink>
+
+
+          
+          <NavLink to="/software-guide-feedback" onClick={() => setIsMenuOpen(false)}>
+            <GrCloudSoftware  /> Software-Guide
+          </NavLink>
+
+
+          
+          
+          <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
+            <FiAlertCircle  /> Terms  &  Conditions
           </NavLink>
 
           <button onClick={handleLogout} className="logout-button">
@@ -346,6 +382,15 @@ function App() {
           <Route path="/model" element={<ParkingSubscriptionModel />} />
           <Route path="/admin-services" element={<AdminServices />} />
           <Route path="/admin-jobs" element={<AdminJobs  />} />
+          <Route path="/services/create" element={< CreateService  />} />
+          <Route path="/create-jobs" element={< CreateJob  />} />
+          <Route path="/services/list-view" element={<ServicesList />} />
+
+     
+         
+
+          <Route path="/report-corruption" element={ <ReportCorruption  />} />
+        
      
       
 
@@ -360,9 +405,19 @@ function App() {
             <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
             <Route path="/download-neuro-app" element={<PageWithBack><Download /></PageWithBack>} />
             <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
-            <Route path="/smart-parking" element={<PageWithBack><ParkingForm /></PageWithBack>} />
+            <Route path="/park" element={<PageWithBack><ParkingForm /></PageWithBack>} />
 
-            <Route path="/plastics-recycles" element={<PageWithBack title="Recycle Plastic"><PlasticRecyclingApp /></PageWithBack>} />
+
+            <Route path="/peoples/favourites" element={<PageWithBack><Favourites /></PageWithBack>} />
+
+
+            <Route path="/emergency" element={<PageWithBack>< EmergencyServices /></PageWithBack>} />
+
+
+           
+           
+
+            <Route path="/plastics-recycles" element={<PageWithBack ><PlasticRecyclingApp /></PageWithBack>} />
             <Route path="/comunity-suport" element={<PageWithBack><ReviewsSection /></PageWithBack>} />
             <Route path="/weather" element={<PageWithBack><WeatherNairobi /></PageWithBack>} />
             <Route path="/e-city-news-feed" element={<PageWithBack><NewsFeed /></PageWithBack>} />

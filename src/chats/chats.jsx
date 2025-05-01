@@ -150,20 +150,13 @@ const ReviewSection = () => {
     }
   };
 
+
   const handleCommentInputChange = (postId, value) => {
-    setCommentTexts(prev => ({
-      ...prev,
-      [postId]: value
-    }));
-  
- 
-    // Maintain focus after state update
-    setTimeout(() => {
-      if (commentInputRef.current) {
-        commentInputRef.current.focus();
-      }
-    }, 0);
-  }; 
+  setCommentTexts(prev => ({
+    ...prev,
+    [postId]: value
+  }));
+};
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -254,7 +247,17 @@ const ReviewSection = () => {
     }));
   };
 
-  const PostCard = React.memo(({ post, index }) => (
+
+
+const PostCard = React.memo(({ post, index }) => {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (showComments[post.id] && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showComments[post.id]]); // Only trigger when comment visibility changes
+  return (
     <PostBubble $even={index % 2 === 0}>
       <div className="d-flex align-items-start gap-3 mb-3">
         <UserAvatar>{post.author?.Name[0] || 'A'}</UserAvatar>
@@ -337,16 +340,16 @@ const ReviewSection = () => {
           </div>
 
           <div className="mt-4 d-flex gap-2">
-          <Form.Control
-  ref={(el) => (commentInputRefs.current[post.id] = el)}
-  as="textarea"
-  rows={2}
-  value={commentTexts[post.id] || ''}
-  onChange={(e) => handleCommentInputChange(post.id, e.target.value)} // Use handler function
-  placeholder="Add your perspective..."
-  className="flex-grow-1"
-  style={{ borderRadius: '15px' }}
-/>
+               <Form.Control
+      ref={inputRef}
+      as="textarea"
+      rows={2}
+      value={commentTexts[post.id] || ''}
+      onChange={(e) => handleCommentInputChange(post.id, e.target.value)}
+      placeholder="Add your perspective..."
+      className="flex-grow-1"
+      style={{ borderRadius: '15px' }}
+    />
             <Button 
               variant="primary" 
               onClick={() => handleCommentSubmit(post.id)}
@@ -358,7 +361,8 @@ const ReviewSection = () => {
         </div>
       )}
     </PostBubble>
-));
+  );
+});
 
   return (
     <HubContainer>

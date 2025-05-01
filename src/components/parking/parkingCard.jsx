@@ -7,7 +7,7 @@ FaGem
 } from 'react-icons/fa';
 import { format, differenceInSeconds } from 'date-fns';
 import styled from 'styled-components';
-
+import { useNavigate } from 'react-router-dom';
 // Color Theme
 const theme = {
   primary: '#8b5cf6',
@@ -47,6 +47,8 @@ const rankConfig = {
 };
 
 const ParkingSessionCard = () => {
+
+  const navigate = useNavigate(); 
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -268,19 +270,19 @@ const ParkingSessionCard = () => {
         </Row>
 
         <ActionButtons>
-          <PrimaryButton>
-            <FaClock />
-            Extend Parking
-          </PrimaryButton>
-          <SuccessButton>
-            <FaMoneyBillWave />
-            Make Payment
-          </SuccessButton>
-          <DangerButton>
-            <FaCar />
-            End Session
-          </DangerButton>
-        </ActionButtons>
+      <PrimaryButton onClick={() => navigate('/park')}>
+        <FaClock />
+        Park
+      </PrimaryButton>
+      <SuccessButton>
+        <FaMoneyBillWave />
+        Make Payment
+      </SuccessButton>
+      <DangerButton>
+        <FaCar />
+        End Session
+      </DangerButton>
+    </ActionButtons>
       </ContentContainer>
     </StyledContainer>
   );

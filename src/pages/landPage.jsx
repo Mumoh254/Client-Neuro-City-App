@@ -179,14 +179,14 @@ const LandingPage = () => {
     { 
       icon: <FiCompass />, 
       title: "Smart Parking", 
-      to: "/smart-parking",
+      to: "/parking-card",
       bg: '#6366f1',
       bg2: '#8b5cf6'
     },
     { 
       icon: <FiRepeat />, 
       title: "Recycle Platics", 
-      to: "/zero-garbage",
+      to: "/plastics-recycles",
       bg: '#10b981',
       bg2: '#059669'
     },
@@ -200,7 +200,7 @@ const LandingPage = () => {
     { 
       icon: <FiRadio />, 
       title: "City News", 
-      to: "/city-news-feed",
+      to: "/e-city-news-feed",
       bg: '#3b82f6',
       bg2: '#2563eb'
     },
