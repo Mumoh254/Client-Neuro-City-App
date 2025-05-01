@@ -38,7 +38,7 @@
       "name": "New Post",
       "short_name": "Post",
       "description": "Create a new community post",
-      "url": "/create-post"  
+      "url": "/create-post"
     }
   ]
 }
