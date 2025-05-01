@@ -4,14 +4,7 @@ import axios from 'axios';
 import styled from 'styled-components';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import  {   getUserNameFromToken}   from '../handler/tokenDecoder'
-// Dummy logged-in user
-const loggedInUser = {
-  id: 'smart_ke_WT_318784939',
-  name: 'Peter',
-  email: 'john.doe@example.com',
-  phone: '254712345678',
-};
+import { getUserNameFromToken } from '../handler/tokenDecoder';
 
 // Constants
 const DAILY_RATE = 500;
@@ -26,17 +19,7 @@ const calculateCost = (hours) => {
 };
 
 const ParkingSystem = () => {
-
-    const [username, setUsername] = useState('');
-        useEffect(() => {
-          const userData = getUserNameFromToken();
-          if (userData) {
-            console.log(userData);
-            setUsername(userData.name);
-          }
-        }, []);
-
-
+  const [username, setUsername] = useState('');
   const [parkingDetails, setParkingDetails] = useState({
     registrationNumber: '',
     duration: 1,
@@ -48,6 +31,15 @@ const ParkingSystem = () => {
   const [countdown, setCountdown] = useState(null);
   const countdownIntervalRef = useRef(null);
 
+  // Fetch user on mount
+  useEffect(() => {
+    const userData = getUserNameFromToken();
+    if (userData) {
+      setUsername(userData.name);
+    }
+  }, []);
+
+  // Get user's location
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -78,8 +70,30 @@ const ParkingSystem = () => {
     }, 1000);
   };
 
+  const initiateMpesaPayment = async (amount) => {
+    try {
+      const response = await axios.post('http://localhost:8000/apiV1/mpesa/stkpush', {
+        phone: '254712345678', // Replace with loggedInUser.phone dynamically later
+        amount,
+        accountReference: 'PARKING_PAYMENT',
+        transactionDesc: 'Parking Session Payment',
+      });
+      if (response.data.success) {
+        toast.success('Mpesa payment initiated. Please complete on your phone.');
+        return true;
+      } else {
+        toast.error('Mpesa payment failed to start.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Error initiating Mpesa payment.');
+      return false;
+    }
+  };
+
   const createParkingSession = async () => {
-    if (!loggedInUser?.id) {
+    if (!username) {
       toast.error('Login required.');
       return;
     }
@@ -87,26 +101,42 @@ const ParkingSystem = () => {
       toast.error('Waiting for location...');
       return;
     }
+    if (!parkingDetails.registrationNumber || !parkingDetails.parkingType) {
+      toast.error('Please fill in all fields.');
+      return;
+    }
+
+    const cost = calculateCost(Number(parkingDetails.duration));
 
     setLoading(true);
+
     try {
-      const cost = calculateCost(Number(parkingDetails.duration));
+      // First initiate Mpesa payment
+      const paymentSuccess = await initiateMpesaPayment(cost);
+      if (!paymentSuccess) {
+        setLoading(false);
+        return;
+      }
+
+      // After Mpesa payment initiated, create session
       const response = await axios.post('http://localhost:8000/apiV1/smartcity-ke/park', {
         ...parkingDetails,
-        userId: loggedInUser.id,
-        userName: loggedInUser.name,
+        userName: username,
         location: `${location.lat},${location.lng}`,
         amountDue: cost,
         duration: parkingDetails.duration,
       });
+
       setSession(response.data);
 
       const startTime = new Date(response.data.startTime);
       const endTime = new Date(startTime.getTime() + Number(parkingDetails.duration) * 3600000 + GRACE_MINUTES * 60000);
       startCountdown(endTime.getTime());
-      toast.success('Parking session started!');
+
+      toast.success('Parking session started successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error creating session');
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Error creating parking session.');
     }
     setLoading(false);
   };
@@ -172,7 +202,7 @@ const ParkingSystem = () => {
         <ActionButtons>
           {!session && (
             <Button onClick={createParkingSession} disabled={loading}>
-              {loading ? 'Starting session…' : 'Start Parking Session'}
+              {loading ? 'Processing…' : 'Start Parking Session'}
             </Button>
           )}
         </ActionButtons>
@@ -183,12 +213,8 @@ const ParkingSystem = () => {
           <h2>
             <FaClock /> Parking Session Active
           </h2>
-          <p>
-            Session expires in: {countdown !== null ? `${countdown} seconds` : 'Loading...'}
-          </p>
-          <p>
-            Grace period: {GRACE_MINUTES} minutes after expiry.
-          </p>
+          <p>Session expires in: {countdown !== null ? `${countdown} seconds` : 'Loading...'}</p>
+          <p>Grace period: {GRACE_MINUTES} minutes after expiry.</p>
           <LocationInfo>
             <FaMapMarkerAlt /> Your Location:{' '}
             {location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Loading...'}
@@ -200,6 +226,7 @@ const ParkingSystem = () => {
 };
 
 export default ParkingSystem;
+
 
 //
 // Styled Components
@@ -310,4 +337,3 @@ const LocationInfo = styled.div`
   margin-top: 1rem;
   font-size: 0.95rem;
 `;
-

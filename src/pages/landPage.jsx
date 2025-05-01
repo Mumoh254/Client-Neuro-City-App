@@ -185,7 +185,7 @@ const LandingPage = () => {
     },
     { 
       icon: <FiRepeat />, 
-      title: "Waste Management", 
+      title: "Recycle Platics", 
       to: "/zero-garbage",
       bg: '#10b981',
       bg2: '#059669'

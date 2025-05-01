@@ -39,10 +39,10 @@
   <body>
     <div id="root"></div>
 
-    <!-- External JS Libraries -->
+
     <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps-web.min.js" defer></script>
 
-    <!-- Your Main React App -->
+
     <script type="module" src="/src/main.jsx" defer></script>
 
     <!-- Register Service Worker -->
@@ -51,10 +51,26 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker
             .register('/serviceworker.js')
-            .then(reg => console.log('✅ Service Worker registered with scope:', reg.scope))
-            .catch(err => console.error('❌ Service Worker registration failed:', err));
+            .then(reg => {
+              console.log('✅ Service Worker registered with scope:', reg.scope);
+      
+              // Force update 
+              reg.update();
+      
+              if (reg.waiting) {
+                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+     
+              reg.onupdatefound = () => {
+                console.log('🔄 New Service Worker update found.');
+              };
+            })
+            .catch(err => {
+              console.error('❌ Service Worker registration failed:', err);
+            });
         });
       }
+      
     </script>
   </body>
 </html>

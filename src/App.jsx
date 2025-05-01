@@ -1,5 +1,5 @@
 // App.js
-import { useState  , useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, NavLink, useNavigate } from 'react-router-dom';
 import {
   FiHome, FiMapPin, FiNavigation, FiAlertCircle, FiCloud, FiMenu, FiX,
@@ -10,7 +10,7 @@ import { LuLogOut } from "react-icons/lu";
 import { RiBatteryChargeFill } from "react-icons/ri";
 import { BsChatSquareQuoteFill } from "react-icons/bs";
 import { PiUserSoundFill } from "react-icons/pi";
-import { FaInternetExplorer, FaTrashRestoreAlt, FaHome, FaRecycle,  FaDownload  , FaPeopleCarry } from "react-icons/fa";
+import { FaInternetExplorer, FaTrashRestoreAlt, FaHome, FaRecycle, FaDownload, FaPeopleCarry } from "react-icons/fa";
 import { FaCircleInfo } from "react-icons/fa6";
 import { GiMoonClaws } from "react-icons/gi";
 import { SiGoogleanalytics } from "react-icons/si";
@@ -57,69 +57,19 @@ import ReviewSection from './chats/chats';
 import { getUserNameFromToken } from './components/handler/tokenDecoder';
 import Gems from './components/foods-gems/gems';
 import Download from './components/downloader/download';
-import  EVCharging   from  "./components/Green-Energy/Evs-Cars/findEvsStations"
-// Styled Components
+import EVCharging from "./components/Green-Energy/Evs-Cars/findEvsStations"
+import ParkingSessionCard from "./components/parking/parkingCard"
+import ParkingSubscriptionModel from './components/parking/parkingsubscriptionModel';
+import AdminServices from './admin/controller/adminServices';
+import AdminJobs from './admin/controller/adminJobs';
 
-const settings = {
-  dots: true,
-  infinite: true,
-  speed: 500,
-  slidesToShow: 3,
-  slidesToScroll: 1,
-  responsive: [
-    {
-      breakpoint: 992,
-      settings: {
-        slidesToShow: 2,
-        slidesToScroll: 1
-      }
-    },
-    {
-      breakpoint: 768,
-      settings: {
-        slidesToShow: 1,
-        slidesToScroll: 1
-      }
-    }
-  ]
-};
+
 const AppContainer = styled.div`
   display: flex;
   min-height: 100vh;
   position: relative;
   @media (max-width: 768px) {
     flex-direction: column;
-  }
-`;
-
-const HistoryControls = styled.div`
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-  display: flex;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  border-radius: 8px;
-  padding: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-`;
-
-const HistoryButton = styled.button`
-  background: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #4f46e5;
-    transform: translateY(-1px);
   }
 `;
 
@@ -136,7 +86,7 @@ const MobileMenuButton = styled.button`
   display: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   @media (max-width: 768px) {
-    display: block;
+    display: ${props => props.$show ? 'block' : 'none'};
   }
 `;
 
@@ -219,7 +169,6 @@ const Sidebar = styled.nav`
     &:hover {
       background: #fee2e2;
       color: #dc2626;
-      
     }
   }
 `;
@@ -227,14 +176,14 @@ const Sidebar = styled.nav`
 const MainContent = styled.main`
   flex: 1;
   padding: 0.25rem;
-  margin-left: 240px;
+  margin-left: ${props => props.$sidebarVisible ? '240px' : '0'};
   min-height: calc(100vh - 80px);
   position: relative;
   
   @media (max-width: 768px) {
     margin-left: 0;
     padding: 0.25rem;
-    padding-top: 4rem;
+    padding-top: ${props => props.$sidebarVisible ? '4rem' : '0'};
     padding-bottom: 80px;
   }
 `;
@@ -250,6 +199,7 @@ const BottomNav = styled.nav`
   justify-content: space-around;
   padding: 0.25rem 0;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  display: ${props => props.$show ? 'flex' : 'none'};
 
   a {
     display: flex;
@@ -260,7 +210,6 @@ const BottomNav = styled.nav`
     text-decoration: none;
     font-size: 0.75rem;
   
-    
     &.active {
       color: #6366f1;
     }
@@ -288,24 +237,17 @@ const Backdrop = styled.div`
 `;
 
 function App() {
-
-const Navigate  =  useNavigate()
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem('token')
-  );
-console.log("true")
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('token'));
-    };
-
-    window.addEventListener('authStateChanged', handleAuthChange);
-    return () => window.removeEventListener('authStateChanged', handleAuthChange);
-  }, []);
-
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const [username, setUsername] = useState('');
+  const isAdmin = user?.role === 'admin';
+  const showSidebar = !isAdmin && user;
+
+  useEffect(() => {
+    const userData = getUserNameFromToken();
+    if (userData) setUsername(userData.name);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -313,103 +255,65 @@ console.log("true")
     navigate('/login');
   };
 
-
-  const [username, setUsername] = useState('');
-
-  
-    useEffect(() => {
-      const userData = getUserNameFromToken();
-      if (userData) {
-        console.log(userData);
-    
-        setUsername(userData.name);
-
-      }
-    }, []);
-  
   return (
-
-    
     <AppContainer>
-      <MobileMenuButton onClick={() => setIsMenuOpen(!isMenuOpen)}>
-        {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-      </MobileMenuButton>
-      
-      <Backdrop $visible={isMenuOpen} onClick={() => setIsMenuOpen(false)} />
+      {showSidebar && (
+        <>
+          <MobileMenuButton 
+            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+            $show={showSidebar}
+          >
+            {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </MobileMenuButton>
+          <Backdrop $visible={isMenuOpen} onClick={() => setIsMenuOpen(false)} />
+        </>
+      )}
 
-      {user && (
+      {showSidebar && (
         <Sidebar $isOpen={isMenuOpen}>
-        <div className="user-greeting" style={{ 
-  display: 'flex',
-  flexWrap: 'wrap',
-  alignItems: 'center',
-  gap: '8px',
-  padding: '6px 12px',
-  borderRadius: '20px',
-  background: '#f1f5f9',
-  transition: 'all 0.2s ease',
-  cursor: 'pointer',
-  ':hover': {
-    background: '#e2e8f0',
-    transform: 'translateY(-1px)'
-  }
-}}>
-  <FiUser size={14} className="user-icon" style={{ 
-    color: '#4f46e5',
-    flexShrink: 0 
-  }} />
-  <span style={{
-    fontSize: '10px',
-    fontWeight: 300,
-    color: '#334155',
-    whiteSpace: 'nowrap'
-  }}>
-    Welcome, {' '}
-    <span style={{
-      color: '#4f46e5',
-      background: '#e0e7ff',
-      padding: '2px 8px',
-      borderRadius: '12px',
-      marginLeft: '4px',
-      fontWeight: 300
-    }}>
-      {username}
-    </span>
-  </span>
-</div>
+          <div className="user-greeting" style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            background: '#f1f5f9',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer'
+          }}>
+            <FiUser size={14} style={{ color: '#4f46e5' }} />
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 300,
+              color: '#334155'
+            }}>
+              Welcome, {' '}
+              <span style={{
+                color: '#4f46e5',
+                background: '#e0e7ff',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                marginLeft: '4px',
+                fontWeight: 300
+              }}>
+                {username}
+              </span>
+            </span>
+          </div>
 
+          {/* Sidebar Navigation Links */}
           <NavLink to="/" end onClick={() => setIsMenuOpen(false)}>
             <FaHome /> Home
           </NavLink>
-
-          {user?.role === 'admin' && (
-            <>
-              <NavLink to="/admin" onClick={() => setIsMenuOpen(false)}>
-                <SiGoogleanalytics /> Admin Dashboard
-              </NavLink>
-              <NavLink to="/create-news" onClick={() => setIsMenuOpen(false)}>
-                <FiMessageCircle /> Create News
-              </NavLink>
-            </>
-          )}
-
-          {user?.role === 'corporate' && (
-            <NavLink to="/corporate-analytics" onClick={() => setIsMenuOpen(false)}>
-              <SiGoogleanalytics /> Corporate Analytics
-            </NavLink>
-          )}
 
           <NavLink to="/smart-parking" onClick={() => setIsMenuOpen(false)}>
             <FiMapPin /> Parking
           </NavLink>
 
-          
-          <NavLink to="/ev-fast-charging" onClick={() => setIsMenuOpen(false)}>
-            <RiBatteryChargeFill /> EV-Charge
+          <NavLink to="/parking-card" onClick={() => setIsMenuOpen(false)}>
+            <RiBatteryChargeFill /> Parks
           </NavLink>
 
-
-        
           <NavLink to="/zero-garbage" onClick={() => setIsMenuOpen(false)}>
             <FaTrashRestoreAlt /> Garbage
           </NavLink>
@@ -419,49 +323,11 @@ console.log("true")
           </NavLink>
 
           <NavLink to="/e-city-news-feed" onClick={() => setIsMenuOpen(false)}>
-            <IoLogoDesignernews   />News & Updates
+            <IoLogoDesignernews />News & Updates
           </NavLink>
-
 
           <NavLink to="/e-chats" onClick={() => setIsMenuOpen(false)}>
-            <BsChatSquareQuoteFill  /> E-Chats
-          </NavLink>
-     
-          <NavLink to="/report/coruption-Real-time/analytics" onClick={() => setIsMenuOpen(false)}>
-            <FiMap /> Corruption
-          </NavLink>
-          <NavLink to="/community-painpoints-analysis" onClick={() => setIsMenuOpen(false)}>
-            <SiGoogleanalytics /> Analytics
-          </NavLink>
-          <NavLink to="/weather" onClick={() => setIsMenuOpen(false)}>
-            <FiCloud /> Weather
-          </NavLink>
-          <NavLink to="/traffic" onClick={() => setIsMenuOpen(false)}>
-            <FiNavigation /> Traffic
-          </NavLink>
-
-
-          <NavLink to="/plastics-recycles">
-              <FaTrashRestoreAlt /> Recycle
-            </NavLink> 
-          
-          <NavLink to="/peoples/favourites" onClick={() => setIsMenuOpen(false)}>
-            <FaInternetExplorer /> Explore
-          </NavLink>
-          <NavLink to="/live-tracking" onClick={() => setIsMenuOpen(false)}>
-            <FiSettings /> Tracking
-          </NavLink>
-          <NavLink to="/terms" onClick={() => setIsMenuOpen(false)}>
-            <GiMoonClaws /> Terms
-          </NavLink>
-
-            <NavLink to="/software-guide-feedback" className="button">
-            <FaCircleInfo size={20} /> Software Guide
-          </NavLink>
-          
-
-          <NavLink to="/register" className="button">
-            <FiUserPlus size={20} /> Register
+            <BsChatSquareQuoteFill /> E-Chats
           </NavLink>
 
           <button onClick={handleLogout} className="logout-button">
@@ -469,125 +335,81 @@ console.log("true")
           </button>
         </Sidebar>
       )}
-      
-    
 
-
-      <MainContent>
-
+      <MainContent $sidebarVisible={showSidebar}>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/ev-fast-charging" element={<EVCharging   />} />
-           
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />
-          <Route path="/terms" element={<TermsAndConditions />} />
-          <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
-          <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
-          <Route path="/download-neuro-app" element={<PageWithBack ><Download /></PageWithBack>} />
+          <Route path="/model" element={<ParkingSubscriptionModel />} />
+          <Route path="/admin-services" element={<AdminServices />} />
+          <Route path="/admin-jobs" element={<AdminJobs  />} />
+     
+      
 
-    
-          <Route path="/community-suport" element={<CommunityHub />} />
-
+          {/* Protected User Routes */}
           <Route element={<ProtectedRoute />}>
+
+
+          <Route path="/parking-card" element={<ParkingSessionCard />} />
+            <Route path="/nairobi-must-visit-places" element={<PlacesCarousel />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
+            <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
+            <Route path="/download-neuro-app" element={<PageWithBack><Download /></PageWithBack>} />
             <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
-            <Route path="/smart-parking" element={<PageWithBack ><ParkingForm /></PageWithBack>} />
+            <Route path="/smart-parking" element={<PageWithBack><ParkingForm /></PageWithBack>} />
             <Route path="/zero-garbage" element={<PageWithBack title="Waste Management"><GarbageManagementSystem /></PageWithBack>} />
-            <Route 
-  path="/plastics-recycles" 
-  element={
-    <PageWithBack title={`Hello ${username} Help Build a clean City , Recycle Plasics`}>
-      <PlasticRecyclingApp />
-    </PageWithBack>
-  }
-/>
+            <Route path="/plastics-recycles" element={<PageWithBack title="Recycle Plastic"><PlasticRecyclingApp /></PageWithBack>} />
+            <Route path="/comunity-suport" element={<PageWithBack><ReviewsSection /></PageWithBack>} />
+            <Route path="/weather" element={<PageWithBack><WeatherNairobi /></PageWithBack>} />
+            <Route path="/e-city-news-feed" element={<PageWithBack><NewsFeed /></PageWithBack>} />
+            <Route path="/jobs-list" element={<PageWithBack><JobsList /></PageWithBack>} />
+            <Route path="/e-chats" element={<PageWithBack><ReviewSection /></PageWithBack>} />
 
-            <Route path="/comunity-suport" element={<PageWithBack titl={`Welcome ${username} , to E-Comunity HUb `}><ReviewsSection /></PageWithBack>} />
-            <Route path="/amenities" element={<PageWithBack title="Public Amenities"><PublicAmenities /></PageWithBack>} />
-            <Route path="/weather" element={<PageWithBack title={`Hello ${username} , Know  Your Weather`}><WeatherNairobi /></PageWithBack>} />
-            <Route path="/stages" element={<PageWithBack title="Transport Stages"><StagesData /></PageWithBack>} />
-            <Route path="/services/create" element={<PageWithBack title="Create Service"><CreateService /></PageWithBack>} />
-            <Route path="/services/list-view" element={<PageWithBack title="Services Directory"><ServicesList /></PageWithBack>} />
-            <Route path="/emergency" element={<PageWithBack title="Emergency Services"><EmergencyServices /></PageWithBack>} />
-            <Route path="/e-city-news-feed" element={<PageWithBack title="News-Feed"><NewsFeed /></PageWithBack>} />
-
-            <Route path="/jobs-list" element={<PageWithBack title="Job-Lists"><JobsList /></PageWithBack>} />
-            
-            <Route path="/e-chats" element={<PageWithBack title="E-Chats"><ReviewSection /></PageWithBack>} />
-            <Route path="/nairobi-stages-routes" element={<PageWithBack title="Stages  &  Routes "><StagesData /></PageWithBack>} />
-          
-             <Route path="/create-jobs" element={<PageWithBack title="City News">< CreateJob /></PageWithBack>} />
-       
-            <Route path="/city-news-feed" element={<PageWithBack title="City News"><NewsFeed /></PageWithBack>} />
-          
-        
-            <Route
-  path="/peoples/favourites"
-  element={
-    isAuthenticated ? (
-      <PageWithBack title="Fvaourites">
-        <Favourites />
-      </PageWithBack>
-    ) : (
-      <Navigate to="/login" />
-    )
-  }
-/>
-
-            <Route path="/live-tracking" element={<PageWithBack title="Live Tracking"><LiveTrackingMap /></PageWithBack>} />
-            <Route path="/community-painpoints-analysis" element={<PageWithBack title="   Community  Pain  Points  E-Analysis  -  Mosts  Engeged  Posts . "><AnalyticsDashboard /></PageWithBack>} />
-            <Route path="/register-device" element={<PageWithBack title="Device Registration"><LiveTrackingMap /></PageWithBack>} />
-            <Route path="/report/coruption-Real-time/analytics" element={<PageWithBack title={`Hellow ${username} Help  Fight  Corruption in the city.`}><ReportCorruption /></PageWithBack>} />
+         
           </Route>
 
-          <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
-            <Route path="/admin-dashboard" element={<PageWithBack title="AdminDashboard"><AdminDashboard /></PageWithBack>} />
-            <Route path="/create-news" element={<PageWithBack title="Create News"><CreateNews /></PageWithBack>} />
-            <Route path="/corruption-dashboard" element={<PageWithBack title="Corruption Analytics"><CorruptionDashboard /></PageWithBack>} />
-            <Route path="/corporate-install-counts" element={<PageWithBack title="corporate-install-counts"><InstallCount /></PageWithBack>} />
-            <Route path="/corporate-analytics" element={<PageWithBack title="Corporate Insights"><CorporateAnalytics /></PageWithBack>} />
-            <Route path="/cooprate-registartrion-analytics" element={<PageWithBack title="Registration Analytics"><RegistrationAnalytics /></PageWithBack>} />
-            <Route path="/coorporate/services-registration-analytics" element={<PageWithBack title="Service Analytics"><ServicesAnalyticsDashboard /></PageWithBack>} />
+          {/* Admin Routes - No Sidebar */}
+          <Route element={<ProtectedRoute roles={["admin"]} />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/create-news" element={<CreateNews />} />
+            <Route path="/corruption-dashboard" element={<CorruptionDashboard />} />
+            <Route path="/corporate-install-counts" element={<InstallCount />} />
+            <Route path="/corporate-analytics" element={<CorporateAnalytics />} />
+            <Route path="/cooprate-registartrion-analytics" element={<RegistrationAnalytics />} />
+            <Route path="/coorporate/services-registration-analytics" element={<ServicesAnalyticsDashboard />} />
           </Route>
+
+          {/* Corporate Routes */}
           <Route element={<ProtectedRoute roles={["corporate"]} />}>
-            <Route path="/corporate-install-counts" element={<PageWithBack title="Install Analytics"><InstallCount /></PageWithBack>} />
-            <Route path="/corporate-analytics" element={<PageWithBack title="Corporate Insights"><CorporateAnalytics /></PageWithBack>} />
-            <Route path="/cooprate-registartrion-analytics" element={<PageWithBack title="Registration Analytics"><RegistrationAnalytics /></PageWithBack>} />
-            <Route path="/coorporate/services-registration-analytics" element={<PageWithBack title="Service Analytics"><ServicesAnalyticsDashboard /></PageWithBack>} />
+            <Route path="/corporate-analytics" element={<CorporateAnalytics />} />
+            <Route path="/corporate-install-counts" element={<InstallCount />} />
           </Route>
-       
         </Routes>
 
-        {user && (
-          <BottomNav>
-                    <NavLink to="/plastics-recycles">
+        {showSidebar && (
+          <BottomNav $show={showSidebar}>
+            <NavLink to="/plastics-recycles">
               <FaTrashRestoreAlt /> Recycle
-            </NavLink> 
-          
+            </NavLink>
             <NavLink to="/peoples/favourites">
               <FaInternetExplorer /> Explore
             </NavLink>
-    
-
             <NavLink to="/comunity-suport">
               <FaPeopleCarry /> Support
             </NavLink>
-
-            
             <NavLink to="/download-neuro-app">
-              <FaDownload  /> Download
+              <FaDownload /> Download
             </NavLink>
-
             <NavLink to="/" end>
               <FiHome /> Home
             </NavLink>
-         
           </BottomNav>
         )}
       </MainContent>
-
     </AppContainer>
   );
 }
