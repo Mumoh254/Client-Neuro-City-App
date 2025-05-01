@@ -101,8 +101,7 @@ const LiveTrackingMap = () => {
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const ws = useRef(null);
 
-  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
-
+ 
   useEffect(() => {
     const connectWebSocket = () => {
       ws.current = new WebSocket(`wss:${BASE_URl}/tracking`);

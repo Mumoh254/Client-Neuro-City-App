@@ -65,7 +65,7 @@ const CreateJob = () => {
 
         if (response.ok) {
           Swal.fire('Success!', 'Job posted successfully!', 'success');
-          navigate('/jobs');
+          navigate('/jobs-list');
         } else {
           Swal.fire('Error!', 'Failed to post job', 'error');
         }

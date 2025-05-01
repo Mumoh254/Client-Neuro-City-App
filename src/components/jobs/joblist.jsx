@@ -1,129 +1,221 @@
-
-
-
-import  React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Row, Col, Badge } from 'react-bootstrap';
 import { FaClock, FaMapMarkerAlt, FaMoneyBillWave, FaEnvelope } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import styled from 'styled-components';
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en';
 
-
-
-
-
+// Initialize TimeAgo once
+TimeAgo.addLocale(en);
+const timeAgo = new TimeAgo('en-KE');
 
 const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 const DB_NAME = "SmartCityJobsDB";
 const STORE_NAME = "jobs";
 
-// Open IndexedDB
+// Kenyan Date Utilities
+const formatKenyanDate = (dateString) => {
+  const options = {
+    timeZone: 'Africa/Nairobi',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  try {
+    const date = new Date(dateString);
+    return isNaN(date) ? 'N/A' : date.toLocaleString('en-KE', options);
+  } catch (e) {
+    return 'N/A';
+  }
+};
+
+const safeTimeAgo = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    return isNaN(date) ? 'Recently' : timeAgo.format(date);
+  } catch (e) {
+    return 'Recently';
+  }
+};
+
+// IndexedDB Operations with Kenyan time storage
 const openDB = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onerror = () => reject("Failed to open IndexedDB");
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = () => {
+    const request = indexedDB.open(DB_NAME, 3);
+    request.onerror = (event) => reject(`DB Error: ${event.target.error}`);
+    
+    request.onsuccess = () => {
       const db = request.result;
+      db.onversionchange = () => db.close();
+      resolve(db);
+    };
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+        const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+        store.createIndex("timestamp", "timestamp");
       }
     };
   });
 };
 
-// Store jobs in IndexedDB
 const storeJobsInDB = async (jobs) => {
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  const store = tx.objectStore(STORE_NAME);
-  await store.clear();
-  jobs.forEach(job => store.add(job));
-  return tx.complete;
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    
+    // Clear old entries
+    await store.clear();
+    
+    // Store with Kenyan timestamp
+    const kenyanTimestamp = new Date().toLocaleString('en-KE', { 
+      timeZone: 'Africa/Nairobi' 
+    });
+    
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < jobs.length; i += CHUNK_SIZE) {
+      const chunk = jobs.slice(i, i + CHUNK_SIZE).map(job => ({
+        ...job,
+        id: job._id,
+        timestamp: kenyanTimestamp
+      }));
+      await Promise.all(chunk.map(job => store.put(job)));
+    }
+
+    // Cleanup old entries
+    const count = await store.count();
+    if (count > 100) {
+      const index = store.index('timestamp');
+      const cursor = await index.openCursor(null, 'prev');
+      const toDelete = [];
+      while (cursor && toDelete.length < count - 100) {
+        toDelete.push(cursor.primaryKey);
+        cursor.continue();
+      }
+      await Promise.all(toDelete.map(key => store.delete(key)));
+    }
+    
+    await tx.done;
+  } catch (error) {
+    console.error('IndexedDB Store Error:', error);
+  }
 };
 
-// Get jobs from IndexedDB
 const getJobsFromDB = async () => {
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME, "readonly");
-  const store = tx.objectStore(STORE_NAME);
-  const allJobs = store.getAll();
-  return new Promise((resolve, reject) => {
-    allJobs.onsuccess = () => resolve(allJobs.result);
-    allJobs.onerror = () => reject("Failed to read from IndexedDB");
-  });
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    return await store.getAll();
+  } catch (error) {
+    console.error('IndexedDB Retrieve Error:', error);
+    return [];
+  }
 };
 
 const JobsList = () => {
   const [jobs, setJobs] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const previousJobCount = useRef(0);
 
+  // Network Status Detection
   useEffect(() => {
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
+  // Data Fetching Logic
   useEffect(() => {
-    const delay = (ms) => new Promise(res => setTimeout(res, ms));
-
     const fetchJobs = async () => {
-      let attempts = 0;
-      let success = false;
-
-      while (attempts < 3 && !success) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(
+          `${BASE_URL}/jobs${filter !== 'all' ? `?type=${filter}` : ''}`,
+          { signal: controller.signal }
+        );
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        
+        const data = await response.json();
+        previousJobCount.current = data.length;
+        setJobs(data);
+        await storeJobsInDB(data);
+        
+        if (!isOnline) {
+          Swal.fire('Back Online', 'Synced with latest jobs', 'success');
+          setIsOnline(true);
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          Swal.fire('Connection Slow', 'Loading local data...', 'warning');
+        }
+        
         try {
-          const response = await fetch(`${BASE_URL}/jobs${filter !== 'all' ? `?type=${filter}` : ''}`);
-          if (!response.ok) throw new Error("Network response was not ok");
-
-          const data = await response.json();
-
-          if (Notification.permission === "granted" && data.length > previousJobCount.current) {
-            const newJob = data[0];
-            new Notification("🚀 New Job Posted!", {
-              body: `${newJob.title} at ${newJob.company}`,
-              icon: "/favicon.ico"
-            });
-          }
-
-          previousJobCount.current = data.length;
-          setJobs(data);
-          storeJobsInDB(data);
-          success = true;
-        } catch (err) {
-          attempts++;
-          if (attempts >= 3) {
-            console.warn("Server failed, loading from IndexedDB...");
-            try {
-              const cachedJobs = await getJobsFromDB();
-              if (cachedJobs.length) {
-                setJobs(cachedJobs);
-                Swal.fire('Offline Mode', 'Loaded jobs from local cache', 'info');
-              } else {
-                Swal.fire('Error', 'No cached jobs available.', 'error');
-              }
-            } catch (cacheError) {
-              Swal.fire('Error', 'Failed to load jobs from cache', 'error');
+          const cachedJobs = await getJobsFromDB();
+          if (cachedJobs.length) {
+            setJobs(cachedJobs);
+            if (!isOnline) {
+              Swal.fire('Offline Mode', 'Using cached jobs', 'info');
             }
-          } else {
-            await delay(2000);
           }
+        } catch (cacheError) {
+          Swal.fire('Error', 'Failed to load jobs', 'error');
         }
       }
     };
 
-    fetchJobs();
-  }, [filter]);
+    if (isOnline) {
+      fetchJobs();
+    } else {
+      getJobsFromDB().then(cachedJobs => setJobs(cachedJobs));
+    }
+  }, [filter, isOnline]);
+
+  // Kenyan Time Notifications
+  useEffect(() => {
+    if ("Notification" in window && isOnline) {
+      Notification.requestPermission().then(perm => {
+        if (perm === "granted" && jobs.length > previousJobCount.current) {
+          const newJob = jobs[0];
+          new Notification("🚀 New Job Posted!", {
+            body: `${newJob.title} at ${newJob.company}\nPosted: ${formatKenyanDate(newJob.postedDate)}`,
+            icon: "/favicon.ico",
+            vibrate: [200, 100, 200]
+          });
+        }
+      });
+    }
+  }, [jobs.length]);
+
   return (
     <JobsContainer className="p-4">
-      <h2 className="mb-4 fw-bold text-primary">Career Opportunities in Nairobi</h2>
+      <h2 className="mb-4 fw-bold text-primary">Nairobi Career Opportunities</h2>
 
       {/* Filter Buttons */}
       <div className="d-flex flex-wrap gap-2 mb-4">
         {['all', 'full-time', 'part-time', 'contract', 'remote'].map((type) => (
           <FilterButton
             key={type}
-            active={filter === type}
+            $active={filter === type}
             onClick={() => setFilter(type)}
           >
             {type.replace(/-/g, ' ').toUpperCase()}
@@ -133,7 +225,7 @@ const JobsList = () => {
 
       <Row className="g-4">
         {jobs.map(job => (
-          <Col key={job._id} md={6} lg={4}>
+          <ResponsiveCol key={job._id} md={6} lg={4}>
             <JobCard className="h-100">
               <Card.Body className="d-flex flex-column">
                 <div className="d-flex align-items-start mb-3">
@@ -144,7 +236,7 @@ const JobsList = () => {
                     </Card.Subtitle>
                   </div>
                   <Badge pill bg="secondary" className="ms-2">
-                    {new Date(job.postedDate).toLocaleDateString()}
+                    {safeTimeAgo(job.postedDate)}
                   </Badge>
                 </div>
 
@@ -154,7 +246,7 @@ const JobsList = () => {
                   </JobBadge>
                   <SalaryBadge>
                     <FaMoneyBillWave className="me-1" />
-                    KES {job.salary}/month
+                    KES {job.salary.toLocaleString('en-KE')}/month
                   </SalaryBadge>
                 </div>
 
@@ -164,7 +256,7 @@ const JobsList = () => {
                 </JobDetailItem>
                 <JobDetailItem>
                   <FaClock className="me-2" />
-                  Apply by: {new Date(job.deadline).toLocaleDateString()}
+                  Apply by: {formatKenyanDate(job.deadline)}
                 </JobDetailItem>
 
                 <ContactDetail>
@@ -194,7 +286,7 @@ const JobsList = () => {
                 </ApplyButton>
               </Card.Body>
             </JobCard>
-          </Col>
+          </ResponsiveCol>
         ))}
       </Row>
 
@@ -207,47 +299,76 @@ const JobsList = () => {
     </JobsContainer>
   );
 };
-
-// Styled Components
+// Updated Styled Components with new color scheme
 const JobsContainer = styled.div`
-  background: linear-gradient(to bottom right, #f8f9fa, #ffffff);
+  background: linear-gradient(to bottom right, #f8fafc, #f0fdfa);
   min-height: 100vh;
+  padding: 1rem !important;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem !important;
+    
+    h2 {
+      font-size: 1.5rem !important;
+      color: #10b981 !important;
+    }
+  }
 `;
 
 const JobCard = styled(Card)`
   border: none;
   border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-top: 3px solid #6366f1;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid #10b981;
+  height: auto; /* Dynamic height based on content */
+  min-height: 320px; /* Minimum height for consistency */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
+  }
+
+  @media (max-width: 768px) {
+    border-radius: 12px;
+    min-height: 280px;
   }
 `;
 
-const FilterButton = styled.button`
+const FilterButton = styled.button.attrs(({ $active }) => ({
+  'data-active': $active.toString()
+}))`
   padding: 8px 20px;
   border-radius: 25px;
-  border: 2px solid ${props => props.active ? '#6366f1' : '#dee2e6'};
-  background: ${props => props.active ? '#6366f1' : 'transparent'};
-  color: ${props => props.active ? 'white' : '#495057'};
+  border: 2px solid ${props => props.$active ? '#10b981' : '#e2e8f0'};
+  background: ${props => props.$active ? 
+    'linear-gradient(135deg, #10b981, #059669)' : 
+    'transparent'};
+  color: ${props => props.$active ? 'white' : '#475569'};
   font-weight: 500;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: #4f46e5;
-    background: ${props => !props.active && '#eef2ff'};
+    border-color: #059669;
+    background: ${props => !props.$active && '#e8f5f0'};
+  }
+
+  @media (max-width: 768px) {
+    padding: 6px 15px;
+    font-size: 0.8rem;
   }
 `;
 
 const CompanyBadge = styled.span`
-  background: #eef2ff;
-  color: #4f46e5;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
+  backdrop-filter: blur(4px);
 `;
 
 const JobBadge = styled(Badge)`
@@ -255,33 +376,33 @@ const JobBadge = styled(Badge)`
   padding: 6px 12px;
   border-radius: 20px;
   font-weight: 500;
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 `;
 
 const SalaryBadge = styled(JobBadge)`
-  background: #2d9c6f !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
   color: white !important;
+  border: none;
 `;
 
 const JobDetailItem = styled.div`
   display: flex;
   align-items: center;
-  color: #4a5568;
+  color: #475569;
   font-size: 0.9rem;
   margin-bottom: 8px;
+  gap: 8px;
 
   svg {
-    color: #6366f1;
+    color: #10b981;
     min-width: 20px;
+    flex-shrink: 0;
   }
-`;
 
-const ContactDetail = styled(JobDetailItem)`
-  a {
-    color: #4f46e5;
-    text-decoration: none;
-    &:hover {
-      text-decoration: underline;
-    }
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
   }
 `;
 
@@ -289,35 +410,49 @@ const RequirementsList = styled.ul`
   list-style: none;
   padding-left: 0;
   margin-bottom: 0;
+  max-height: 120px;
+  overflow-y: auto;
 
   li {
     position: relative;
     padding-left: 1.5rem;
     margin-bottom: 4px;
     font-size: 0.9rem;
+    line-height: 1.4;
 
     &::before {
       content: '•';
-      color: #6366f1;
+      color: #10b981;
       position: absolute;
       left: 0;
       font-weight: bold;
     }
   }
+
+  @media (max-width: 768px) {
+    li {
+      font-size: 0.85rem;
+    }
+  }
 `;
 
 const ApplyButton = styled(Button)`
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #10b981, #059669);
   border: none;
   border-radius: 8px;
   padding: 12px 20px;
   font-weight: 600;
   transition: all 0.3s ease;
+  margin-top: auto; /* Pushes button to bottom */
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    padding: 10px 16px;
+    font-size: 0.9rem;
   }
 `;
-
 export default JobsList;
