@@ -3,7 +3,6 @@ const CACHE_NAME = `community-hub-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 const BASE_URL = 'https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke';
 
-// URLs to cache during installation (add content hashes in production)
 const INSTALL_CACHE = [
   '/',
   '/index.html',
@@ -13,84 +12,93 @@ const INSTALL_CACHE = [
   '/images/nairobi.png',
   '/styles.css',
   '/offline.html',
-  // Add hashed assets (e.g., '/main.a1b2c3.js') in production
 ];
 
-// Install and cache core assets
+// Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(INSTALL_CACHE))
+      .then(cache => cache.addAll(INSTALL_CACHE))
       .then(() => self.skipWaiting())
+      .catch(err => console.error('Install failed:', err))
   );
 });
 
-// Activate and clean old caches
+// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => 
-      Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log(`Clearing old cache: ${cache}`);
-            return caches.delete(cache);
-          }
-        })
-      )
-    )
+    caches.keys().then(cacheNames => Promise.all(
+      cacheNames.map(cache => {
+        if (cache !== CACHE_NAME) {
+          console.log(`Deleting old cache: ${cache}`);
+          return caches.delete(cache);
+        }
+        return null;
+      })
+    ))
     .then(() => self.clients.claim())
-    .catch((error) => console.error('Activation failed:', error))
+    .catch(err => console.error('Activation failed:', err))
   );
 });
 
-// Network-first for HTML, cache-first for assets
+// Fetch Event (Updated with error handling)
 self.addEventListener('fetch', (event) => {
+  // Skip non-HTTP(S) requests
+  if (!event.request.url.startsWith('http') || 
+      event.request.url.includes('chrome-extension://')) {
+    return;
+  }
+
   const { request } = event;
 
-  // Network-first for HTML pages
+  // Network-first for navigation
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((networkResponse) => {
-          const responseClone = networkResponse.clone();
+        .then(networkResponse => {
+          const clone = networkResponse.clone();
           caches.open(CACHE_NAME)
-            .then((cache) => cache.put(request, responseClone));
+            .then(cache => cache.put(request, clone))
+            .catch(err => console.warn('Cache put error:', err));
           return networkResponse;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL)))
+        .catch(() => caches.match(request)
+          .then(cached => cached || caches.match(OFFLINE_URL))
     );
     return;
   }
 
-  // API requests
+  // API handling
   if (request.url.includes('/apiV1/')) {
     event.respondWith(
       fetch(request)
-        .then((networkResponse) => {
-          const responseClone = networkResponse.clone();
+        .then(response => {
+          const clone = response.clone();
           caches.open(CACHE_NAME)
-            .then((cache) => cache.put(request, responseClone));
-          return networkResponse;
+            .then(cache => cache.put(request, clone))
+            .catch(err => console.warn('API cache error:', err));
+          return response;
         })
         .catch(() => caches.match(request))
     );
     return;
   }
 
-  // Cache-first for static assets
+  // Cache-first for assets
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const networkFetch = fetch(request).then((networkResponse) => {
-        const responseClone = networkResponse.clone();
+    caches.match(request).then(cached => {
+      return cached || fetch(request).then(networkResponse => {
+        const clone = networkResponse.clone();
         caches.open(CACHE_NAME)
-          .then((cache) => cache.put(request, responseClone));
+          .then(cache => cache.put(request, clone))
+          .catch(err => console.warn('Asset cache error:', err));
         return networkResponse;
-      });
-      return cached || networkFetch.catch(() => caches.match(OFFLINE_URL));
+      }).catch(() => caches.match(OFFLINE_URL));
     })
   );
 });
 
+// Rest of your event handlers remain the same...
 // Push notifications (unchanged)
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};

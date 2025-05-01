@@ -1,6 +1,6 @@
 {
   "name": "Neuro City App - Community Platform",
-  "short_name": "CityNeuro",
+  "short_name": "Neuro-City",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -38,7 +38,7 @@
       "name": "New Post",
       "short_name": "Post",
       "description": "Create a new community post",
-      "url": "https://neuro-city-apps.netlify.app/peoples/favourites#/e-chats"
+      "url": "/create-post"  
     }
   ]
 }
