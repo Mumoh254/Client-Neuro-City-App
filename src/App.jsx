@@ -20,7 +20,7 @@ import { IoLogoDesignernews } from "react-icons/io5";
 import VerifyOtp from './authFolder/verifyOtp';
 import LandingPage from './pages/landPage';
 import ParkingForm from './components/parking/park';
-import GarbageManagementSystem from "./components/garbage/garbageSearch";
+
 import ReviewsSection from './components/reviews/comunittySuport';
 import PublicAmenities from './components/public/publicamenities';
 import LiveTrackingMap from './components/devices/liveTracking';
@@ -57,7 +57,7 @@ import ReviewSection from './chats/chats';
 import { getUserNameFromToken } from './components/handler/tokenDecoder';
 import Gems from './components/foods-gems/gems';
 import Download from './components/downloader/download';
-import EVCharging from "./components/Green-Energy/Evs-Cars/findEvsStations"
+
 import ParkingSessionCard from "./components/parking/parkingCard"
 import ParkingSubscriptionModel from './components/parking/parkingsubscriptionModel';
 import AdminServices from './admin/controller/adminServices';
@@ -361,7 +361,7 @@ function App() {
             <Route path="/download-neuro-app" element={<PageWithBack><Download /></PageWithBack>} />
             <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
             <Route path="/smart-parking" element={<PageWithBack><ParkingForm /></PageWithBack>} />
-            <Route path="/zero-garbage" element={<PageWithBack title="Waste Management"><GarbageManagementSystem /></PageWithBack>} />
+
             <Route path="/plastics-recycles" element={<PageWithBack title="Recycle Plastic"><PlasticRecyclingApp /></PageWithBack>} />
             <Route path="/comunity-suport" element={<PageWithBack><ReviewsSection /></PageWithBack>} />
             <Route path="/weather" element={<PageWithBack><WeatherNairobi /></PageWithBack>} />

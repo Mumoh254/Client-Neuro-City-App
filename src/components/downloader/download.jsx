@@ -77,16 +77,21 @@ const Download = () => {
     const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"; 
 
     try {
+
       const response = await fetch(`${BASE_URL}/track-install`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: username }),
       });
+
+
+      
       if (!response.ok) throw new Error('Tracking failed');
-      console.log('✅ Installation tracked');
+      console.log('✅ Installation tracked');  
     } catch (error) {
       console.error('Tracking error:', error);
     }
+
   };
 
   return (

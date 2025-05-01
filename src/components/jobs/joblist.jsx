@@ -1,18 +1,63 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+
+
+import  React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Row, Col, Badge } from 'react-bootstrap';
 import { FaClock, FaMapMarkerAlt, FaMoneyBillWave, FaEnvelope } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import styled from 'styled-components';
 
-const JobsList = () => {
 
-  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
- 
+
+
+
+
+const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+const DB_NAME = "SmartCityJobsDB";
+const STORE_NAME = "jobs";
+
+// Open IndexedDB
+const openDB = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = () => reject("Failed to open IndexedDB");
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+      }
+    };
+  });
+};
+
+// Store jobs in IndexedDB
+const storeJobsInDB = async (jobs) => {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  await store.clear();
+  jobs.forEach(job => store.add(job));
+  return tx.complete;
+};
+
+// Get jobs from IndexedDB
+const getJobsFromDB = async () => {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readonly");
+  const store = tx.objectStore(STORE_NAME);
+  const allJobs = store.getAll();
+  return new Promise((resolve, reject) => {
+    allJobs.onsuccess = () => resolve(allJobs.result);
+    allJobs.onerror = () => reject("Failed to read from IndexedDB");
+  });
+};
+
+const JobsList = () => {
   const [jobs, setJobs] = useState([]);
   const [filter, setFilter] = useState('all');
   const previousJobCount = useRef(0);
 
-  // Ask for notification permission on load
   useEffect(() => {
     if ("Notification" in window && Notification.permission !== "granted") {
       Notification.requestPermission();
@@ -20,29 +65,55 @@ const JobsList = () => {
   }, []);
 
   useEffect(() => {
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
     const fetchJobs = async () => {
-      try {
-        const response = await fetch(`${BASE_URl}/jobs${filter !== 'all' ? `?type=${filter}` : ''}`);
-        const data = await response.json();
+      let attempts = 0;
+      let success = false;
 
-        if (Notification.permission === "granted" && data.length > previousJobCount.current) {
-          const newJob = data[0];
-          new Notification("🚀 New Job Posted!", {
-            body: `${newJob.title} at ${newJob.company}`,
-            icon: "/favicon.ico"
-          });
+      while (attempts < 3 && !success) {
+        try {
+          const response = await fetch(`${BASE_URL}/jobs${filter !== 'all' ? `?type=${filter}` : ''}`);
+          if (!response.ok) throw new Error("Network response was not ok");
+
+          const data = await response.json();
+
+          if (Notification.permission === "granted" && data.length > previousJobCount.current) {
+            const newJob = data[0];
+            new Notification("🚀 New Job Posted!", {
+              body: `${newJob.title} at ${newJob.company}`,
+              icon: "/favicon.ico"
+            });
+          }
+
+          previousJobCount.current = data.length;
+          setJobs(data);
+          storeJobsInDB(data);
+          success = true;
+        } catch (err) {
+          attempts++;
+          if (attempts >= 3) {
+            console.warn("Server failed, loading from IndexedDB...");
+            try {
+              const cachedJobs = await getJobsFromDB();
+              if (cachedJobs.length) {
+                setJobs(cachedJobs);
+                Swal.fire('Offline Mode', 'Loaded jobs from local cache', 'info');
+              } else {
+                Swal.fire('Error', 'No cached jobs available.', 'error');
+              }
+            } catch (cacheError) {
+              Swal.fire('Error', 'Failed to load jobs from cache', 'error');
+            }
+          } else {
+            await delay(2000);
+          }
         }
-
-        previousJobCount.current = data.length;
-        setJobs(data);
-      } catch (err) {
-        Swal.fire('Error', 'Failed to load jobs', 'error');
       }
     };
 
     fetchJobs();
   }, [filter]);
-
   return (
     <JobsContainer className="p-4">
       <h2 className="mb-4 fw-bold text-primary">Career Opportunities in Nairobi</h2>
