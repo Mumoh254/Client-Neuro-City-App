@@ -1,66 +1,78 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getUserNameFromToken } from '../handler/tokenDecoder';
 
 const Download = () => {
   const [username, setUserName] = useState('');
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const deferredPrompt = useRef(null);
 
+  // User effect and install prompt handling separated
   useEffect(() => {
     const userData = getUserNameFromToken();
-    if (userData) {
-      setUserName(userData.name);
-    }
+    if (userData) setUserName(userData.name);
+  }, []);
+
+  // Install prompt handling
+  useEffect(() => {
+    const checkInstalled = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+      
+      // Special handling for iOS devices
+      if ((isIOS && isSafari && navigator.standalone) || isStandalone) {
+        setIsInstalled(true);
+      }
+    };
 
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       console.log('📦 beforeinstallprompt event captured');
-      setDeferredPrompt(e);
+      deferredPrompt.current = e;
+      setIsInstalled(false); // Reset install state when prompt becomes available
     };
 
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-    }
-
+    checkInstalled();
+    
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
+      deferredPrompt.current = null;
+    });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', () => {});
     };
   }, []);
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      try {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-
-        if (outcome === 'accepted') {
-          console.log('✅ App installed successfully');
-          setIsInstalled(true);
-          trackInstall();
-        } else {
-          console.log('❌ App installation dismissed');
-        }
-      } catch (error) {
-        console.error('Installation error:', error);
-      } finally {
-        setDeferredPrompt(null);
-      }
-    } else {
-      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-      const isEdge = /Edg/.test(navigator.userAgent);
-
+    if (!deferredPrompt.current) {
+      // Check again if installed after user interaction
       if (window.matchMedia('(display-mode: standalone)').matches) {
-        alert('App is already installed!');
-      } else if (isChrome || isEdge) {
-        alert('Installation not available yet — try refreshing or check the install prompt.');
-      } else {
-        alert('Installation is only supported on Chrome or Edge browsers.');
+        setIsInstalled(true);
+        return alert('App is already installed!');
       }
+      return alert('Install prompt not available - try refreshing');
+    }
+
+    try {
+      deferredPrompt.current.prompt();
+      const { outcome } = await deferredPrompt.current.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('✅ App installed successfully');
+        setIsInstalled(true);
+        trackInstall();
+      } else {
+        console.log('❌ App installation dismissed');
+      }
+    } catch (error) {
+      console.error('Installation error:', error);
+    } finally {
+      deferredPrompt.current = null;
     }
   };
-
   const trackInstall = async () => {
     const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 

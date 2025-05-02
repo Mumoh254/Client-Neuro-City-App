@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Button, Row, Col, Badge } from 'react-bootstrap';
 import { FaClock, FaMapMarkerAlt, FaMoneyBillWave, FaEnvelope } from 'react-icons/fa';
 import Swal from 'sweetalert2';
@@ -139,56 +139,64 @@ const JobsList = () => {
     };
   }, []);
 
+  // Custom event listener for refresh
+  useEffect(() => {
+    const handleRefresh = () => fetchJobs();
+    window.addEventListener('jobsShouldRefresh', handleRefresh);
+    return () => window.removeEventListener('jobsShouldRefresh', handleRefresh);
+  }, []);
+
+  // Memoized fetch function
+  const fetchJobs = useCallback(async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(
+        `${BASE_URL}/jobs${filter !== 'all' ? `?type=${filter}` : ''}`,
+        { signal: controller.signal }
+      );
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+      
+      const data = await response.json();
+      previousJobCount.current = data.length;
+      setJobs(data);
+      await storeJobsInDB(data);
+      
+      if (!isOnline) {
+        Swal.fire('Back Online', 'Synced with latest jobs', 'success');
+        setIsOnline(true);
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        Swal.fire('Connection Slow', 'Loading local data...', 'warning');
+      }
+      
+      try {
+        const cachedJobs = await getJobsFromDB();
+        if (cachedJobs.length) {
+          setJobs(cachedJobs);
+          if (!isOnline) {
+            Swal.fire('Offline Mode', 'Using cached jobs', 'info');
+          }
+        }
+      } catch (cacheError) {
+        Swal.fire('Error', 'Failed to load jobs', 'error');
+      }
+    }
+  }, [filter, isOnline]);
+
   // Data Fetching Logic
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(
-          `${BASE_URL}/jobs${filter !== 'all' ? `?type=${filter}` : ''}`,
-          { signal: controller.signal }
-        );
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-        
-        const data = await response.json();
-        previousJobCount.current = data.length;
-        setJobs(data);
-        await storeJobsInDB(data);
-        
-        if (!isOnline) {
-          Swal.fire('Back Online', 'Synced with latest jobs', 'success');
-          setIsOnline(true);
-        }
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          Swal.fire('Connection Slow', 'Loading local data...', 'warning');
-        }
-        
-        try {
-          const cachedJobs = await getJobsFromDB();
-          if (cachedJobs.length) {
-            setJobs(cachedJobs);
-            if (!isOnline) {
-              Swal.fire('Offline Mode', 'Using cached jobs', 'info');
-            }
-          }
-        } catch (cacheError) {
-          Swal.fire('Error', 'Failed to load jobs', 'error');
-        }
-      }
-    };
-
     if (isOnline) {
       fetchJobs();
     } else {
       getJobsFromDB().then(cachedJobs => setJobs(cachedJobs));
     }
-  }, [filter, isOnline]);
+  }, [fetchJobs, isOnline]);
 
   // Kenyan Time Notifications
   useEffect(() => {
@@ -225,7 +233,7 @@ const JobsList = () => {
 
       <Row className="g-4">
         {jobs.map(job => (
-          <ResponsiveCol key={job._id} md={6} lg={4}>
+          <Col key={job._id} md={6} lg={4}>
             <JobCard className="h-100">
               <Card.Body className="d-flex flex-column">
                 <div className="d-flex align-items-start mb-3">
@@ -236,9 +244,8 @@ const JobsList = () => {
                     </Card.Subtitle>
                   </div>
                   <Badge pill className='p' style={{  }}>
-  {safeTimeAgo(job.postedDate)}
-</Badge>
-
+                    {safeTimeAgo(job.postedDate)}
+                  </Badge>
                 </div>
 
                 <div className="d-flex flex-wrap gap-2 mb-3">
@@ -287,7 +294,7 @@ const JobsList = () => {
                 </ApplyButton>
               </Card.Body>
             </JobCard>
-          </ResponsiveCol>
+          </Col>
         ))}
       </Row>
 
@@ -300,7 +307,8 @@ const JobsList = () => {
     </JobsContainer>
   );
 };
-// Updated Styled Components with new color scheme
+
+// Styled Components
 const JobsContainer = styled.div`
   background: linear-gradient(to bottom right, #f8fafc, #f0fdfa);
   min-height: 100vh;
@@ -322,8 +330,8 @@ const JobCard = styled(Card)`
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-left: 2px solid #8b5cf6;
-  height: auto; /* Dynamic height based on content */
-  min-height: 320px; /* Minimum height for consistency */
+  height: auto;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -366,7 +374,6 @@ const FilterButton = styled.button.attrs(({ $active }) => ({
 const CompanyBadge = styled.span`
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
-
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -438,13 +445,6 @@ const RequirementsList = styled.ul`
   }
 `;
 
-const ResponsiveCol = styled(Col)`
-  @media (max-width: 768px) {
-    margin-bottom: 1rem;
-  }
-`;
-
-
 const ContactDetail = styled.div`
   display: flex;
   align-items: center;
@@ -475,7 +475,7 @@ const ApplyButton = styled(Button)`
   padding: 12px 20px;
   font-weight: 600;
   transition: all 0.3s ease;
-  margin-top: auto; /* Pushes button to bottom */
+  margin-top: auto;
 
   &:hover {
     transform: translateY(-2px);
@@ -487,4 +487,5 @@ const ApplyButton = styled(Button)`
     font-size: 0.9rem;
   }
 `;
+
 export default JobsList;

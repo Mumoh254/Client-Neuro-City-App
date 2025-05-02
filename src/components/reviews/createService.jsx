@@ -161,7 +161,7 @@ const CreateService = () => {
       );
       
       setImages(prev => [...prev, ...compressedFiles]);
-      e.target.value = null; // Reset input for re-uploads
+      e.target.value = null;
     } catch (error) {
       Swal.fire('Error', 'Failed to process images', 'error');
     }
