@@ -7,7 +7,7 @@ import {
 import {
   FaComment, FaThumbsUp, FaPaperPlane,
   FaPen, FaRegThumbsUp, FaTimes, FaMoon, FaSun,
-  FaHeart, FaRegComment, FaBell, FaTrash
+  FaHeart, FaRegComment, FaBell, FaTrash, FaShare, FaEye
 } from 'react-icons/fa';
 import axios from 'axios';
 import styled, { ThemeContext } from 'styled-components';
@@ -273,6 +273,17 @@ const ReviewSection = () => {
     }
   };
 
+  const handleShare = async (postId) => {
+    try {
+      const postUrl = `${window.location.origin}/post/${postId}`;
+      await navigator.clipboard.writeText(postUrl);
+      setSuccess('Post link copied to clipboard!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Failed to copy post link');
+    }
+  };
+
   const PostCard = React.memo(({ post, index }) => {
     const theme = useContext(ThemeContext);
     const inputRef = useRef(null);
@@ -316,6 +327,10 @@ const ReviewSection = () => {
                 <Badge bg="secondary" className="fs-7 rounded-pill">
                   {post.role}
                 </Badge>
+                <div className="d-flex align-items-center gap-1 ms-2">
+                  <FaEye className="text-muted" style={{ fontSize: '0.8rem' }} />
+                  <small style={{ fontSize: '0.7rem' }}>{post.views || 0}</small>
+                </div>
                 {post.author?._id === userId && (
                   <Dropdown>
                     <Dropdown.Toggle variant="link" className="p-0">
@@ -354,6 +369,14 @@ const ReviewSection = () => {
               >
                 <FaRegComment />
                 <small style={{ fontSize: '0.7rem' }}>{post.comments?.length || 0}</small>
+              </Button>
+
+              <Button 
+                variant="link" 
+                className="p-0 text-muted hover-effect"
+                onClick={() => handleShare(post.id)}
+              >
+                <FaShare />
               </Button>
             </div>
           </div>

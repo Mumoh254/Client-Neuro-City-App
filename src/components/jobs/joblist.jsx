@@ -235,9 +235,10 @@ const JobsList = () => {
                       <CompanyBadge>{job.company}</CompanyBadge>
                     </Card.Subtitle>
                   </div>
-                  <Badge pill bg="secondary" className="ms-2">
-                    {safeTimeAgo(job.postedDate)}
-                  </Badge>
+                  <Badge pill className='p' style={{  }}>
+  {safeTimeAgo(job.postedDate)}
+</Badge>
+
                 </div>
 
                 <div className="d-flex flex-wrap gap-2 mb-3">
@@ -320,7 +321,7 @@ const JobCard = styled(Card)`
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-left: 4px solid #10b981;
+  border-left: 2px solid #8b5cf6;
   height: auto; /* Dynamic height based on content */
   min-height: 320px; /* Minimum height for consistency */
   display: flex;
@@ -365,6 +366,7 @@ const FilterButton = styled.button.attrs(({ $active }) => ({
 const CompanyBadge = styled.span`
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
+
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -376,13 +378,13 @@ const JobBadge = styled(Badge)`
   padding: 6px 12px;
   border-radius: 20px;
   font-weight: 500;
-  background: rgba(16, 185, 129, 0.1) !important;
-  color: #10b981 !important;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: #ef4444 !important;
+  color:rgb(243, 243, 243) !important;
+  border: 1px solid #ef4444 ;
 `;
 
 const SalaryBadge = styled(JobBadge)`
-  background: linear-gradient(135deg, #10b981, #059669) !important;
+  background: linear-gradient(135deg,#3b82f6, #3b82f6) !important;
   color: white !important;
   border: none;
 `;
@@ -396,7 +398,7 @@ const JobDetailItem = styled.div`
   gap: 8px;
 
   svg {
-    color: #10b981;
+    color: #ef4444;
     min-width: 20px;
     flex-shrink: 0;
   }
@@ -422,7 +424,7 @@ const RequirementsList = styled.ul`
 
     &::before {
       content: '•';
-      color: #10b981;
+      color: #ef4444;
       position: absolute;
       left: 0;
       font-weight: bold;
@@ -436,8 +438,38 @@ const RequirementsList = styled.ul`
   }
 `;
 
+const ResponsiveCol = styled(Col)`
+  @media (max-width: 768px) {
+    margin-bottom: 1rem;
+  }
+`;
+
+
+const ContactDetail = styled.div`
+  display: flex;
+  align-items: center;
+  color: #3b82f6;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  gap: 8px;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  svg {
+    color: #3b82f6;
+    min-width: 20px;
+    flex-shrink: 0;
+  }
+`;
+
 const ApplyButton = styled(Button)`
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #3b82f6, #3b82f6);
   border: none;
   border-radius: 8px;
   padding: 12px 20px;

@@ -1,48 +1,37 @@
 import { useEffect, useState } from 'react';
-
 import { getUserNameFromToken } from '../handler/tokenDecoder';
 
 const Download = () => {
   const [username, setUserName] = useState('');
-
-
-  
-  useEffect(() => {
-    const userData = getUserNameFromToken();
-    if (userData) {
-      console.log(userData);
-  
-      setUserName(userData.name);
-
-    }
-  }, []);
-
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    const handleBeforeInstall = (e) => {
+    const userData = getUserNameFromToken();
+    if (userData) {
+      setUserName(userData.name);
+    }
 
+    const handleBeforeInstall = (e) => {
       e.preventDefault();
       console.log('📦 beforeinstallprompt event captured');
       setDeferredPrompt(e);
     };
 
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     return () => {
-
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
   }, []);
 
   const handleInstall = async () => {
-
-
-    
     if (deferredPrompt) {
       try {
-  
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
 
@@ -56,7 +45,7 @@ const Download = () => {
       } catch (error) {
         console.error('Installation error:', error);
       } finally {
-        setDeferredPrompt(null); 
+        setDeferredPrompt(null);
       }
     } else {
       const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
@@ -73,32 +62,26 @@ const Download = () => {
   };
 
   const trackInstall = async () => {
-
-    const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"; 
+    const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
     try {
-
       const response = await fetch(`${BASE_URL}/track-install`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: username }),
       });
 
-
-      
       if (!response.ok) throw new Error('Tracking failed');
-      console.log('✅ Installation tracked');  
+      console.log('✅ Installation tracked');
     } catch (error) {
       console.error('Tracking error:', error);
     }
-
   };
 
   return (
     <div className="installation-container">
       <h1>Hello {username}, Welcome to Neuro-City-Apps</h1>
 
-      {/* Custom Install Button */}
       <button
         className="install-button"
         onClick={handleInstall}
