@@ -10,6 +10,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
 import SubscriptionModal from './subscriptionModel';
+
 // Color Theme
 const theme = {
   primary: '#8b5cf6',

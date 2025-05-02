@@ -42,12 +42,13 @@ const SubscriptionModal = ({ show, onHide, userId }) => {
             <Form.Select 
               value={selectedPlan}
               onChange={(e) => setSelectedPlan(e.target.value)}
-            >
+          >
               <option value="weekly">Weekly (Ksh 1,500)</option>
               <option value="monthly">Monthly (Ksh 5,000)</option>
             </Form.Select>
           </Form.Group>
         </Form>
+
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>
@@ -57,7 +58,7 @@ const SubscriptionModal = ({ show, onHide, userId }) => {
           variant="primary" 
           onClick={handleSubscribe}
           disabled={loading}
-        >
+  >
           {loading ? <Spinner size="sm" /> : 'Confirm Subscription'}
         </Button>
       </Modal.Footer>

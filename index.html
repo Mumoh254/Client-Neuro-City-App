@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
     <!-- Primary Meta Tags -->
     <title>City Neuro App | Smart City Navigation & Community Hub</title>
-    <meta name="description" content="City Neuro: Smart city navigation, safety features, and community engagement platform for urban citizens. Real-time updates and health resources." />
-    <meta name="keywords" content="smart city, urban navigation, public safety, community hub, city health, real-time mapping, urban technology" />
-    <meta name="author" content="Welt Tallis Development Team" />
+    <meta name="description" content="City Neuro: Smart city navigation, safety features, and community engagement platform for urban citizens. Real-time updates and health resources.">
+    <meta name="keywords" content="smart city, urban navigation, public safety, community hub, city health, real-time mapping, urban technology">
+    <meta name="author" content="Welt Tallis Development Team">
     
     <!-- PWA Configuration -->
     <meta name="theme-color" content="#1a365d">
@@ -25,7 +25,7 @@
     <meta name="twitter:card" content="summary_large_image">
 
     <!-- Icons & Manifest -->
-    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/images/favicon.ico" sizes="any">
     <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
@@ -33,21 +33,18 @@
 
     <!-- Preload Critical Resources -->
     <link rel="preload" href="/src/main.css" as="style">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" as="style" crossorigin="anonymous">
-    <link rel="preload" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps.css" as="style">
+    <link rel="preload"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
+    as="style"
+    integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7"
+    crossorigin="anonymous">
+
+    <link rel="preload" 
+          href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps.css" 
+          as="style">
 
     <!-- External Stylesheets -->
-    <link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" 
-    as="style" 
-    crossorigin="anonymous">
-
-<link rel="stylesheet" 
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" 
-    integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" 
-    crossorigin="anonymous">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
     <style>
         /* Loading Spinner Styles */
         .loading-overlay {
@@ -96,6 +93,12 @@
             font-weight: 500;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .network-toast.visible {
+            opacity: 1;
         }
 
         .network-toast.online { background: #2d9c6f; }
@@ -108,35 +111,51 @@
     
     <!-- Loading Indicator -->
     <div id="loading" class="loading-overlay" aria-live="polite">
-        <div class="spinner"></div>
+        <div class="spinner" role="status"></div>
         <p>Loading Application...</p>
     </div>
 
+    <script src="./src/main.jsx" type="module"></script>
+
     <!-- External Scripts -->
     <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.19.0/maps/maps-web.min.js" 
-        defer 
-        crossorigin="anonymous"></script>
+            defer 
+            crossorigin="anonymous"></script>
 
     <!-- Service Worker Registration -->
     <script>
         (function() {
             const loadingEl = document.getElementById('loading');
             let registration;
+            let toastTimeout;
 
             function showUpdateNotification() {
-                if (registration && registration.waiting) {
-                    if (confirm('A new version is available. Refresh to update?')) {
+                if (registration?.waiting) {
+                    const toast = showToast('New version available! Refresh to update?', 'online', true);
+                    toast.addEventListener('click', () => {
                         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    }
+                    });
                 }
             }
 
-            function showToast(message, type) {
+            function showToast(message, type, persistent = false) {
+                const existingToast = document.querySelector('.network-toast');
+                if (existingToast) existingToast.remove();
+
                 const toast = document.createElement('div');
-                toast.className = `network-toast ${type}`;
+                toast.className = `network-toast ${type}${persistent ? ' visible' : ''}`;
                 toast.textContent = message;
                 document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
+                
+                if (!persistent) {
+                    toast.classList.add('visible');
+                    clearTimeout(toastTimeout);
+                    toastTimeout = setTimeout(() => {
+                        toast.classList.remove('visible');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+                return toast;
             }
 
             if ('serviceWorker' in navigator) {
@@ -156,9 +175,7 @@
                             });
                         });
 
-                        if (registration.waiting) {
-                            showUpdateNotification();
-                        }
+                        if (registration.waiting) showUpdateNotification();
 
                         let refreshing = false;
                         navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -178,6 +195,8 @@
 
                 window.addEventListener('online', () => showToast('Internet connection restored', 'online'));
                 window.addEventListener('offline', () => showToast('You are currently offline', 'offline'));
+            } else {
+                loadingEl.style.display = 'none';
             }
         })();
     </script>
