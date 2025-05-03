@@ -8,8 +8,8 @@ const INSTALL_CACHE = [
   '/manifest.json',
   '/styles.css',
   '/offline.html',
-  '/images/logo-192.png',
-  '/images/logo-512.png',
+  '/images/logo.png',
+  '/images/logo.png',
   '/assets/index.js',
   '/assets/index.css'
 ];
