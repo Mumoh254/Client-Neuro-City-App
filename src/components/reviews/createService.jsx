@@ -148,25 +148,25 @@ const CreateService = () => {
     });
   };
 
-  const handleImageUpload = async (e) => {
+  const handleSingleImageUpload = async (e) => {
     try {
-      const files = Array.from(e.target.files);
-      if (files.length + images.length > MAX_IMAGES) {
-        Swal.fire('Error', `Maximum ${MAX_IMAGES} images allowed`, 'error');
+      const file = e.target.files[0];
+      if (!file) return;
+  
+      if (images.length >= 1) {
+        Swal.fire('Only one image allowed', 'Please remove the existing image first.', 'info');
+        e.target.value = null;
         return;
       }
-
-      const compressedFiles = await Promise.all(
-        files.map(async (file) => await compressImage(file))
-      );
-      
-      setImages(prev => [...prev, ...compressedFiles]);
+  
+      const compressedFile = await compressImage(file);
+      setImages([compressedFile]); // replace existing image
       e.target.value = null;
     } catch (error) {
-      Swal.fire('Error', 'Failed to process images', 'error');
+      Swal.fire('Error', 'Failed to process the image', 'error');
     }
   };
-
+  
   const removeImage = (index) => {
     URL.revokeObjectURL(images[index].preview);
     setImages(prev => prev.filter((_, i) => i !== index));
@@ -389,52 +389,35 @@ const CreateService = () => {
 
           {/* Image Upload */}
           <Col md={12}>
-            <Form.Group controlId="images">
-              <Form.Label><FaImages className="me-2" />Upload Images</Form.Label>
-              <Form.Control
-                type="file"
-                multiple
-                onChange={handleImageUpload}
-                accept="image/*"
-                capture="environment"
-                disabled={images.length >= MAX_IMAGES}
-              />
-              <small className="text-muted d-block mt-2">
-                {MAX_IMAGES - images.length} images remaining (max {MAX_IMAGES})
-              </small>
-              
-              {/* Image Previews */}
-              <div className="d-flex flex-wrap gap-2 mt-3">
-                {images.map((img, index) => (
-                  <div key={index} className="position-relative">
-                    <img
-                      src={img.preview}
-                      alt={`Preview ${index + 1}`}
-                      className="img-thumbnail"
-                      style={{
-                        width: '100px',
-                        height: '100px',
-                        objectFit: 'cover',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-danger btn-sm position-absolute top-0 end-0"
-                      onClick={() => removeImage(index)}
-                      style={{
-                        transform: 'translate(30%, -30%)',
-                        padding: '2px 6px',
-                        borderRadius: '50%'
-                      }}
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </Form.Group>
-          </Col>
+  <Form.Group controlId="images">
+    <Form.Label><FaImages className="me-2" />Upload Service Image</Form.Label>
+    <Form.Control
+      type="file"
+      accept="image/*"
+      onChange={handleSingleImageUpload}
+    />
+    <Form.Text muted>Only one image allowed. Max width/height: {IMAGE_SIZE}px</Form.Text>
+  </Form.Group>
+
+  {images.length > 0 && (
+    <div className="mt-3 d-flex align-items-center gap-3">
+      <img
+        src={images[0].preview}
+        alt="Preview"
+        width="120"
+        className="img-thumbnail"
+      />
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={() => removeImage(0)}
+      >
+        <FaTimes className="me-1" />Remove
+      </Button>
+    </div>
+  )}
+</Col>
+
 
           {/* Submit Button */}
           <Col md={12}>

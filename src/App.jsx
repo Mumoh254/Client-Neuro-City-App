@@ -200,7 +200,7 @@ const BottomNav = styled.nav`
   background: #ffffff;
   display: flex;
   justify-content: space-around;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
   display: ${props => props.$show ? 'flex' : 'none'};
 

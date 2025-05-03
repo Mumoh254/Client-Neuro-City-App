@@ -419,7 +419,8 @@ const ReviewSection = () => {
                     style={{ 
                       fontSize: '0.8rem',
                       lineHeight: '1.4',
-                      padding: '0.6rem'
+                      padding: '0.6rem',
+                     
                     }}
                   />
                   <div className="d-flex justify-content-end">
@@ -429,7 +430,7 @@ const ReviewSection = () => {
                       className="rounded-pill px-3"
                       style={{ fontSize: '0.8rem' }}
                     >
-                      <FaPaperPlane className="me-3" />
+                      <FaPaperPlane className="me-1" />
                       Post
                     </Button>
                   </div>
