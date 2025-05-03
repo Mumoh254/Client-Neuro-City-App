@@ -216,7 +216,7 @@ const ReviewSection = () => {
   const handleCommentSubmit = async (postId) => {
     try {
       const commentContent = commentTexts[postId];
-      const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
+      const { data } = await axios.post(`${BASE_URL}/${postId}/comments`, {
         content: commentContent,
         author: userId
       });
@@ -233,7 +233,7 @@ const ReviewSection = () => {
 
   const handleLike = async (postId) => {
     try {
-      const { data } = await axios.post(`${BASE_URL}/posts/${postId}/like`, { userId });
+      const { data } = await axios.post(`${BASE_URL}/${postId}/like`, { userId });
       setPosts(prev => prev.map(post => 
         post.id === postId ? { ...post, likes: data.likes } : post
       ));
