@@ -6,20 +6,19 @@ const Download = () => {
   const [isInstalled, setIsInstalled] = useState(false);
   const deferredPrompt = useRef(null);
 
-  // User effect and install prompt handling separated
+  // Fetch username from token on component mount
   useEffect(() => {
     const userData = getUserNameFromToken();
     if (userData) setUserName(userData.name);
   }, []);
 
-  // Install prompt handling
+  // Detect install prompt and app installation state
   useEffect(() => {
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
-      
-      // Special handling for iOS devices
+
       if ((isIOS && isSafari && navigator.standalone) || isStandalone) {
         setIsInstalled(true);
       }
@@ -29,11 +28,11 @@ const Download = () => {
       e.preventDefault();
       console.log('📦 beforeinstallprompt event captured');
       deferredPrompt.current = e;
-      setIsInstalled(false); // Reset install state when prompt becomes available
+      setIsInstalled(false);
     };
 
     checkInstalled();
-    
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
@@ -46,9 +45,9 @@ const Download = () => {
     };
   }, []);
 
+  // Handle user clicking the install button
   const handleInstall = async () => {
     if (!deferredPrompt.current) {
-      // Check again if installed after user interaction
       if (window.matchMedia('(display-mode: standalone)').matches) {
         setIsInstalled(true);
         return alert('App is already installed!');
@@ -59,7 +58,7 @@ const Download = () => {
     try {
       deferredPrompt.current.prompt();
       const { outcome } = await deferredPrompt.current.userChoice;
-      
+
       if (outcome === 'accepted') {
         console.log('✅ App installed successfully');
         setIsInstalled(true);
@@ -73,6 +72,8 @@ const Download = () => {
       deferredPrompt.current = null;
     }
   };
+
+  // Send install tracking info to backend
   const trackInstall = async () => {
     const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
@@ -97,7 +98,7 @@ const Download = () => {
       <button
         className="install-button"
         onClick={handleInstall}
-        disabled={!deferredPrompt || isInstalled}
+        disabled={!deferredPrompt.current || isInstalled}
       >
         {isInstalled ? 'App Installed ✓' : 'Install App Now'}
       </button>
