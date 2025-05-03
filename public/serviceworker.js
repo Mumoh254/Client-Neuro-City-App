@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v1';
 const CACHE_NAME = `city-neuro-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 const INSTALL_CACHE = [
