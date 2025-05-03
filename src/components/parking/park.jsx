@@ -18,6 +18,7 @@ const GlobalStyle = createGlobalStyle`
     --border: #e2e8f0;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05);
+    --container-padding: 1rem;
   }
 
   body {
@@ -26,6 +27,11 @@ const GlobalStyle = createGlobalStyle`
     background: var(--background);
     margin: 0;
     -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+
+    @media (min-width: 768px) {
+      font-size: 16px;
+    }
   }
 `;
 
@@ -35,7 +41,6 @@ const PRICING = {
   monthly: 10000
 };
 const POINTS_PER_SHILLING = 10;
-const GRACE_MINUTES = 30;
 
 const ParkingSystem = () => {
   const [username, setUsername] = useState('');
@@ -187,8 +192,8 @@ const ParkingSystem = () => {
       </Header>
 
       <MainContent>
-        <Tabs activeKey={activeTab} onSelect={setActiveTab}>
-          <Tab eventKey="parking" title={<TabTitle><FaCar /> Parking</TabTitle>}>
+        <StyledTabs activeKey={activeTab} onSelect={setActiveTab}>
+          <Tab eventKey="parking" title={<TabTitle><FaCar /><span>Parking</span></TabTitle>}>
             <ContentCard>
               {!session ? (
                 <FormSection>
@@ -279,12 +284,12 @@ const ParkingSystem = () => {
             </ContentCard>
           </Tab>
 
-          <Tab eventKey="subscriptions" title={<TabTitle><FaCalendarAlt /> Subscriptions</TabTitle>}>
+          <Tab eventKey="subscriptions" title={<TabTitle><FaCalendarAlt /><span>Subs</span></TabTitle>}>
             <ContentCard>
               <SubscriptionPlans />
             </ContentCard>
           </Tab>
-        </Tabs>
+        </StyledTabs>
       </MainContent>
 
       <RedeemModal 
@@ -298,44 +303,59 @@ const ParkingSystem = () => {
 
 // Styled Components
 const Container = styled.div`
-  padding: 2rem;
+  padding: var(--container-padding);
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
 `;
 
 const Header = styled.header`
   display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 2rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const Logo = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 1.5rem;
+  gap: 0.75rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--primary);
 
   svg {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+    svg {
+      font-size: 1.8rem;
+    }
   }
 `;
 
 const ControlGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 `;
 
 const PointsButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 0.5rem;
@@ -346,6 +366,11 @@ const PointsButton = styled.button`
   &:hover {
     background: var(--background);
   }
+
+  @media (min-width: 768px) {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -353,11 +378,21 @@ const UserInfo = styled.div`
   
   .name {
     font-weight: 500;
+    font-size: 0.875rem;
   }
   
   .role {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
+  }
+
+  @media (min-width: 768px) {
+    .name {
+      font-size: 1rem;
+    }
+    .role {
+      font-size: 0.875rem;
+    }
   }
 `;
 
@@ -365,23 +400,68 @@ const MainContent = styled.main`
   background: var(--surface);
   border-radius: 1rem;
   box-shadow: var(--shadow-sm);
-  padding: 2rem;
+  padding: 1rem;
+  overflow: hidden;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
+`;
+
+const StyledTabs = styled(Tabs)`
+  .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    border: none !important;
+
+    &.active {
+      color: var(--primary);
+      background: transparent;
+      font-weight: 600;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .nav-link {
+      font-size: 1rem;
+    }
+  }
+`;
+
+const TabTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  span {
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
 `;
 
 const ContentCard = styled.div`
-  padding: 2rem;
+  padding: 1rem;
   background: var(--surface);
   border-radius: 1rem;
+  margin-top: 1rem;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
 `;
 
 const FormSection = styled.div`
   display: grid;
-  gap: 1.5rem;
-  max-width: 600px;
-  margin: 0 auto;
+  gap: 1rem;
+  width: 100%;
 
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    max-width: 600px;
+    margin: 0 auto;
   }
 `;
 
@@ -389,6 +469,7 @@ const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
 
   label {
     font-size: 0.875rem;
@@ -397,16 +478,22 @@ const FormGroup = styled.div`
 `;
 
 const Input = styled.input`
-  padding: 0.875rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.875rem;
   transition: border-color 0.2s;
 
   &:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  }
+
+  @media (min-width: 768px) {
+    padding: 0.875rem;
+    font-size: 1rem;
   }
 `;
 
@@ -415,23 +502,29 @@ const Select = styled.select`
 `;
 
 const CostDisplay = styled.div`
-  grid-column: span 2;
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--primary);
-  padding: 1.5rem 0;
+  padding: 1rem 0;
+  grid-column: 1 / -1;
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const PrimaryButton = styled.button`
-  grid-column: span 2;
-  padding: 1rem;
+  width: 100%;
+  padding: 0.875rem;
   background: var(--primary);
   color: white;
   border: none;
   border-radius: 0.5rem;
   font-weight: 500;
+  font-size: 0.875rem;
   transition: opacity 0.2s;
+  grid-column: 1 / -1;
 
   &:disabled {
     opacity: 0.7;
@@ -439,6 +532,11 @@ const PrimaryButton = styled.button`
 
   &:hover:not(:disabled) {
     opacity: 0.9;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1rem;
+    font-size: 1rem;
   }
 `;
 
@@ -451,42 +549,57 @@ const SessionHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
 
   svg {
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--primary);
   }
 
   h3 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     margin-bottom: 0.25rem;
   }
 
   p {
     color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 768px) {
+    svg {
+      font-size: 2rem;
+    }
+    h3 {
+      font-size: 1.25rem;
+    }
   }
 `;
 
 const StatusGrid = styled.div`
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
+  width: 100%;
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  @media (max-width: 639px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const StatusItem = styled.div`
-  padding: 1.5rem;
+  padding: 1rem;
   background: var(--background);
   border-radius: 0.5rem;
+  font-size: 0.875rem;
 
   label {
     display: block;
-    font-size: 0.875rem;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
   }
@@ -501,27 +614,29 @@ const StatusItem = styled.div`
   .success {
     color: #16a34a;
   }
-`;
 
-const TabTitle = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 0;
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+    font-size: 1rem;
+  }
 `;
 
 const SubscriptionContainer = styled.div`
   display: grid;
-  gap: 2rem;
-  padding: 2rem;
+  gap: 1.5rem;
+  width: 100%;
 
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const PlanCard = styled.div`
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 1rem;
   background: var(--surface);
   border: 2px solid ${props => props.highlighted ? 'var(--primary)' : 'var(--border)'};
@@ -530,6 +645,7 @@ const PlanCard = styled.div`
   h3 {
     color: var(--primary);
     margin-bottom: 1rem;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -538,26 +654,41 @@ const PlanCard = styled.div`
   ul {
     list-style: none;
     padding: 0;
-    margin: 1.5rem 0;
+    margin: 1rem 0;
     color: var(--text-secondary);
+    font-size: 0.875rem;
 
     li {
-      padding: 0.75rem 0;
+      padding: 0.5rem 0;
       border-bottom: 1px solid var(--border);
+    }
+  }
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+    h3 {
+      font-size: 1.25rem;
+    }
+    ul {
+      font-size: 1rem;
     }
   }
 `;
 
 const Price = styled.div`
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--primary);
-  margin: 1.5rem 0;
+  margin: 1rem 0;
+
+  @media (min-width: 768px) {
+    font-size: 2rem;
+  }
 `;
 
 const SubscribeButton = styled.button`
   width: 100%;
-  padding: 1rem;
+  padding: 0.875rem;
   background: var(--primary);
   color: white;
   border: none;
@@ -565,9 +696,15 @@ const SubscribeButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s;
+  font-size: 0.875rem;
 
   &:hover {
     opacity: 0.9;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1rem;
+    font-size: 1rem;
   }
 `;
 
@@ -604,6 +741,7 @@ const RedeemModal = ({ show, onHide, points }) => {
               step="100"
               value={redeemAmount}
               onChange={(e) => setRedeemAmount(e.target.value)}
+              size="lg"
             />
             <Form.Text>Ksh {(redeemAmount / 100).toFixed(2)} Value</Form.Text>
           </Form.Group>
