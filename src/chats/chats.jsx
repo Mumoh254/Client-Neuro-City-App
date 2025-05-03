@@ -361,7 +361,7 @@ const ReviewSection = () => {
       <HubContainer>
         <Container style={{ maxWidth: '800px' }}>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>City Community Hub</h5>
+            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>Free  Speech !!</h5>
             <div className="d-flex gap-2">
               <Button 
                 variant="outline-primary" 
@@ -396,48 +396,51 @@ const ReviewSection = () => {
 
           {showReviewForm && (
             <StickyReviewForm theme={darkMode ? darkTheme : lightTheme}>
-              <div className="position-relative">
-                <Button 
-                  variant="link" 
-                  onClick={() => setShowReviewForm(false)}
-                  className="position-absolute top-0 end-0 p-1"
-                >
-                  <FaTimes className="fs-6" />
-                </Button>
-                
-                <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem' }}>Create New Post</h6>
-                <Form onSubmit={(e) => {
-                  e.preventDefault();
-                  handleReviewSubmit(e);
-                }}>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={formData.content}
-                    onChange={(e) => setFormData({ content: e.target.value })}
-                    placeholder="Share your thoughts..."
-                    className="rounded-2 mb-2"
-                    style={{ 
-                      fontSize: '0.8rem',
-                      lineHeight: '1.4',
-                      padding: '0.6rem',
-                     
-                    }}
-                  />
-                  <div className="d-flex justify-content-end">
-                    <Button 
-                      type="submit" 
-                      variant="primary" 
-                      className="rounded-pill px-3"
-                      style={{ fontSize: '0.8rem' }}
-                    >
-                      <FaPaperPlane className="me-1" />
-                      Post
-                    </Button>
-                  </div>
-                </Form>
-              </div>
-            </StickyReviewForm>
+  <div className="position-relative mb-3 p-4">
+    <Button 
+      variant="link" 
+      onClick={() => setShowReviewForm(false)}
+      className="position-absolute top-0 end-0 p-1"
+    >
+      <FaTimes className="fs-6" />
+    </Button>
+
+    <h6 className="mb-1 fw-semibold" style={{ fontSize: '0.4rem' }}>
+      Create New Post
+    </h6>
+
+    <Form onSubmit={(e) => {
+      e.preventDefault();
+      handleReviewSubmit(e);
+    }}>
+      <div className="position-relative">
+        <Form.Control
+          as="textarea"
+          rows={1}
+          value={formData.content}
+          onChange={(e) => setFormData({ content: e.target.value })}
+          placeholder="Share your thoughts..."
+          className="rounded-2 pe-5" // Add right padding for the button
+          style={{ 
+            fontSize: '0.8rem',
+            lineHeight: '1.4',
+            padding: '0.2rem',
+            resize: 'none',
+          }}
+        />
+        <Button 
+          type="submit" 
+          variant="link"
+          className="position-absolute bottom-0 end-0 mb-1 me-2 p-0 text-primary"
+          style={{ fontSize: '1rem' }}
+        >
+          <FaPaperPlane />
+        </Button>
+      </div>
+    </Form>
+  </div>
+</StickyReviewForm>
+
           )}
         </Container>
       </HubContainer>
