@@ -77,7 +77,7 @@ const TomTomTrafficMap = () => {
   return (
     <div style={{ padding: '0px' }}>
       <h2 style={{ display: 'flex', alignItems: 'center' }}>
-        <span  style={{fontSize: "10px"}}>Welt Tallis Nairobi Traffic</span>
+        <span  style={{fontSize: "18px"}}>Welt Tallis Nairobi Traffic</span>
         <button
           onClick={toggleModal}
           style={{

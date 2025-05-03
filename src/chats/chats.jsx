@@ -170,18 +170,25 @@ const ReviewSection = () => {
   };
 
   const trackView = async (postId) => {
-    if (!viewedPosts.has(postId)) {
+    const numericPostId = parseInt(postId, 10); // <- ensure correct type
+  
+    if (!viewedPosts.has(numericPostId)) {
       try {
-        await axios.post(`${BASE_URL}/posts/${postId}/view`, { userId });
-        setViewedPosts(prev => new Set([...prev, postId]));
-        setPosts(prev => prev.map(post => 
-          post.id === postId ? { ...post, views: post.views + 1 } : post
-        ));
+        await axios.post(`${BASE_URL}/posts/${numericPostId}/view`, { userId });
+  
+        setViewedPosts(prev => new Set([...prev, numericPostId]));
+  
+        setPosts(prev =>
+          prev.map(post =>
+            post.id === numericPostId ? { ...post, views: post.views + 1 } : post
+          )
+        );
       } catch (err) {
         console.error('View tracking error:', err);
       }
     }
   };
+  
 
   const handleLike = async (postId) => {
     try {
@@ -384,7 +391,7 @@ const ReviewSection = () => {
       <HubContainer>
         <Container style={{ maxWidth: '800px' }}>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>City Community Hub</h5>
+            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>Free  Speech !</h5>
             <div className="d-flex gap-2">
               <Button 
                 variant="outline-primary" 
@@ -392,12 +399,12 @@ const ReviewSection = () => {
                 className="rounded-circle p-1"
                 style={{ width: '32px', height: '32px' }}
               >
-                {darkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
+                {darkMode ? <FaSun size={10} /> : <FaMoon size={10} />}
               </Button>
               <Button
                 variant="primary"
                 onClick={() => setShowReviewForm(true)}
-                className="rounded-pill px-3"
+                className="rounded-pill px-2"
                 style={{ fontSize: '0.8rem' }}
               >
                 <FaPen className="me-1" />
@@ -423,44 +430,46 @@ const ReviewSection = () => {
 
           {showReviewForm && (
             <StickyReviewForm theme={darkMode ? darkTheme : lightTheme}>
-              <div className="position-relative">
-                <Button 
-                  variant="link" 
-                  onClick={() => setShowReviewForm(false)}
-                  className="position-absolute top-0 end-0 p-1"
-                >
-                  <FaTimes className="fs-6" />
-                </Button>
-                
-                <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem' }}>Create New Post</h6>
-                <Form onSubmit={handleReviewSubmit}>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={formData.content}
-                    onChange={(e) => setFormData({ content: e.target.value })}
-                    placeholder="Share your thoughts..."
-                    className="rounded-2 mb-2"
-                    style={{ 
-                      fontSize: '0.8rem',
-                      lineHeight: '1.4',
-                      padding: '0.6rem'
-                    }}
-                  />
-                  <div className="d-flex justify-content-end">
-                    <Button 
-                      type="submit" 
-                      variant="primary" 
-                      className="rounded-pill px-3"
-                      style={{ fontSize: '0.8rem' }}
-                    >
-                      <FaPaperPlane className="me-1" />
-                      Post
-                    </Button>
-                  </div>
-                </Form>
-              </div>
-            </StickyReviewForm>
+  <div className="position-relative p-5">
+    <Button 
+      variant="link" 
+      onClick={() => setShowReviewForm(false)}
+      className="position-absolute top-0 end-0 p-1"
+    >
+      <FaTimes className="fs-6" />
+    </Button>
+
+    <h6 className=" fw-semibold" style={{ fontSize: '0.9rem' }}>
+      Create New Post
+    </h6>
+
+    <Form onSubmit={handleReviewSubmit}>
+      <div className="position-relative">
+        <Form.Control
+          type="text"
+          value={formData.content}
+          onChange={(e) => setFormData({ content: e.target.value })}
+          placeholder="Share your thoughts..."
+          className="rounded-pill pe-2 py-1"
+          style={{
+            fontSize: '0.85rem',
+            paddingLeft: '1rem',
+            backgroundColor: darkMode ? '#1e1e1e' : '#f8f9fa',
+            border: '1px solid #ccc'
+          }}
+        />
+        <Button 
+          type="submit"
+          variant="link"
+          className="position-absolute top-50 end-0 translate-middle-y me-2 p-0"
+        >
+          <FaPaperPlane className="text-primary" />
+        </Button>
+      </div>
+    </Form>
+  </div>
+</StickyReviewForm>
+
           )}
         </Container>
       </HubContainer>
