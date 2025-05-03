@@ -56,13 +56,13 @@ const ParkingSessionCard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
-
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com";
   useEffect(() => {
     let timerInterval;
     
     const fetchParkingData = async () => {
       try {
-        const response = await fetch('http://localhost:8000/apiV1/smartcity-ke/get-parking?userId=smart_ke_WT_125343562');
+        const response = await fetch(`${BASE_URL}/apiV1/smartcity-ke/get-parking?userId=smart_ke_WT_125343562`);
         
         if (!response.ok) throw new Error('Failed to fetch parking details');
         
