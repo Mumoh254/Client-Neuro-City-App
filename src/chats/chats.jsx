@@ -18,29 +18,28 @@ import en from 'javascript-time-ago/locale/en';
 TimeAgo.addDefaultLocale(en);
 const timeAgo = new TimeAgo('en-US');
 
-// Styled components
+// Styled Components
 const HubContainer = styled.div`
   background: ${props => props.theme.background};
   min-height: 100vh;
-  padding: 0.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 1rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 0.875rem;
 `;
 
 const PostBubble = styled.div`
-  background: ${props => props.isOdd ? props.theme.oddPostBg : props.theme.postBg};
+  background: ${props => props.theme.postBg};
   color: ${props => props.theme.text};
   border-radius: 8px;
-  padding: 0.8rem;
-  margin: 0.3rem 0;
+  padding: 1rem;
+  margin: 0.5rem 0;
   border: 1px solid ${props => props.theme.border};
-  transition: all 0.15s ease;
-  line-height: 1.35;
-  font-size: 0.8125rem;
-  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   
   &:hover {
-    transform: translateY(-0.5px);
-    box-shadow: ${props => props.theme.shadow};
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 `;
 
@@ -48,12 +47,11 @@ const CommentBubble = styled.div`
   background: ${props => props.theme.commentBg};
   color: ${props => props.theme.text};
   border-radius: 6px;
-  padding: 0.6rem;
+  padding: 0.75rem;
   margin: 0.3rem 0 0.3rem 1.2rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   position: relative;
   border: 1px solid ${props => props.theme.commentBorder};
-  line-height: 1.3;
   
   &::before {
     content: '';
@@ -67,13 +65,13 @@ const CommentBubble = styled.div`
 
 const StickyReviewForm = styled.div`
   position: fixed;
-  bottom: 0.6rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 96%;
-  max-width: 560px;
+  width: 95%;
+  max-width: 600px;
   background: ${props => props.theme.formBg};
-  padding: 0.6rem;
+  padding: 1rem;
   border-radius: 8px;
   border: 1px solid ${props => props.theme.border};
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -81,8 +79,8 @@ const StickyReviewForm = styled.div`
 `;
 
 const UserAvatar = styled.div`
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: ${props => props.color || props.theme.avatarBg};
   color: white;
@@ -90,46 +88,39 @@ const UserAvatar = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  font-weight: 500;
   border: 1.5px solid ${props => props.theme.avatarBorder};
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  flex-shrink: 0;
 `;
 
 // Themes
 const lightTheme = {
-  background: '#fafafa',
+  background: '#f8f9fa',
   postBg: '#ffffff',
-  oddPostBg: '#f8f9fa',
-  commentBg: '#f0f2f5',
-  commentBorder: 'rgba(0,0,0,0.04)',
+  commentBg: '#f3f4f6',
+  commentBorder: '#e5e7eb',
   formBg: '#ffffff',
-  text: '#2d3436',
-  border: 'rgba(0,0,0,0.08)',
-  avatarBg: '#6366f1',
-  avatarBorder: 'rgba(255,255,255,0.2)',
-  shadow: '0 1px 3px rgba(0,0,0,0.03)'
+  text: '#1f2937',
+  border: '#e5e7eb',
+  avatarBg: '#3b82f6',
+  avatarBorder: '#bfdbfe',
 };
 
 const darkTheme = {
-  background: '#0a0a0a',
-  postBg: '#161616',
-  oddPostBg: '#202020',
-  commentBg: '#2a2a2a',
-  commentBorder: 'rgba(0,0,0,0.3)',
-  formBg: '#1a1a1a',
-  text: '#e0e0e0',
-color:  '#fff',
-  avatarBg: '#4f46e5',
-  avatarBorder: 'rgba(0,0,0,0.3)',
-  shadow: 'rgba(0,0,0,0.3)'
+  background: '#111827',
+  postBg: '#1f2937',
+  commentBg: '#374151',
+  commentBorder: '#4b5563',
+  formBg: '#1f2937',
+  text: '#f3f4f6',
+  border: '#374151',
+  avatarBg: '#6366f1',
+  avatarBorder: '#818cf8',
 };
 
-const REACTIONS = ['👍', '❤️', '😂', '😲', '😢'];
-const STICKERS = ['🚀', '💡', '🌟', '🔥', '💯'];
 const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
 const getAvatarColor = (char) => {
-  const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   return colors[char.charCodeAt(0) % colors.length];
 };
 
@@ -143,52 +134,23 @@ const ReviewSection = () => {
   const [commentTexts, setCommentTexts] = useState({});
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [notifiedPosts, setNotifiedPosts] = useState(new Set());
-  const [formData, setFormData] = useState({ content: '', stickers: [] });
-  const [editPostId, setEditPostId] = useState(null);
+  const [viewedPosts, setViewedPosts] = useState(new Set());
+  const [formData, setFormData] = useState({ content: '' });
 
   useEffect(() => {
     const userId = getUserIdFromToken();
     setUserId(userId);
     fetchPosts();
-    checkNotificationPermission();
-    const interval = setInterval(fetchPosts, 60000);
+    
+    const interval = setInterval(fetchPosts, 120000);
     return () => clearInterval(interval);
   }, []);
-
-  const checkNotificationPermission = async () => {
-    if ('Notification' in window && Notification.permission !== 'granted') {
-      await Notification.requestPermission();
-    }
-  };
-
-  const sendNotification = (post) => {
-    if (Notification.permission === 'granted') {
-      new Notification(`New Post from ${post.author.Name}`, {
-        body: post.content.substring(0, 50) + (post.content.length > 50 ? '...' : ''),
-        icon: 'https://cdn-icons-png.flaticon.com/512/1250/1250689.png'
-      });
-    }
-  };
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
       const { data } = await axios.get(`${BASE_URL}/posts`);
-      const newPosts = data.map(p => ({ ...p, id: p.id ?? p._id }));
-      
-      const now = new Date();
-      newPosts.forEach(post => {
-        const postDate = new Date(post.createdAt);
-        const diffMinutes = (now - postDate) / (1000 * 60);
-        
-        if (diffMinutes <= 10 && !notifiedPosts.has(post.id)) {
-          sendNotification(post);
-          setNotifiedPosts(prev => new Set([...prev, post.id]));
-        }
-      });
-
-      setPosts(newPosts);
+      setPosts(data.map(p => ({ ...p, id: p.id ?? p._id })));
     } catch (err) {
       setError('Failed to load posts');
     } finally {
@@ -196,44 +158,23 @@ const ReviewSection = () => {
     }
   };
 
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post(`${BASE_URL}/posts`, {
-        content: formData.content,
-        author: userId
-      });
-      setPosts(prev => [data, ...prev]);
-      setFormData({ content: '', stickers: [] });
-      setShowReviewForm(false);
-      setSuccess('Post created successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to create post');
-    }
-  };
-
-  const handleCommentSubmit = async (postId) => {
-    try {
-      const commentContent = commentTexts[postId];
-      const { data } = await axios.post(`${BASE_URL}/${postId}/comments`, {
-        content: commentContent,
-        author: userId
-      });
-      
-      setPosts(prev => prev.map(post => 
-        post.id === postId ? 
-        { ...post, comments: [...post.comments, data] } : post
-      ));
-      setCommentTexts(prev => ({ ...prev, [postId]: '' }));
-    } catch (err) {
-      setError('Failed to add comment');
+  const trackView = async (postId) => {
+    if (!viewedPosts.has(postId)) {
+      try {
+        await axios.post(`${BASE_URL}/posts/${postId}/view`, { userId });
+        setViewedPosts(prev => new Set([...prev, postId]));
+        setPosts(prev => prev.map(post => 
+          post.id === postId ? { ...post, views: (post.views || 0) + 1 } : post
+        ));
+      } catch (err) {
+        console.error('View tracking error:', err);
+      }
     }
   };
 
   const handleLike = async (postId) => {
     try {
-      const { data } = await axios.post(`${BASE_URL}/${postId}/like`, { userId });
+      const { data } = await axios.put(`${BASE_URL}/${postId}/like`, { userId });
       setPosts(prev => prev.map(post => 
         post.id === postId ? { ...post, likes: data.likes } : post
       ));
@@ -242,95 +183,52 @@ const ReviewSection = () => {
     }
   };
 
-  const handleDeletePost = async (postId) => {
+  const handleCommentSubmit = async (postId, commentText) => {
     try {
-      await axios.delete(`${BASE_URL}/posts/${postId}`);
-      setPosts(prev => prev.filter(post => post.id !== postId));
-      setSuccess('Post deleted successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to delete post');
-    }
-  };
-
-  const handleCommentReaction = async (postId, commentId, reaction) => {
-    try {
-      const { data } = await axios.post(
-        `${BASE_URL}/posts/${postId}/comments/${commentId}/react`,
-        { reaction }
-      );
+      const { data } = await axios.post(`${BASE_URL}/${postId}/comments`, {
+        content: commentText,
+        author: userId
+      });
       
       setPosts(prev => prev.map(post => 
-        post.id === postId ? {
-          ...post,
-          comments: post.comments.map(comment => 
-            comment.id === commentId ? { ...comment, reactions: data.reactions } : comment
-          )
-        } : post
+        post.id === postId ? { ...post, comments: [...post.comments, data] } : post
       ));
+      setCommentTexts(prev => ({ ...prev, [postId]: '' }));
     } catch (err) {
-      setError('Failed to add reaction');
+      setError('Failed to add comment');
     }
   };
 
-  const handleShare = async (postId) => {
-    try {
-      const postUrl = `${window.location.origin}/post/${postId}`;
-      await navigator.clipboard.writeText(postUrl);
-      setSuccess('Post link copied to clipboard!');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to copy post link');
-    }
-  };
-
-  const PostCard = React.memo(({ post, index }) => {
+  const PostCard = React.memo(({ post }) => {
     const theme = useContext(ThemeContext);
-    const inputRef = useRef(null);
-    const [localComment, setLocalComment] = useState('');
-    const userInitial = post.author?.Name?.[0] || 'A';
+    const [comment, setComment] = useState('');
+    const userInitial = post.author?.Name?.[0] || 'U';
     const avatarColor = getAvatarColor(userInitial);
 
     useEffect(() => {
-      if (showComments[post.id]) {
-        inputRef.current?.focus();
-        setLocalComment(commentTexts[post.id] || '');
-      }
-    }, [showComments[post.id]]);
-
-    const handleSubmit = () => {
-      setCommentTexts(prev => ({ ...prev, [post.id]: localComment }));
-      handleCommentSubmit(post.id);
-      setLocalComment('');
-    };
+      trackView(post.id);
+    }, []);
 
     return (
-      <PostBubble theme={theme} isOdd={index % 2 !== 0}>
-        <div className="d-flex align-items-start gap-2 mb-2">
+      <PostBubble theme={theme}>
+        <div className="d-flex gap-2 align-items-start">
           <UserAvatar color={avatarColor}>{userInitial}</UserAvatar>
+          
           <div className="flex-grow-1">
-            <div className="d-flex justify-content-between align-items-start">
+            <div className="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="fw-medium">{post.author?.Name}</span>
-                  <OverlayTrigger
-                    placement="top"
-                    overlay={<Tooltip>{new Date(post.createdAt).toLocaleString()}</Tooltip>}
-                  >
-                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>
-                      {timeAgo.format(new Date(post.createdAt))}
-                    </span>
-                  </OverlayTrigger>
-                </div>
+                <h6 className="mb-0 fw-medium" style={{ fontSize: '0.9rem' }}>
+                  {post.author?.Name}
+                </h6>
+                <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                  {timeAgo.format(new Date(post.createdAt))}
+                </small>
               </div>
+              
               <div className="d-flex align-items-center gap-2">
-                <Badge bg="secondary" className="fs-7 rounded-pill">
-                  {post.role}
+                <Badge bg="dark" className="rounded-pill" style={{ fontSize: '0.7rem' }}>
+                  <FaEye className="me-1" /> {post.views || 0}
                 </Badge>
-                <div className="d-flex align-items-center gap-1 ms-2">
-                  <FaEye className="text-muted" style={{ fontSize: '0.8rem' }} />
-                  <small style={{ fontSize: '0.7rem' }}>{post.views || 0}</small>
-                </div>
                 {post.author?._id === userId && (
                   <Dropdown>
                     <Dropdown.Toggle variant="link" className="p-0">
@@ -345,111 +243,97 @@ const ReviewSection = () => {
                 )}
               </div>
             </div>
-            <p className="mt-1 mb-2">{post.content}</p>
-            
+
+            <p className="mb-2" style={{ fontSize: '0.85rem' }}>{post.content}</p>
+
             <div className="d-flex gap-3 align-items-center">
               <Button 
                 variant="link" 
-                className="p-0 text-muted d-flex align-items-center gap-1 hover-effect"
+                className="d-flex align-items-center gap-1 text-muted p-0"
                 onClick={() => handleLike(post.id)}
               >
-                {post.likes?.includes(userId) ? 
-                  <FaThumbsUp className="text-primary" /> : 
-                  <FaRegThumbsUp />}
-                <small style={{ fontSize: '0.7rem' }}>{post.likes?.length || 0}</small>
+                {post.likes?.includes(userId) ? (
+                  <FaThumbsUp className="text-primary" style={{ fontSize: '0.9rem' }} />
+                ) : (
+                  <FaRegThumbsUp style={{ fontSize: '0.9rem' }} />
+                )}
+                <span style={{ fontSize: '0.8rem' }}>{post.likes?.length || 0}</span>
               </Button>
 
-              <Button 
-                variant="link" 
-                className="p-0 text-muted d-flex align-items-center gap-1 hover-effect"
+              <Button
+                variant="link"
+                className="d-flex align-items-center gap-1 text-muted p-0"
                 onClick={() => setShowComments(prev => ({
-                  ...prev, 
+                  ...prev,
                   [post.id]: !prev[post.id]
                 }))}
               >
-                <FaRegComment />
-                <small style={{ fontSize: '0.7rem' }}>{post.comments?.length || 0}</small>
+                <FaRegComment style={{ fontSize: '0.9rem' }} />
+                <span style={{ fontSize: '0.8rem' }}>{post.comments?.length || 0}</span>
               </Button>
 
               <Button 
                 variant="link" 
-                className="p-0 text-muted hover-effect"
+                className="text-muted p-0"
                 onClick={() => handleShare(post.id)}
               >
-                <FaShare />
+                <FaShare style={{ fontSize: '0.9rem' }} />
               </Button>
             </div>
+
+            {showComments[post.id] && (
+              <div className="mt-3">
+                <div className="mb-2">
+                  {post.comments?.map((comment, index) => (
+                    <CommentBubble key={index} theme={theme}>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div className="d-flex align-items-center gap-2">
+                          <UserAvatar 
+                            color={getAvatarColor(comment.author?.Name?.[0])}
+                            style={{ width: '28px', height: '28px', fontSize: '0.7rem' }}
+                          >
+                            {comment.author?.Name?.[0]}
+                          </UserAvatar>
+                          <span className="fw-medium" style={{ fontSize: '0.8rem' }}>
+                            {comment.author?.Name}
+                          </span>
+                        </div>
+                        <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                          {timeAgo.format(new Date(comment.createdAt))}
+                        </small>
+                      </div>
+                      <p className="mb-0" style={{ fontSize: '0.8rem' }}>{comment.content}</p>
+                    </CommentBubble>
+                  ))}
+                </div>
+
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    as="textarea"
+                    rows={1}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="rounded-2"
+                    style={{ 
+                      fontSize: '0.8rem',
+                      padding: '0.4rem 0.8rem',
+                      lineHeight: '1.3'
+                    }}
+                  />
+                  <Button 
+                    variant="primary" 
+                    className="rounded-2 px-3"
+                    onClick={() => handleCommentSubmit(post.id, comment)}
+                    style={{ fontSize: '0.8rem' }}
+                  >
+                    Post
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {showComments[post.id] && (
-          <div className="mt-2">
-            <div className="comments">
-              {post.comments?.map((comment, index) => {
-                const commentInitial = comment.author?.Name?.[0] || 'U';
-                const commentColor = getAvatarColor(commentInitial);
-
-                return (
-                  <CommentBubble key={index} theme={theme}>
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <div className="d-flex align-items-center gap-2">
-                        <UserAvatar 
-                          color={commentColor}
-                          style={{ width: '24px', height: '24px', fontSize: '0.7rem' }}
-                        >
-                          {commentInitial}
-                        </UserAvatar>
-                        <small className="fw-medium">{comment.author?.Name}</small>
-                      </div>
-                      <small className="text-muted" style={{ fontSize: '0.65rem' }}>
-                        {timeAgo.format(new Date(comment.createdAt))}
-                      </small>
-                    </div>
-                    <p className="mb-0">{comment.content}</p>
-                    <div className="reaction-bar mt-1">
-                      {REACTIONS.map(reaction => (
-                        <button
-                          key={reaction}
-                          className="btn btn-link p-0 me-2 fs-7"
-                          onClick={() => handleCommentReaction(post.id, comment._id, reaction)}
-                        >
-                          {reaction}
-                        </button>
-                      ))}
-                    </div>
-                  </CommentBubble>
-                );
-              })}
-            </div>
-
-            <div className="mt-2 d-flex gap-2">
-              <Form.Control
-                ref={inputRef}
-                as="textarea"
-                rows={1}
-                value={localComment}
-                onChange={(e) => setLocalComment(e.target.value)}
-                placeholder="Add comment..."
-                className="flex-grow-1 rounded-pill"
-                style={{ 
-                  fontSize: '0.75rem', 
-                  padding: '0.4rem 0.8rem',
-                  background: theme.commentBg,
-                  border: 'none'
-                }}
-              />
-              <Button 
-                variant="primary" 
-                onClick={handleSubmit}
-                className="rounded-pill px-2"
-                size="sm"
-                style={{ fontSize: '0.75rem' }}
-              >
-                Post
-              </Button>
-            </div>
-          </div>
-        )}
       </PostBubble>
     );
   });
@@ -457,39 +341,28 @@ const ReviewSection = () => {
   return (
     <ThemeContext.Provider value={darkMode ? darkTheme : lightTheme}>
       <HubContainer>
-        <Container className="position-relative" style={{ maxWidth: '800px' }}>
-          <div className="d-flex gap-2 position-absolute top-0 end-0 mt-2 me-2">
-            <Button 
-              variant="link" 
-              onClick={() => setDarkMode(!darkMode)}
-              style={{ fontSize: '0.9rem' }}
-            >
-              {darkMode ? <FaSun /> : <FaMoon />}
-            </Button>
-            <Button
-              variant="link"
-              onClick={checkNotificationPermission}
-              style={{ fontSize: '0.9rem' }}
-            >
-              <FaBell />
-            </Button>
-          </div>
-
-          <div className="d-flex justify-content-between align-items-center mb-3 p-5">
-            <div>
-              <h6 className="mb-0 fw-bold">Free Speech Hub</h6>
-              <small className="text-muted" style={{ fontSize: '0.7rem' }}>Express yourself freely</small>
+        <Container style={{ maxWidth: '800px' }}>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>City Community Hub</h5>
+            <div className="d-flex gap-2">
+              <Button 
+                variant="outline-primary" 
+                onClick={() => setDarkMode(!darkMode)}
+                className="rounded-circle p-1"
+                style={{ width: '32px', height: '32px' }}
+              >
+                {darkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setShowReviewForm(true)}
+                className="rounded-pill px-3"
+                style={{ fontSize: '0.8rem' }}
+              >
+                <FaPen className="me-1" />
+                New Post
+              </Button>
             </div>
-            <Button 
-              variant="primary" 
-              onClick={() => setShowReviewForm(true)}
-              className="rounded-pill px-2"
-              size="sm"
-              style={{ fontSize: '0.75rem' }}
-            >
-              <FaPen className="me-2" />
-              New Post
-            </Button>
           </div>
 
           {error && <Alert variant="danger" className="py-2">{error}</Alert>}
@@ -497,12 +370,10 @@ const ReviewSection = () => {
 
           {loading ? (
             <div className="text-center mt-4">
-              <Spinner animation="border" variant="primary" />
+              <Spinner animation="border" variant="primary" size="sm" />
             </div>
           ) : (
-            posts.map((post, index) => (
-              <PostCard key={post.id} post={post} index={index} />
-            ))
+            posts.map(post => <PostCard key={post.id} post={post} />)
           )}
 
           {showReviewForm && (
@@ -516,49 +387,30 @@ const ReviewSection = () => {
                   <FaTimes className="fs-6" />
                 </Button>
                 
-                <h6 className="mb-2 fw-bold" style={{ fontSize: '0.875rem' }}>Create Post</h6>
-                <Form onSubmit={handleReviewSubmit}>
+                <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem' }}>Create New Post</h6>
+                <Form onSubmit={(e) => {
+                  e.preventDefault();
+                  handleReviewSubmit(e);
+                }}>
                   <Form.Control
                     as="textarea"
                     rows={3}
                     value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      content: e.target.value 
-                    }))}
+                    onChange={(e) => setFormData({ content: e.target.value })}
                     placeholder="Share your thoughts..."
-                    className="mb-2 rounded-2"
+                    className="rounded-2 mb-2"
                     style={{ 
-                      background: 'transparent',
-                      border: 'none',
-                      fontSize: '0.75rem',
-                      lineHeight: '1.4'
+                      fontSize: '0.8rem',
+                      lineHeight: '1.4',
+                      padding: '0.6rem'
                     }}
                   />
-                  
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="d-flex gap-1">
-                      {STICKERS.map((sticker, i) => (
-                        <Button
-                          key={i}
-                          variant="outline-secondary"
-                          className="rounded-circle p-1"
-                          style={{ fontSize: '0.75rem' }}
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            content: prev.content + sticker
-                          }))}
-                        >
-                          {sticker}
-                        </Button>
-                      ))}
-                    </div>
+                  <div className="d-flex justify-content-end">
                     <Button 
                       type="submit" 
                       variant="primary" 
-                      className="rounded-pill px-2"
-                      size="sm"
-                      style={{ fontSize: '0.75rem' }}
+                      className="rounded-pill px-3"
+                      style={{ fontSize: '0.8rem' }}
                     >
                       <FaPaperPlane className="me-1" />
                       Post
