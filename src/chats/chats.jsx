@@ -174,7 +174,7 @@ const ReviewSection = () => {
 
   const handleLike = async (postId) => {
     try {
-      const { data } = await axios.put(`${BASE_URL}/${postId}/like`, { userId });
+      const { data } = await axios.put(`${BASE_URL}/posts/${postId}/like`, { userId });
       setPosts(prev => prev.map(post => 
         post.id === postId ? { ...post, likes: data.likes } : post
       ));
@@ -188,7 +188,7 @@ const ReviewSection = () => {
     try {
       const { data } = await axios.post(`${BASE_URL}/posts`, {
         content: formData.content,
-        author: userId
+        authorId: userId 
       });
       setPosts(prev => [data, ...prev]);
       setFormData({ content: '' });
@@ -202,7 +202,7 @@ const ReviewSection = () => {
 
   const handleCommentSubmit = async (postId, commentText) => {
     try {
-      const { data } = await axios.post(`${BASE_URL}/${postId}/comments`, {
+      const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
         content: commentText,
         author: userId
       });
@@ -429,7 +429,7 @@ const ReviewSection = () => {
                       className="rounded-pill px-3"
                       style={{ fontSize: '0.8rem' }}
                     >
-                      <FaPaperPlane className="me-1" />
+                      <FaPaperPlane className="me-3" />
                       Post
                     </Button>
                   </div>
