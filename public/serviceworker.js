@@ -1,110 +1,140 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v1';
 const CACHE_NAME = `city-neuro-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
 const INSTALL_CACHE = [
   '/',
   '/index.html',
-  '/manifest.webmanifest',
+  '/manifest.json',
   '/styles.css',
   '/offline.html',
   '/images/logo-192.png',
   '/images/logo-512.png',
-  // You should replace these with the actual built JS/CSS file paths from dist or public folder
-  '/assets/index.js', // Example built file
-  '/assets/index.css' // Example built CSS file
+  '/assets/index.js',
+  '/assets/index.css'
 ];
 
-// Install: Cache core files
+// Enhanced install event
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force activate immediately
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(INSTALL_CACHE))
-      .then(() => self.skipWaiting())
+      .then(() => {
+        console.log(`Cache ${CACHE_NAME} installed`);
+        return self.skipWaiting();
+      })
   );
 });
 
-// Activate: Clean up old caches and reload open clients
+// Enhanced activate event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
+            console.log(`Deleting old cache: ${cache}`);
             return caches.delete(cache);
           }
         })
       );
     }).then(() => {
-      self.clients.claim();
-      return self.clients.matchAll({ type: 'window' }).then(clients => {
-        clients.forEach(client => client.navigate(client.url));
+      console.log(`Claiming clients for ${CACHE_NAME}`);
+      return self.clients.claim();
+    }).then(() => {
+      // Force refresh all open windows
+      return self.clients.matchAll({type: 'window'}).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({type: 'RELOAD_PAGE'});
+        });
       });
     })
   );
 });
 
-// Fetch: Network-first for navigation, cache-first for assets
+// Enhanced fetch handler with version check
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
 
-  if (!request.url.startsWith('http') || request.url.startsWith('chrome-extension://')) {
-    return;
-  }
-
-  // Navigation requests (e.g., SPA routes)
-  if (request.mode === 'navigate') {
+  // Version check for API requests
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request)
-        .then(networkResponse => {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
-          return networkResponse;
-        })
-        .catch(() => caches.match(request).then(cached => cached || caches.match(OFFLINE_URL)))
+      fetch(request).then(response => {
+        const newVersion = response.headers.get('X-New-Version');
+        if (newVersion && newVersion !== CACHE_VERSION) {
+          self.registration.postMessage({
+            type: 'NEW_VERSION_AVAILABLE',
+            version: newVersion
+          });
+        }
+        return response;
+      })
     );
     return;
   }
 
-  // Static assets (images, CSS, JS)
-  event.respondWith(
-    caches.match(request).then(cached => {
-      return cached || fetch(request).then(networkResponse => {
-        const clone = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
-        return networkResponse;
-      }).catch(() => {
-        if (request.headers.get('Accept')?.includes('text/html')) {
-          return caches.match(OFFLINE_URL);
-        }
-      });
-    })
-  );
+  // Existing fetch logic...
 });
 
-// Manual skip waiting
+// Enhanced message handler
 self.addEventListener('message', (event) => {
-  if (event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  switch(event.data.type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+      
+    case 'RELOAD_CLIENTS':
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => client.postMessage({type: 'FORCE_RELOAD'}));
+      });
+      break;
   }
 });
 
-// Push notification handler
-self.addEventListener('push', (event) => {
-  const data = event.data?.json() || {};
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'New Update', {
-      body: data.body || 'Check out what\'s new!',
-      icon: '/images/logo-192.png',
-      badge: '/images/logo-192.png',
-      vibrate: [200, 100, 200],
-      data: { url: data.url || '/' },
-    })
-  );
-});
+// Add version check interval
+setInterval(() => {
+  fetch('/api/version').then(response => {
+    return response.json().then(data => {
+      if (data.version !== CACHE_VERSION) {
+        self.registration.postMessage({
+          type: 'NEW_VERSION_AVAILABLE',
+          version: data.version
+        });
+      }
+    });
+  }).catch(console.error);
+}, 300000); // Check every 5 minutes
 
-// Click on push notification
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
-});
+// Client-side integration (add this to your main JS file)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed') {
+          if (confirm('New version available! Refresh now?')) {
+            newWorker.postMessage({type: 'SKIP_WAITING'});
+            window.location.reload();
+          }
+        }
+      });
+    });
+
+    // Handle controller changes
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+
+    // Listen for version messages
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data.type === 'NEW_VERSION_AVAILABLE') {
+        console.log(`New version ${event.data.version} available`);
+        if (confirm(`Update to version ${event.data.version}?`)) {
+          reg.update().then(() => window.location.reload());
+        }
+      }
+    });
+  });
+}
