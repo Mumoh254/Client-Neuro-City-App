@@ -126,7 +126,7 @@ const getAvatarColor = (char) => {
 
 const ReviewSection = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState([]); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -150,7 +150,8 @@ const ReviewSection = () => {
     try {
       setLoading(true);
       const { data } = await axios.get(`${BASE_URL}/posts`);
-      setPosts(data.map(p => ({ ...p, id: p.id ?? p._id })));
+      // Use proper ID field from backend
+      setPosts(data.map(p => ({ ...p, id: p._id ?? p.id }))); // Changed here
     } catch (err) {
       setError('Failed to load posts');
     } finally {
