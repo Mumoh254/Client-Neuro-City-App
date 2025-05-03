@@ -115,13 +115,13 @@ const darkTheme = {
   postBg: '#161616',
   oddPostBg: '#202020',
   commentBg: '#2a2a2a',
-  commentBorder: 'rgba(255,255,255,0.06)',
+  commentBorder: 'rgba(0,0,0,0.3)',
   formBg: '#1a1a1a',
   text: '#e0e0e0',
-  border: 'rgba(255,255,255,0.08)',
+color:  '#fff',
   avatarBg: '#4f46e5',
   avatarBorder: 'rgba(0,0,0,0.3)',
-  shadow: '0 1px 4px rgba(0,0,0,0.12)'
+  shadow: 'rgba(0,0,0,0.3)'
 };
 
 const REACTIONS = ['👍', '❤️', '😂', '😲', '😢'];
@@ -475,7 +475,7 @@ const ReviewSection = () => {
             </Button>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-3 p-2">
+          <div className="d-flex justify-content-between align-items-center mb-3 p-5">
             <div>
               <h6 className="mb-0 fw-bold">Free Speech Hub</h6>
               <small className="text-muted" style={{ fontSize: '0.7rem' }}>Express yourself freely</small>
@@ -487,7 +487,7 @@ const ReviewSection = () => {
               size="sm"
               style={{ fontSize: '0.75rem' }}
             >
-              <FaPen className="me-1" />
+              <FaPen className="me-2" />
               New Post
             </Button>
           </div>
