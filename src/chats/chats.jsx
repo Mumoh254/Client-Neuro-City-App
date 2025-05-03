@@ -183,6 +183,23 @@ const ReviewSection = () => {
     }
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await axios.post(`${BASE_URL}/posts`, {
+        content: formData.content,
+        author: userId
+      });
+      setPosts(prev => [data, ...prev]);
+      setFormData({ content: '' });
+      setShowReviewForm(false);
+      setSuccess('Post created successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Failed to create post');
+    }
+  };
+
   const handleCommentSubmit = async (postId, commentText) => {
     try {
       const { data } = await axios.post(`${BASE_URL}/${postId}/comments`, {
