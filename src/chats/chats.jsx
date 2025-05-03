@@ -124,7 +124,7 @@ const getAvatarColor = (char) => {
 
 const ReviewSection = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const [posts, setPosts] = useState(null);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -147,7 +147,7 @@ const ReviewSection = () => {
     try {
       setLoading(true);
       const { data } = await axios.get(`${BASE_URL}/posts`);
-      setPosts(data.map(p => ({ ...p, id: p._id })));
+      setPosts(data);
       setError('');
     } catch (err) {
       setError('Failed to load posts');
@@ -156,13 +156,26 @@ const ReviewSection = () => {
     }
   };
 
+  const toggleComments = (postId) => {
+    setShowComments(prev => {
+      const newState = { ...prev };
+      if (newState[postId]) {
+        delete newState[postId];
+      } else {
+        Object.keys(newState).forEach(key => delete newState[key]);
+        newState[postId] = true;
+      }
+      return newState;
+    });
+  };
+
   const trackView = async (postId) => {
     if (!viewedPosts.has(postId)) {
       try {
         await axios.post(`${BASE_URL}/posts/${postId}/view`, { userId });
         setViewedPosts(prev => new Set([...prev, postId]));
-        setPosts(prev => prev?.map(post => 
-          post.id === postId ? { ...post, views: (post.views || 0) + 1 } : post
+        setPosts(prev => prev.map(post => 
+          post.id === postId ? { ...post, views: post.views + 1 } : post
         ));
       } catch (err) {
         console.error('View tracking error:', err);
@@ -230,7 +243,7 @@ const ReviewSection = () => {
   const PostCard = React.memo(({ post }) => {
     const theme = useContext(ThemeContext);
     const [comment, setComment] = useState('');
-    const userInitial = post.author?.Name?.[0] || 'U';
+    const userInitial = post.author?.name?.[0] || 'U';
     const avatarColor = getAvatarColor(userInitial);
 
     useEffect(() => {
@@ -246,7 +259,7 @@ const ReviewSection = () => {
             <div className="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <h6 className="mb-0 fw-medium" style={{ fontSize: '0.9rem' }}>
-                  {post.author?.Name || 'Anonymous'}
+                  {post.author?.name || 'Anonymous'}
                 </h6>
                 <small className="text-muted" style={{ fontSize: '0.75rem' }}>
                   {timeAgo.format(new Date(post.createdAt))}
@@ -257,7 +270,7 @@ const ReviewSection = () => {
                 <Badge bg="dark" className="rounded-pill" style={{ fontSize: '0.7rem' }}>
                   <FaEye className="me-1" /> {post.views || 0}
                 </Badge>
-                {post.author?._id === userId && (
+                {post.author?.id === userId && (
                   <Dropdown>
                     <Dropdown.Toggle variant="link" className="p-0">
                       <FaTrash className="text-danger" style={{ fontSize: '0.8rem' }} />
@@ -291,10 +304,7 @@ const ReviewSection = () => {
               <Button
                 variant="link"
                 className="d-flex align-items-center gap-1 text-muted p-0"
-                onClick={() => setShowComments(prev => ({
-                  ...prev,
-                  [post.id]: !prev[post.id]
-                }))}
+                onClick={() => toggleComments(post.id)}
               >
                 <FaRegComment style={{ fontSize: '0.9rem' }} />
                 <span style={{ fontSize: '0.8rem' }}>{post.comments?.length || 0}</span>
@@ -312,18 +322,18 @@ const ReviewSection = () => {
             {showComments[post.id] && (
               <div className="mt-3">
                 <div className="mb-2">
-                  {post.comments?.map((comment, index) => (
-                    <CommentBubble key={index} theme={theme}>
+                  {post.comments?.map(comment => (
+                    <CommentBubble key={comment.id} theme={theme}>
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <div className="d-flex align-items-center gap-2">
                           <UserAvatar 
-                            color={getAvatarColor(comment.author?.Name?.[0])}
+                            color={getAvatarColor(comment.author?.name?.[0])}
                             style={{ width: '28px', height: '28px', fontSize: '0.7rem' }}
                           >
-                            {comment.author?.Name?.[0]}
+                            {comment.author?.name?.[0]}
                           </UserAvatar>
                           <span className="fw-medium" style={{ fontSize: '0.8rem' }}>
-                            {comment.author?.Name || 'Anonymous'}
+                            {comment.author?.name || 'Anonymous'}
                           </span>
                         </div>
                         <small className="text-muted" style={{ fontSize: '0.7rem' }}>
@@ -403,11 +413,11 @@ const ReviewSection = () => {
             <div className="text-center mt-4">
               <Spinner animation="border" variant="primary" size="sm" />
             </div>
-          ) : posts?.length > 0 ? (
+          ) : posts.length > 0 ? (
             posts.map(post => <PostCard key={post.id} post={post} />)
           ) : (
             <div className="text-center text-muted py-4">
-              {posts ? "No posts available yet" : "Loading posts..."}
+              No posts available yet
             </div>
           )}
 
