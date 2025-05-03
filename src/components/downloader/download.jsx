@@ -5,21 +5,36 @@ const Download = () => {
   const [username, setUserName] = useState('');
   const [isInstalled, setIsInstalled] = useState(false);
   const deferredPrompt = useRef(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  // User effect and install prompt handling separated
+  // Auto-refresh logic
   useEffect(() => {
-    const userData = getUserNameFromToken();
-    if (userData) setUserName(userData.name);
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('refreshed')) {
+      params.set('refreshed', 'true');
+      window.location.search = params.toString();
+    } else {
+      setInitialLoad(false);
+    }
   }, []);
 
-  // Install prompt handling
+
   useEffect(() => {
+    if (!initialLoad) {
+      const userData = getUserNameFromToken();
+      if (userData) setUserName(userData.name);
+    }
+  }, [initialLoad]);
+
+ 
+  useEffect(() => {
+    if (initialLoad) return;
+
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
       
-      // Special handling for iOS devices
       if ((isIOS && isSafari && navigator.standalone) || isStandalone) {
         setIsInstalled(true);
       }
@@ -29,7 +44,7 @@ const Download = () => {
       e.preventDefault();
       console.log('📦 beforeinstallprompt event captured');
       deferredPrompt.current = e;
-      setIsInstalled(false); // Reset install state when prompt becomes available
+      setIsInstalled(false);
     };
 
     checkInstalled();
@@ -44,11 +59,10 @@ const Download = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', () => {});
     };
-  }, []);
+  }, [initialLoad]);
 
   const handleInstall = async () => {
     if (!deferredPrompt.current) {
-      // Check again if installed after user interaction
       if (window.matchMedia('(display-mode: standalone)').matches) {
         setIsInstalled(true);
         return alert('App is already installed!');
@@ -64,8 +78,6 @@ const Download = () => {
         console.log('✅ App installed successfully');
         setIsInstalled(true);
         trackInstall();
-      } else {
-        console.log('❌ App installation dismissed');
       }
     } catch (error) {
       console.error('Installation error:', error);
@@ -73,6 +85,7 @@ const Download = () => {
       deferredPrompt.current = null;
     }
   };
+
   const trackInstall = async () => {
     const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
@@ -89,6 +102,8 @@ const Download = () => {
       console.error('Tracking error:', error);
     }
   };
+
+  if (initialLoad) return null; // Prevent flash of content before refresh
 
   return (
     <div className="installation-container">
