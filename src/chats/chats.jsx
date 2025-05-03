@@ -200,12 +200,11 @@ const ReviewSection = () => {
       setError('Failed to create post');
     }
   };
-
   const handleCommentSubmit = async (postId, commentText) => {
     try {
       const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
         content: commentText,
-        author: userId
+        authorId: userId 
       });
       
       setPosts(prev => prev.map(post => 
@@ -216,7 +215,7 @@ const ReviewSection = () => {
       setError('Failed to add comment');
     }
   };
-
+  
   const PostCard = React.memo(({ post }) => {
     const theme = useContext(ThemeContext);
     const [comment, setComment] = useState('');
