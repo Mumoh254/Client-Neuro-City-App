@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button, Form, Spinner, Alert,
-  Badge, Container, OverlayTrigger,
-  Tooltip, Dropdown
+  Badge, Container, Dropdown
 } from 'react-bootstrap';
 import {
-  FaComment, FaThumbsUp, FaPaperPlane,
-  FaPen, FaRegThumbsUp, FaTimes, FaMoon, FaSun,
-  FaHeart, FaRegComment, FaBell, FaTrash, FaShare, FaEye
+  FaThumbsUp, FaRegThumbsUp, FaPen, FaTimes,
+  FaMoon, FaSun, FaTrash, FaRegComment, FaShare, FaEye, FaPaperPlane
 } from 'react-icons/fa';
 import axios from 'axios';
 import styled, { ThemeContext } from 'styled-components';
@@ -121,17 +119,16 @@ const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com
 
 const getAvatarColor = (char) => {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-  return colors[char.charCodeAt(0) % colors.length];
+  return colors[char?.charCodeAt(0) % colors.length] || '#3b82f6';
 };
 
 const ReviewSection = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const [posts, setPosts] = useState([]); 
-  const [loading, setLoading] = useState(false);
+  const [posts, setPosts] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showComments, setShowComments] = useState({});
-  const [commentTexts, setCommentTexts] = useState({});
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userId, setUserId] = useState(null);
   const [viewedPosts, setViewedPosts] = useState(new Set());
@@ -150,24 +147,8 @@ const ReviewSection = () => {
     try {
       setLoading(true);
       const { data } = await axios.get(`${BASE_URL}/posts`);
-      
-      // Fetch comments for each post individually
-      const postsWithComments = await Promise.all(
-        data.map(async post => {
-          try {
-            const commentsRes = await axios.get(`${BASE_URL}/posts/${post._id}/comments`);
-            return { 
-              ...post, 
-              id: post._id ?? post.id,
-              comments: commentsRes.data
-            };
-          } catch (error) {
-            return { ...post, comments: [] };
-          }
-        })
-      );
-  
-      setPosts(postsWithComments);
+      setPosts(data.map(p => ({ ...p, id: p._id })));
+      setError('');
     } catch (err) {
       setError('Failed to load posts');
     } finally {
@@ -180,7 +161,7 @@ const ReviewSection = () => {
       try {
         await axios.post(`${BASE_URL}/posts/${postId}/view`, { userId });
         setViewedPosts(prev => new Set([...prev, postId]));
-        setPosts(prev => prev.map(post => 
+        setPosts(prev => prev?.map(post => 
           post.id === postId ? { ...post, views: (post.views || 0) + 1 } : post
         ));
       } catch (err) {
@@ -205,7 +186,7 @@ const ReviewSection = () => {
     try {
       const { data } = await axios.post(`${BASE_URL}/posts`, {
         content: formData.content,
-        authorId: userId 
+        authorId: userId
       });
       setPosts(prev => [data, ...prev]);
       setFormData({ content: '' });
@@ -216,22 +197,36 @@ const ReviewSection = () => {
       setError('Failed to create post');
     }
   };
+
   const handleCommentSubmit = async (postId, commentText) => {
     try {
       const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
         content: commentText,
-        authorId: userId 
+        authorId: userId
       });
       
       setPosts(prev => prev.map(post => 
-        post.id === postId ? { ...post, comments: [...post.comments, data] } : post
+        post.id === postId ? { 
+          ...post, 
+          comments: [...(post.comments || []), data] 
+        } : post
       ));
-      setCommentTexts(prev => ({ ...prev, [postId]: '' }));
     } catch (err) {
       setError('Failed to add comment');
     }
   };
-  
+
+  const handleDeletePost = async (postId) => {
+    try {
+      await axios.delete(`${BASE_URL}/posts/${postId}`);
+      setPosts(prev => prev.filter(post => post.id !== postId));
+      setSuccess('Post deleted successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Failed to delete post');
+    }
+  };
+
   const PostCard = React.memo(({ post }) => {
     const theme = useContext(ThemeContext);
     const [comment, setComment] = useState('');
@@ -239,8 +234,8 @@ const ReviewSection = () => {
     const avatarColor = getAvatarColor(userInitial);
 
     useEffect(() => {
-      trackView(post.id);
-    }, []);
+      if (post?.id) trackView(post.id);
+    }, [post?.id]);
 
     return (
       <PostBubble theme={theme}>
@@ -251,7 +246,7 @@ const ReviewSection = () => {
             <div className="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <h6 className="mb-0 fw-medium" style={{ fontSize: '0.9rem' }}>
-                  {post.author?.Name}
+                  {post.author?.Name || 'Anonymous'}
                 </h6>
                 <small className="text-muted" style={{ fontSize: '0.75rem' }}>
                   {timeAgo.format(new Date(post.createdAt))}
@@ -308,7 +303,7 @@ const ReviewSection = () => {
               <Button 
                 variant="link" 
                 className="text-muted p-0"
-                onClick={() => handleShare(post.id)}
+                onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}
               >
                 <FaShare style={{ fontSize: '0.9rem' }} />
               </Button>
@@ -328,7 +323,7 @@ const ReviewSection = () => {
                             {comment.author?.Name?.[0]}
                           </UserAvatar>
                           <span className="fw-medium" style={{ fontSize: '0.8rem' }}>
-                            {comment.author?.Name}
+                            {comment.author?.Name || 'Anonymous'}
                           </span>
                         </div>
                         <small className="text-muted" style={{ fontSize: '0.7rem' }}>
@@ -357,7 +352,10 @@ const ReviewSection = () => {
                   <Button 
                     variant="primary" 
                     className="rounded-2 px-3"
-                    onClick={() => handleCommentSubmit(post.id, comment)}
+                    onClick={() => {
+                      handleCommentSubmit(post.id, comment);
+                      setComment('');
+                    }}
                     style={{ fontSize: '0.8rem' }}
                   >
                     Post
@@ -376,7 +374,7 @@ const ReviewSection = () => {
       <HubContainer>
         <Container style={{ maxWidth: '800px' }}>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>Free  Speech !!</h5>
+            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>City Community Hub</h5>
             <div className="d-flex gap-2">
               <Button 
                 variant="outline-primary" 
@@ -405,57 +403,54 @@ const ReviewSection = () => {
             <div className="text-center mt-4">
               <Spinner animation="border" variant="primary" size="sm" />
             </div>
-          ) : (
+          ) : posts?.length > 0 ? (
             posts.map(post => <PostCard key={post.id} post={post} />)
+          ) : (
+            <div className="text-center text-muted py-4">
+              {posts ? "No posts available yet" : "Loading posts..."}
+            </div>
           )}
 
           {showReviewForm && (
             <StickyReviewForm theme={darkMode ? darkTheme : lightTheme}>
-  <div className="position-relative mb-3 p-4">
-    <Button 
-      variant="link" 
-      onClick={() => setShowReviewForm(false)}
-      className="position-absolute top-0 end-0 p-1"
-    >
-      <FaTimes className="fs-6" />
-    </Button>
-
-    <h6 className="mb-1 fw-semibold" style={{ fontSize: '0.4rem' }}>
-      Create New Post
-    </h6>
-
-    <Form onSubmit={(e) => {
-      e.preventDefault();
-      handleReviewSubmit(e);
-    }}>
-      <div className="position-relative">
-        <Form.Control
-          as="textarea"
-          rows={1}
-          value={formData.content}
-          onChange={(e) => setFormData({ content: e.target.value })}
-          placeholder="Share your thoughts..."
-          className="rounded-2 pe-5" // Add right padding for the button
-          style={{ 
-            fontSize: '0.8rem',
-            lineHeight: '1.4',
-            padding: '0.2rem',
-            resize: 'none',
-          }}
-        />
-        <Button 
-          type="submit" 
-          variant="link"
-          className="position-absolute bottom-0 end-0 mb-1 me-2 p-0 text-primary"
-          style={{ fontSize: '1rem' }}
-        >
-          <FaPaperPlane />
-        </Button>
-      </div>
-    </Form>
-  </div>
-</StickyReviewForm>
-
+              <div className="position-relative">
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowReviewForm(false)}
+                  className="position-absolute top-0 end-0 p-1"
+                >
+                  <FaTimes className="fs-6" />
+                </Button>
+                
+                <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem' }}>Create New Post</h6>
+                <Form onSubmit={handleReviewSubmit}>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    value={formData.content}
+                    onChange={(e) => setFormData({ content: e.target.value })}
+                    placeholder="Share your thoughts..."
+                    className="rounded-2 mb-2"
+                    style={{ 
+                      fontSize: '0.8rem',
+                      lineHeight: '1.4',
+                      padding: '0.6rem'
+                    }}
+                  />
+                  <div className="d-flex justify-content-end">
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      className="rounded-pill px-3"
+                      style={{ fontSize: '0.8rem' }}
+                    >
+                      <FaPaperPlane className="me-1" />
+                      Post
+                    </Button>
+                  </div>
+                </Form>
+              </div>
+            </StickyReviewForm>
           )}
         </Container>
       </HubContainer>

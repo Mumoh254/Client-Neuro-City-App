@@ -161,6 +161,8 @@ const ServicesLists = () => {
       try {
         const response = await fetch(`${BASE_URl}/get/services?category=${selectedCategory}`);
         const data = await response.json();
+
+        console.log(data)
         
         setServices(data);
         const sorted = [...data].sort((a, b) => b.likes.length - a.likes.length).slice(0, 5);
@@ -274,7 +276,7 @@ const ServicesLists = () => {
                       className="like-button p-0"
                       onClick={() => handleLike(service._id)}
                     >
-                      {service.likes.includes(userId) ? 
+               {Array.isArray(service.likes) && service.likes.includes(userId) ?
                         <FaHeart size={24} /> : 
                         <FaRegHeart size={24} className="text-city-primary" />}
                     </Button>
