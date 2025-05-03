@@ -150,8 +150,24 @@ const ReviewSection = () => {
     try {
       setLoading(true);
       const { data } = await axios.get(`${BASE_URL}/posts`);
-      // Use proper ID field from backend
-      setPosts(data.map(p => ({ ...p, id: p._id ?? p.id }))); // Changed here
+      
+      // Fetch comments for each post individually
+      const postsWithComments = await Promise.all(
+        data.map(async post => {
+          try {
+            const commentsRes = await axios.get(`${BASE_URL}/posts/${post._id}/comments`);
+            return { 
+              ...post, 
+              id: post._id ?? post.id,
+              comments: commentsRes.data
+            };
+          } catch (error) {
+            return { ...post, comments: [] };
+          }
+        })
+      );
+  
+      setPosts(postsWithComments);
     } catch (err) {
       setError('Failed to load posts');
     } finally {
