@@ -1,45 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Slider from 'react-slick';
-import { FaHeart, FaRegHeart, FaStar, FaComment, FaPlus } from 'react-icons/fa';
-import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
+import { 
+  FaHeart, FaRegHeart, FaStar, FaComment, FaPlus, 
+  FaGlobe, FaUsers, FaCalendarAlt, FaComments, 
+  FaPhone, FaCheckCircle, FaRegClock, FaCheckDouble,
+  FaCrown, FaUserTag, FaMapMarkerAlt, FaPaperPlane
+} from 'react-icons/fa';
+import { Modal, Button, Spinner, Form, ListGroup, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import axios from 'axios';
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-const API_URL = 'https://sheetdb.io/api/v1/7jk1fedp87rbm';
+TimeAgo.addDefaultLocale(en);
+const timeAgo = new TimeAgo('en-US');
 
 const styles = `
-  .places-slider {
-    position: relative;
-    padding: 20px 0;
+  :root {
+    --primary-blue: #3b82f6;
+    --secondary-blue: #2563eb;
+    --primary-purple: #8b5cf6;
+    --secondary-purple: #7c3aed;
+    --primary-green: #10b981;
+    --secondary-green: #059669;
   }
 
-  .hover-scale {
+  .places-slider {
+    padding: 20px 0;
+    position: relative;
+  }
+
+  .gradient-header {
+    background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+    color: white;
+    border-radius: 15px;
+  }
+
+  .attraction-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border-radius: 15px;
     overflow: hidden;
+    border: none;
+    margin: 10px;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   }
 
-  .hover-scale:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  .attraction-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.2);
   }
 
   .place-image {
-    height: 300px;
+    height: 250px;
     object-fit: cover;
     border-radius: 15px 15px 0 0;
   }
 
-  .modal-content {
+  .price-badge {
+    background: var(--primary-purple);
+    color: white;
+    padding: 8px 15px;
     border-radius: 20px;
-    border: none;
-  }
-
-  .review-star {
-    color: #ffc107;
-    font-size: 1.2rem;
+    font-size: 0.9rem;
   }
 
   .floating-add-btn {
@@ -50,29 +75,136 @@ const styles = `
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    background: var(--primary-green);
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .gradient-bg {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  .chat-container {
+    height: 65vh;
+    border-radius: 15px;
+    background: #f0f2f5;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e5e7eb;
+  }
+
+  .chat-header {
+    background: var(--primary-blue);
     color: white;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .message-container {
+    display: flex;
+    margin-bottom: 15px;
+    position: relative;
+  }
+
+  .message-bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 1.25rem;
+    position: relative;
+    word-break: break-word;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .sent-message {
+    flex-direction: row-reverse;
+  }
+
+  .sent-message .message-bubble {
+    background: var(--primary-green);
+    color: white;
+    border-radius: 1.25rem 1.25rem 0 1.25rem;
+  }
+
+  .received-message .message-bubble {
+    background: white;
+    border-radius: 1.25rem 1.25rem 1.25rem 0;
+  }
+
+  .message-time {
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .participant-list {
+    background: white;
+    padding: 1rem;
+    border-radius: 15px;
+    height: 65vh;
+    overflow-y: auto;
+  }
+
+  .member-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    gap: 12px;
+  }
+
+  .user-role-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+  }
+
+  .admin-badge {
+    background: var(--primary-purple);
+    color: white;
+  }
+
+  .parking-status {
+    background: var(--primary-green);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+  }
+
+  .chat-input-container {
+    background: white;
+    padding: 16px;
+    border-top: 1px solid #e9edef;
+    display: flex;
+    gap: 12px;
+    align-items: center;
   }
 `;
 
 const PlacesCarousel = () => {
   const [places, setPlaces] = useState([]);
+  const [groupPlans, setGroupPlans] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [newReview, setNewReview] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newPlace, setNewPlace] = useState({
-    name: '',
-    image: '',
-    price_adult: '',
-    price_child: '',
-    description: ''
-  });
+  const [messageInput, setMessageInput] = useState('');
+  
+  const currentUser = {
+    id: "smart_ke_WT_656759411",
+    Name: "Neuro Apps Group",
+    PhoneNumber: "0740045355",
+    role: "USER",
+    isAdmin: false,
+    parkingRank: "Bronze",
+    avatar: "https://ui-avatars.com/api/?name=Neuro+Apps+Group&background=random"
+  };
 
   const settings = {
     dots: true,
@@ -81,142 +213,115 @@ const PlacesCarousel = () => {
     slidesToShow: 3,
     slidesToScroll: 1,
     responsive: [
-      {
-        breakpoint: 992,
-        settings: { slidesToShow: 2, slidesToScroll: 1 }
-      },
-      {
-        breakpoint: 768,
-        settings: { slidesToShow: 1, slidesToScroll: 1 }
-      }
+      { breakpoint: 992, settings: { slidesToShow: 2 } },
+      { breakpoint: 768, settings: { slidesToShow: 1 } }
     ]
   };
 
+
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+ 
   useEffect(() => {
-    fetchPlaces();
+    const fetchData = async () => {
+      try {
+        const [placesRes, plansRes] = await Promise.all([
+          axios.get(`${BASE_URL}/places`),
+          axios.get(`${BASE_URL}/plans`)
+        ]);
+        
+        const enhancedPlans = plansRes.data.map(plan => ({
+          ...plan,
+          chat: [],
+          creator: plan.participants.find(p => p.id === plan.creatorId)
+        }));
+
+        setPlaces(placesRes.data);
+        setGroupPlans(enhancedPlans);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-  const fetchPlaces = async () => {
-    try {
-      const { data } = await axios.get(API_URL);
-      setPlaces(data.map(p => ({ ...p, liked: false })));
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to load places');
-      setLoading(false);
-    }
+  const handleSendMessage = (planId, text) => {
+    if (!text.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      text,
+      user: currentUser,
+      timestamp: new Date().toISOString(),
+      status: 'sent'
+    };
+
+    setGroupPlans(prev => 
+      prev.map(plan => 
+        plan.id === planId 
+          ? { ...plan, chat: [...plan.chat, newMessage] }
+          : plan
+      )
+    );
+    setMessageInput('');
   };
 
-  const handleLike = async (id) => {
-    try {
-      const place = places.find(p => p.id === id);
-      const newLikes = parseInt(place.likes) + (place.liked ? -1 : 1);
-      
-      await axios.patch(`${API_URL}/id/${id}`, {
-        data: { likes: newLikes }
-      });
-
-      setPlaces(places.map(p => 
-        p.id === id ? { ...p, likes: newLikes, liked: !p.liked } : p
-      ));
-    } catch (err) {
-      setError('Failed to update like');
-    }
-  };
-
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    if (!newReview.trim()) return;
-
-    try {
-      const reviews = [...selectedPlace.reviews, newReview];
-      
-      await axios.patch(`${API_URL}/id/${selectedPlace.id}`, {
-        data: { reviews: JSON.stringify(reviews) }
-      });
-
-      setPlaces(places.map(p => 
-        p.id === selectedPlace.id ? { ...p, reviews } : p
-      ));
-      setNewReview('');
-    } catch (err) {
-      setError('Failed to submit review');
-    }
-  };
-
-  const handleAddPlace = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(API_URL, { data: [newPlace] });
-      await fetchPlaces();
-      setShowAddForm(false);
-      setNewPlace({
-        name: '',
-        image: '',
-        price_adult: '',
-        price_child: '',
-        description: ''
-      });
-    } catch (err) {
-      setError('Failed to add new place');
-    }
-  };
-
-  if (loading) return (
-    <div className="d-flex justify-content-center align-items-center vh-100">
-      <Spinner animation="border" variant="primary" />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center mt-5">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container py-5">
       <style>{styles}</style>
 
-      <h2 className="text-center mb-5 display-4 fw-bold text-white gradient-bg py-4 rounded-4">
-        Nairobi's Top Attractions
-      </h2>
-
-      {error && <Alert variant="danger">{error}</Alert>}
+      <div className="gradient-header p-4 mb-5 text-center">
+        <h1 className="display-4 fw-bold mb-3">Nairobi Explorer</h1>
+        <p className="lead">Connect • Explore • Experience</p>
+      </div>
 
       <Slider {...settings} className="places-slider">
         {places.map(place => (
           <div key={place.id} className="px-2">
-            <div className="card shadow-lg h-100 border-0 hover-scale">
+            <div className="card h-100 attraction-card">
               <img 
-                src={place.image || 'https://via.placeholder.com/300x200'} 
+                src={place.image} 
                 className="card-img-top place-image"
                 alt={place.name}
               />
               <div className="card-body">
-                <h3 className="card-title fw-bold mb-3 text-primary">{place.name}</h3>
+                <h3 className="card-title fw-bold mb-3">{place.name}</h3>
                 
-                <div className="d-flex gap-2 mb-3">
-                  <span className="badge bg-primary fs-6">
-                    Adult: KES {place.price_adult}
-                  </span>
-                  <span className="badge bg-success fs-6">
-                    Child: KES {place.price_child}
-                  </span>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="d-flex gap-2">
+                    <span className="price-badge">
+                      Adult: KES {place.priceAdult}
+                    </span>
+                    <span className="price-badge">
+                      Child: KES {place.priceChild}
+                    </span>
+                  </div>
+                  <div className="d-flex align-items-center">
+                    <FaStar className="text-warning me-1" />
+                    <span>{place.rating || 'New'}</span>
+                  </div>
                 </div>
 
                 <p className="card-text text-muted mb-4">{place.description}</p>
 
-                <div className="d-flex justify-content-between align-items-center">
-                  <button 
-                    className="btn btn-link text-danger p-0"
-                    onClick={() => handleLike(place.id)}
+                <div className="d-flex justify-content-center mt-3">
+                  <Button 
+                    variant="primary"
+                    onClick={() => setSelectedPlan(groupPlans.find(p => p.placeId === place.id))}
+                    style={{ background: 'var(--primary-purple)', border: 'none' }}
                   >
-                    {place.liked ? <FaHeart /> : <FaRegHeart />}
-                    <span className="ms-2">{place.likes}</span>
-                  </button>
-
-                  <button 
-                    className="btn btn-dark"
-                    onClick={() => setSelectedPlace(place)}
-                  >
-                    <FaComment className="me-2" />
-                    Reviews ({place.reviews?.length || 0})
-                  </button>
+                    <FaUsers className="me-2" />
+                    View Group Plans
+                  </Button>
                 </div>
               </div>
             </div>
@@ -224,108 +329,201 @@ const PlacesCarousel = () => {
         ))}
       </Slider>
 
+      <PlanDetailsModal
+        selectedPlan={selectedPlan}
+        setSelectedPlan={setSelectedPlan}
+        currentUser={currentUser}
+        handleSendMessage={handleSendMessage}
+        messageInput={messageInput}
+        setMessageInput={setMessageInput}
+      />
+
       <Button 
         variant="primary" 
         className="floating-add-btn"
-        onClick={() => setShowAddForm(true)}
+        onClick={() => setShowGroupPlans(true)}
       >
         <FaPlus size={24} />
       </Button>
+    </div>
+  );
+};
 
-      <Modal show={!!selectedPlace} onHide={() => setSelectedPlace(null)} centered>
-        <Modal.Header closeButton className="bg-primary text-white">
-          <Modal.Title>{selectedPlace?.name} Reviews</Modal.Title>
-        </Modal.Header>
-        
-        <Modal.Body>
-          <div className="reviews-list mb-4">
-            {(selectedPlace?.reviews || []).map((review, index) => (
-              <div key={index} className="alert alert-light d-flex align-items-center mb-3">
-                <FaStar className="review-star me-2" />
-                {review}
+const PlanDetailsModal = ({ 
+  selectedPlan, 
+  setSelectedPlan,
+  currentUser,
+  handleSendMessage,
+  messageInput,
+  setMessageInput
+}) => {
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [selectedPlan?.chat]);
+
+  return (
+    <Modal show={!!selectedPlan} onHide={() => setSelectedPlan(null)} size="xl">
+      <div className="chat-header">
+        <FaMapMarkerAlt className="flex-shrink-0" />
+        <div>
+          <h5 className="mb-0">{selectedPlan?.place?.name}</h5>
+          <small>{selectedPlan?.participants?.length} participants</small>
+        </div>
+      </div>
+
+      <Modal.Body>
+        <div className="row g-4">
+          <div className="col-md-8">
+            <div className="chat-container">
+              <div className="chat-messages p-3">
+                {selectedPlan?.chat?.map((msg) => (
+                  <div 
+                    key={msg.id}
+                    className={`message-container ${
+                      msg.user.id === currentUser.id ? 'sent-message' : 'received-message'
+                    }`}
+                  >
+                    {msg.user.id !== currentUser.id && (
+                      <div className="position-relative me-2">
+                        <img 
+                          src={msg.user.avatar}
+                          className="rounded-circle"
+                          style={{ width: '40px', height: '40px' }}
+                          alt={msg.user.Name}
+                        />
+                        {msg.user.isAdmin && (
+                          <FaCrown className="text-warning position-absolute bottom-0 end-0" />
+                        )}
+                      </div>
+                    )}
+                    <div className="message-bubble">
+                      <p className="mb-0">{msg.text}</p>
+                      <span className="message-time">
+                        {timeAgo.format(new Date(msg.timestamp))}
+                        {msg.user.id === currentUser.id && (
+                          <span className="ms-2">
+                            {msg.status === 'sent' ? <FaRegClock /> : <FaCheckDouble />}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
-            ))}
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage(selectedPlan.id, messageInput);
+                }} 
+                className="chat-input-container"
+              >
+                <input
+                  type="text"
+                  className="form-control rounded-pill"
+                  placeholder="Type a message"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                />
+                <Button 
+                  variant="primary" 
+                  type="submit"
+                  className="rounded-pill px-4"
+                  style={{ 
+                    background: 'var(--primary-purple)',
+                    borderColor: 'var(--secondary-purple)'
+                  }}
+                >
+                  <FaPaperPlane />
+                </Button>
+              </form>
+            </div>
           </div>
 
-          <form onSubmit={handleReviewSubmit}>
-            <textarea
-              className="form-control mb-3"
-              value={newReview}
-              onChange={(e) => setNewReview(e.target.value)}
-              placeholder="Share your experience..."
-              rows="3"
-            />
-            <div className="d-grid">
-              <Button variant="primary" type="submit">
-                Submit Review
-              </Button>
-            </div>
-          </form>
-        </Modal.Body>
-      </Modal>
+          <div className="col-md-4">
+            <div className="participant-list">
+              <h5 className="mb-3"><FaUsers className="me-2" />Participants</h5>
+              <div className="mb-4">
+                <h6 className="text-muted mb-3">Organizer</h6>
+                <div className="member-item bg-light rounded p-3">
+                  <img 
+                    src={selectedPlan?.creator?.avatar}
+                    className="rounded-circle me-3"
+                    style={{ width: '50px', height: '50px' }}
+                    alt={selectedPlan?.creator?.Name}
+                  />
+                  <div>
+                    <div className="d-flex align-items-center gap-2 mb-1">
+                      <strong>{selectedPlan?.creator?.Name}</strong>
+                      <Badge bg="success">
+                        <FaCheckCircle className="me-1" />
+                        Verified
+                      </Badge>
+                    </div>
+                    <small className="text-muted">{selectedPlan?.creator?.PhoneNumber}</small>
+                    <div className="d-flex gap-2 mt-2">
+                      <Badge className="user-role-badge admin-badge">
+                        <FaCrown className="me-1" />
+                        ADMIN
+                      </Badge>
+                      <Badge className="parking-status">
+                        {selectedPlan?.creator?.parkingRank}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-      <Modal show={showAddForm} onHide={() => setShowAddForm(false)} centered>
-        <Modal.Header closeButton className="bg-primary text-white">
-          <Modal.Title>Add New Place</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form onSubmit={handleAddPlace}>
-            <div className="mb-3">
-              <label>Place Name</label>
-              <input
-                className="form-control"
-                value={newPlace.name}
-                onChange={(e) => setNewPlace({...newPlace, name: e.target.value})}
-                required
-              />
+              <h6 className="text-muted mb-3">Members</h6>
+              <ListGroup variant="flush">
+                {selectedPlan?.participants
+                  ?.filter(p => p.id !== selectedPlan.creator.id)
+                  ?.map((p, i) => (
+                    <ListGroup.Item key={i} className="member-item border-0 px-0">
+                      <div className="d-flex align-items-center">
+                        <img 
+                          src={p.avatar}
+                          className="rounded-circle me-3"
+                          style={{ width: '45px', height: '45px' }}
+                          alt={p.Name}
+                        />
+                        <div>
+                          <div className="d-flex align-items-center gap-2">
+                            <span>{p.Name}</span>
+                            {p.isAdmin && (
+                              <Badge className="user-role-badge admin-badge">
+                                <FaCrown className="me-1" />
+                                ADMIN
+                              </Badge>
+                            )}
+                          </div>
+                          <small className="text-muted">{p.PhoneNumber}</small>
+                          <div className="d-flex gap-2 mt-1">
+                            <Badge className="user-role-badge user-badge">
+                              <FaUserTag className="me-1" />
+                              {p.role}
+                            </Badge>
+                            <Badge className="parking-status">
+                              {p.parkingRank}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </ListGroup.Item>
+                  ))}
+              </ListGroup>
             </div>
-            <div className="mb-3">
-              <label>Image URL</label>
-              <input
-                className="form-control"
-                value={newPlace.image}
-                onChange={(e) => setNewPlace({...newPlace, image: e.target.value})}
-                required
-              />
-            </div>
-            <div className="row mb-3">
-              <div className="col">
-                <label>Adult Price</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={newPlace.price_adult}
-                  onChange={(e) => setNewPlace({...newPlace, price_adult: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="col">
-                <label>Child Price</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={newPlace.price_child}
-                  onChange={(e) => setNewPlace({...newPlace, price_child: e.target.value})}
-                  required
-                />
-              </div>
-            </div>
-            <div className="mb-3">
-              <label>Description</label>
-              <textarea
-                className="form-control"
-                value={newPlace.description}
-                onChange={(e) => setNewPlace({...newPlace, description: e.target.value})}
-                required
-              />
-            </div>
-            <Button variant="primary" type="submit" className="w-100">
-              Add Place
-            </Button>
-          </form>
-        </Modal.Body>
-      </Modal>
-    </div>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
   );
 };
 

@@ -407,10 +407,7 @@ function App() {
             <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
             <Route path="/park" element={<PageWithBack><ParkingForm /></PageWithBack>} />
 
-
             <Route path="/peoples/favourites" element={<PageWithBack><Favourites /></PageWithBack>} />
-
-
             <Route path="/emergency" element={<PageWithBack>< EmergencyServices /></PageWithBack>} />
 
 
