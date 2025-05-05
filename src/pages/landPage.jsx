@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { 
   FiCompass, 
@@ -12,6 +12,7 @@ import { NavLink } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
 import sakajaImage from '/image.png';
 import nairobiCityImage from '/images/nairobi.png';
+import { getUserNameFromToken } from '../components/handler/tokenDecoder';
 
 const GlobalStyles = createGlobalStyle`
   * {
@@ -220,15 +221,24 @@ const LandingPage = () => {
     },
   ];
 
+  const  [   username  , setUsername]= useState(null)
+  useEffect(() => {
+        const userData = getUserNameFromToken();
+        if (userData) setUsername(userData.name);
+      }, []);
+    console.log('username  is '  ,  username)
+
   return (
     <>
       <GlobalStyles />
       <DashboardContainer fluid>
-        <HeroSection>
-          <h1>Welcome to Nairobi  </h1>
-          <p>East Africa's Green City in the Sun</p>
-          <p>The Neuro-City-app powered by welt tallis </p>
-        </HeroSection>
+      <HeroSection>
+  <h1>Hellow, <span>{username}</span> <br /> Welcome to Nairobi 🌆</h1>
+  <p>🌿 East Africa's Green City in the Sun</p>
+  <p> The <strong>Neuro City App</strong> powered by <em>Welt Tallis</em></p>
+  <p style={{ color: 'green', fontWeight: 'bold' }}>🟢 You’re online</p>
+</HeroSection>
+
 
         <Row className="g-4">
           {services.map((service, index) => (

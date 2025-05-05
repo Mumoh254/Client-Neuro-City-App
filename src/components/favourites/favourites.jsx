@@ -13,6 +13,7 @@ import {
   FaGem,
   FaArrowRight
 } from 'react-icons/fa';
+import { getUserNameFromToken } from '../handler/tokenDecoder';
 
 const Favourites = () => {
   const [reviews, setReviews] = useState([]);
@@ -55,6 +56,13 @@ const Favourites = () => {
     },
   ];
 
+const   [  username  ,  setUsername]  =  useState(null)
+  useEffect(() => {
+      const userData = getUserNameFromToken();
+      if (userData) setUsername(userData.name);
+    }, []);
+  
+
   useEffect(() => {
     const fetchReviews = async () => {
       setLoading(true);
@@ -85,8 +93,8 @@ const Favourites = () => {
         <div className="text-center mb-5">
         
           <p className="text-black fw-bold">
-            Discover Curated Local Experiences &  Best Dish Spots && Hidden Gems 
-            <br /> The  peoples  Best Choice & E-Choice
+         <span>Hellow <span>{username}</span> Discover   Best Dish Spots && Hidden Gems </span>
+            <br /> 
           </p>
         </div>
 

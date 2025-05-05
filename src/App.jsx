@@ -286,7 +286,7 @@ function App() {
           }}>
             <FiUser size={14} style={{ color: '#4f46e5' }} />
             <span style={{
-              fontSize: '10px',
+              fontSize: '16px',
               fontWeight: 300,
               color: '#334155'
             }}>
