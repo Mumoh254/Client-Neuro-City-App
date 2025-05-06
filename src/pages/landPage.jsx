@@ -186,7 +186,7 @@ const LandingPage = () => {
     },
     { 
       icon: <FiRepeat />, 
-      title: "Recycle Platics", 
+      title: "Recycle", 
       to: "/plastics-recycles",
       bg: '#10b981',
       bg2: '#059669'
