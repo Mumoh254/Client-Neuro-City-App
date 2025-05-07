@@ -10,7 +10,7 @@ const TrackPageView = () => {
     const currentTime = Date.now();
     const timeSpent = Math.round((currentTime - startTimeRef.current) / 1000); // in seconds
 
-    // Only log if the page actually changed
+
     if (previousPageRef.current !== location.pathname) {
       const pageData = {
         from: previousPageRef.current,
@@ -21,19 +21,19 @@ const TrackPageView = () => {
 
       console.log("Tracked Page:", pageData);
 
-      // Send to your server or tracking service
+
       fetch("/api/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pageData),
       });
 
-      // Update tracking info
+   
       previousPageRef.current = location.pathname;
       startTimeRef.current = currentTime;
     }
 
-    // On first load, just reset start time
+
     if (previousPageRef.current === location.pathname) {
       startTimeRef.current = currentTime;
     }

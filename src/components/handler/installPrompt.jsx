@@ -32,7 +32,7 @@ const InstallPrompt = () => {
       trackInstallation();
     };
 
-    // Listen to events when the install prompt is triggered and when app is installed
+  
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', handleAppInstalled);
 
@@ -58,11 +58,11 @@ const InstallPrompt = () => {
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
-    deferredPrompt.prompt();  // Show the native install prompt
+    deferredPrompt.prompt();  
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === 'accepted') {
-      localStorage.setItem('installPrompted', 'true');  // Mark the prompt as shown
+      localStorage.setItem('installPrompted', 'true');  
       setShowInstall(false);  // Hide the install prompt
       await trackInstallation();  // Track the installation
     }

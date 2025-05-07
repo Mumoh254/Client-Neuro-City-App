@@ -41,10 +41,10 @@ const TomTomTrafficMap = () => {
         .then((res) => res.json())
         .then((data) => {
           if (data?.flowSegmentData) {
-            // For demonstration purposes, let's check the flowSegmentData.
+
             const roadsData = data.flowSegmentData;
 
-            // Example of extracting congested roads from flow data (mocked logic)
+
             const congested = roadsData.filter((road) => road.currentSpeed < road.freeFlowSpeed); 
             const free = roadsData.filter((road) => road.currentSpeed >= road.freeFlowSpeed);
 
@@ -60,7 +60,7 @@ const TomTomTrafficMap = () => {
         })
         .catch((error) => {
           console.error("Error fetching data from TomTom API:", error);
-          // Fallback data when the fetch fails
+    
           setCongestedRoads(['Thika Road', 'Mombasa Road']);
           setFreeRoads(['Ngong Road', 'Kilimani Road']);
         });

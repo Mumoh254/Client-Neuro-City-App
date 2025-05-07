@@ -52,5 +52,5 @@ i18n
     },
   });
 
-export { i18n };  // Named export
+export { i18n }; 
 

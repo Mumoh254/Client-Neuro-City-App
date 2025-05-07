@@ -1,11 +1,10 @@
 import { useState, useRef } from "react";
-// other previous imports
+
 import * as htmlToImage from "html-to-image";
 
 function QrCodeGenerator() {
 
-   // useState variables and the handleQrCodeGenerator previously defined   will be here 
-
+   // useState variables 
   const qrCodeRef = useRef(null);
   const downloadQRCode = () => {
     htmlToImage

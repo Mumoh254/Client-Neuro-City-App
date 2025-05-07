@@ -1,13 +1,13 @@
 // utils/getUserFromToken.js
-import jwtDecode from "jwt-decode";  // Default import
+import jwtDecode from "jwt-decode";  
 
 export const getUserIdFromToken = () => {
   const token = localStorage.getItem("token");
   if (!token) return null;
 
   try {
-    const decoded = jwtDecode(token);  // Use jwtDecode here
-    return decoded.id || decoded.userId; // depending on your token's structure
+    const decoded = jwtDecode(token);  
+    return decoded.id || decoded.userId; 
   } catch (error) {
     console.error("Invalid token:", error);
     return null;

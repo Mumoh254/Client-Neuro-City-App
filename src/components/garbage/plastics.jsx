@@ -93,11 +93,11 @@ const   BASE_URL  =  'https://neuro-apps-api-express-js-production-redy.onrender
 useEffect(() => {
   const fetchData = async () => {
     try {
-      // First get user data
+ 
       const userRes = await axios.get('/apiV1/smartcity-ke/user'); 
-      const userId2 =  userId; // Use actual user ID from response
+      const userId2 =  userId;
 
-      // Then fetch user-specific data
+      //  fetch user-specific data
       const [submissionsRes, leaderboardRes, carbonRes] = await Promise.all([
         axios.get(`${BASE_URL}/submission-requests?userId=${userId}`),
         axios.get(`${BASE_URL}/leaderboard`),
@@ -114,7 +114,7 @@ useEffect(() => {
 
     } catch (error) {
       console.error('Error:', error.response?.data || error.message);
-      // Add error state handling here
+    
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ const handleSubmit = async () => {
   if (submitAmount > 0) {
     try {
       const response = await axios.post(`${BASE_URL}/submission`, {
-        userId: userId, // or user.id depending on your setup
+        userId: userId, 
         amount: parseFloat(submitAmount),
       });
 

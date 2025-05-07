@@ -4,7 +4,7 @@ import { Carousel, Card, Form, Button, Badge, Container } from 'react-bootstrap'
 import { FiStar, FiMapPin, FiHeart, FiClock, FiDollarSign } from 'react-icons/fi';
 
 const Gems = () => {
-  // ... (keep existing state and logic)
+
 
   const categoryVariant = {
     street_food: 'warning',
@@ -104,7 +104,7 @@ const Gems = () => {
                     </Form.Group>
                   </div>
 
-                  {/* Add other form fields in similar structure */}
+           
                   
                 </div>
 

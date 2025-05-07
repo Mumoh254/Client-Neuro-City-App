@@ -114,12 +114,12 @@ body {
 
   .grid-center {
     display: grid !important;
-    place-items: center !important;  /* Shortcut for align + justify */
+    place-items: center !important;  
     text-align: center !important;
     padding: 1rem !important;
   }
 
-  /* Optional: make sure children stack in column */
+  /*children stack in column */
   .grid-center > * {
     width: 100% !important;
     margin-bottom: 1rem !important;
@@ -205,7 +205,7 @@ a:hover{
   }
  
 
-  /* This hides the scrollbars but scrolling still works */
+  /* This hides the scrollba */
 body {
   scrollbar-width: none;        /* Firefox */
   -ms-overflow-style: none;     /* Internet Explorer 10+ */

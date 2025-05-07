@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import {
   Button, Form, Spinner, Alert,
-  Badge, Container, Dropdown
+  Badge, Container, Dropdown, Modal
 } from 'react-bootstrap';
 import {
   FaThumbsUp, FaRegThumbsUp, FaPen, FaTimes,
-  FaMoon, FaSun, FaTrash, FaRegComment, FaShare, FaEye, FaPaperPlane
+  FaMoon, FaSun, FaTrash, FaRegComment, FaShare, 
+  FaEye, FaPaperPlane, FaUserPlus, FaUserCheck
 } from 'react-icons/fa';
 import axios from 'axios';
 import styled, { ThemeContext } from 'styled-components';
@@ -23,6 +24,7 @@ const HubContainer = styled.div`
   padding: 1rem;
   font-family: 'Inter', -apple-system, sans-serif;
   font-size: 0.875rem;
+  position: relative;
 `;
 
 const PostBubble = styled.div`
@@ -88,6 +90,48 @@ const UserAvatar = styled.div`
   font-size: 0.75rem;
   border: 1.5px solid ${props => props.theme.avatarBorder};
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const ProfileModalContent = styled.div`
+  background: ${props => props.theme.postBg};
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: ${props => props.theme.text};
+`;
+
+const VoiceButton = styled(Button)`
+  background: ${props => props.voiced ? '#10b981' : '#3b82f6'};
+  border: none;
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.voiced ? '#059669' : '#2563eb'};
+    transform: scale(1.05);
+  }
+`;
+
+const FollowerCount = styled.div`
+  font-size: 0.8rem;
+  color: ${props => props.theme.text};
+  background: ${props => props.theme.commentBg};
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
 `;
 
 // Themes
@@ -133,11 +177,16 @@ const ReviewSection = () => {
   const [userId, setUserId] = useState(null);
   const [viewedPosts, setViewedPosts] = useState(new Set());
   const [formData, setFormData] = useState({ content: '' });
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userPosts, setUserPosts] = useState([]);
+  const [followers, setFollowers] = useState({});
+  const [following, setFollowing] = useState({});
 
   useEffect(() => {
     const userId = getUserIdFromToken();
     setUserId(userId);
     fetchPosts();
+    fetchFollowers();
     
     const interval = setInterval(fetchPosts, 120000);
     return () => clearInterval(interval);
@@ -156,6 +205,16 @@ const ReviewSection = () => {
     }
   };
 
+  const fetchFollowers = async () => {
+    try {
+      const { data } = await axios.get(`${BASE_URL}/users/followers/${userId}`);
+      setFollowers(data.followers);
+      setFollowing(data.following);
+    } catch (err) {
+      console.error('Error fetching followers:', err);
+    }
+  };
+
   const toggleComments = (postId) => {
     setShowComments(prev => {
       const newState = { ...prev };
@@ -170,14 +229,11 @@ const ReviewSection = () => {
   };
 
   const trackView = async (postId) => {
-    const numericPostId = parseInt(postId, 10); // <- ensure correct type
-  
+    const numericPostId = parseInt(postId, 10);
     if (!viewedPosts.has(numericPostId)) {
       try {
         await axios.post(`${BASE_URL}/posts/${numericPostId}/view`, { userId });
-  
         setViewedPosts(prev => new Set([...prev, numericPostId]));
-  
         setPosts(prev =>
           prev.map(post =>
             post.id === numericPostId ? { ...post, views: post.views + 1 } : post
@@ -188,7 +244,6 @@ const ReviewSection = () => {
       }
     }
   };
-  
 
   const handleLike = async (postId) => {
     try {
@@ -224,7 +279,6 @@ const ReviewSection = () => {
         content: commentText,
         authorId: userId
       });
-      
       setPosts(prev => prev.map(post => 
         post.id === postId ? { 
           ...post, 
@@ -247,6 +301,45 @@ const ReviewSection = () => {
     }
   };
 
+  const handleVoiceAction = async (targetUserId) => {
+    try {
+      const isCurrentlyFollowing = following[targetUserId];
+      const { data } = await axios.post(`${BASE_URL}/users/${targetUserId}/voice`, {
+        userId,
+        action: isCurrentlyFollowing ? 'unvoice' : 'voice'
+      });
+
+      setFollowers(prev => ({
+        ...prev,
+        [targetUserId]: data.newFollowerCount
+      }));
+
+    
+
+      setFollowing(prev => ({
+        ...prev,
+        [targetUserId]: !isCurrentlyFollowing
+      }))
+
+    } catch (err) {
+      setError('Failed to update voice status');
+    }
+  };
+
+  const handleUserClick = async (userId) => {
+    try {
+      const { data } = await axios.get(`${BASE_URL}/users/${userId}/posts`);
+      const profileData = await axios.get(`${BASE_URL}/users/${userId}/profile`);
+      
+      setSelectedUser({
+        ...profileData.data,
+        posts: data
+      });
+    } catch (err) {
+      setError('Failed to load user profile');
+    }
+  };
+
   const PostCard = React.memo(({ post }) => {
     const theme = useContext(ThemeContext);
     const [comment, setComment] = useState('');
@@ -260,17 +353,32 @@ const ReviewSection = () => {
     return (
       <PostBubble theme={theme}>
         <div className="d-flex gap-2 align-items-start">
-          <UserAvatar color={avatarColor}>{userInitial}</UserAvatar>
+          <UserAvatar 
+            color={avatarColor} 
+            onClick={() => handleUserClick(post.author.id)}
+          >
+            {userInitial}
+          </UserAvatar>
           
           <div className="flex-grow-1">
             <div className="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <h6 className="mb-0 fw-medium" style={{ fontSize: '0.9rem' }}>
+                <h6 
+                  className="mb-0 fw-medium" 
+                  style={{ fontSize: '0.9rem', cursor: 'pointer' }}
+                  onClick={() => handleUserClick(post.author.id)}
+                >
                   {post.author?.name || 'Anonymous'}
                 </h6>
-                <small className="text-muted" style={{ fontSize: '0.75rem' }}>
-                  {timeAgo.format(new Date(post.createdAt))}
-                </small>
+                <div className="d-flex align-items-center gap-2 mt-1">
+                  <FollowerCount theme={theme}>
+                    <FaUserCheck />
+                    {followers[post.author.id] || 0}
+                  </FollowerCount>
+                  <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                    {timeAgo.format(new Date(post.createdAt))}
+                  </small>
+                </div>
               </div>
               
               <div className="d-flex align-items-center gap-2">
@@ -336,10 +444,15 @@ const ReviewSection = () => {
                           <UserAvatar 
                             color={getAvatarColor(comment.author?.name?.[0])}
                             style={{ width: '28px', height: '28px', fontSize: '0.7rem' }}
+                            onClick={() => handleUserClick(comment.author.id)}
                           >
                             {comment.author?.name?.[0]}
                           </UserAvatar>
-                          <span className="fw-medium" style={{ fontSize: '0.8rem' }}>
+                          <span 
+                            className="fw-medium" 
+                            style={{ fontSize: '0.8rem', cursor: 'pointer' }}
+                            onClick={() => handleUserClick(comment.author.id)}
+                          >
                             {comment.author?.name || 'Anonymous'}
                           </span>
                         </div>
@@ -386,12 +499,79 @@ const ReviewSection = () => {
     );
   });
 
+  const ProfileModal = () => (
+    <Modal 
+      show={!!selectedUser} 
+      onHide={() => setSelectedUser(null)}
+      centered
+      size="lg"
+    >
+      <ProfileModalContent theme={darkMode ? darkTheme : lightTheme}>
+        <div className="d-flex justify-content-between align-items-start mb-4">
+          <div className="d-flex align-items-center gap-3">
+            <UserAvatar 
+              color={getAvatarColor(selectedUser?.name?.[0])}
+              style={{ width: '48px', height: '48px', fontSize: '1.2rem' }}
+            >
+              {selectedUser?.name?.[0]}
+            </UserAvatar>
+            <div>
+              <h4 className="mb-1">{selectedUser?.name}</h4>
+              <FollowerCount theme={darkMode ? darkTheme : lightTheme}>
+                <FaUserCheck />
+                {followers[selectedUser?.id] || 0} Voices
+              </FollowerCount>
+            </div>
+          </div>
+          <VoiceButton
+            voiced={following[selectedUser?.id]}
+            onClick={() => handleVoiceAction(selectedUser?.id)}
+          >
+            {following[selectedUser?.id] ? (
+              <>
+                <FaUserCheck />
+                Unvoice
+              </>
+            ) : (
+              <>
+                <FaUserPlus />
+                Voice Up
+              </>
+            )}
+          </VoiceButton>
+        </div>
+
+        <div className="posts-container">
+          {userPosts.map(post => (
+            <PostBubble key={post.id} theme={darkMode ? darkTheme : lightTheme}>
+              <p className="mb-2" style={{ fontSize: '0.85rem' }}>{post.content}</p>
+              <div className="d-flex align-items-center gap-3 text-muted">
+                <small>
+                  <FaThumbsUp className="me-1" />
+                  {post.likes?.length || 0}
+                </small>
+                <small>
+                  <FaRegComment className="me-1" />
+                  {post.comments?.length || 0}
+                </small>
+                <small>
+                  <FaEye className="me-1" />
+                  {post.views || 0}
+                </small>
+              </div>
+            </PostBubble>
+          ))}
+        </div>
+      </ProfileModalContent>
+    </Modal>
+  );
+
   return (
     <ThemeContext.Provider value={darkMode ? darkTheme : lightTheme}>
       <HubContainer>
         <Container style={{ maxWidth: '800px' }}>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>Free  Speech !</h5>
+            <h5 className="mb-0 fw-bold" style={{ fontSize: '1rem' }}>Free Speech Hub</h5>
             <div className="d-flex gap-2">
               <Button 
                 variant="outline-primary" 
@@ -430,47 +610,48 @@ const ReviewSection = () => {
 
           {showReviewForm && (
             <StickyReviewForm theme={darkMode ? darkTheme : lightTheme}>
-  <div className="position-relative p-5">
-    <Button 
-      variant="link" 
-      onClick={() => setShowReviewForm(false)}
-      className="position-absolute top-0 end-0 p-1"
-    >
-      <FaTimes className="fs-6" />
-    </Button>
+              <div className="position-relative p-5">
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowReviewForm(false)}
+                  className="position-absolute top-0 end-0 p-1"
+                >
+                  <FaTimes className="fs-6" />
+                </Button>
 
-    <h6 className=" fw-semibold" style={{ fontSize: '0.9rem' }}>
-      Create New Post
-    </h6>
+                <h6 className="fw-semibold" style={{ fontSize: '0.9rem' }}>
+                  Create New Post
+                </h6>
 
-    <Form onSubmit={handleReviewSubmit}>
-      <div className="position-relative">
-        <Form.Control
-          type="text"
-          value={formData.content}
-          onChange={(e) => setFormData({ content: e.target.value })}
-          placeholder="Share your thoughts..."
-          className="rounded-pill pe-2 py-1"
-          style={{
-            fontSize: '0.85rem',
-            paddingLeft: '1rem',
-            backgroundColor: darkMode ? '#1e1e1e' : '#f8f9fa',
-            border: '1px solid #ccc'
-          }}
-        />
-        <Button 
-          type="submit"
-          variant="link"
-          className="position-absolute top-50 end-0 translate-middle-y me-2 p-0"
-        >
-          <FaPaperPlane className="text-primary" />
-        </Button>
-      </div>
-    </Form>
-  </div>
-</StickyReviewForm>
-
+                <Form onSubmit={handleReviewSubmit}>
+                  <div className="position-relative">
+                    <Form.Control
+                      type="text"
+                      value={formData.content}
+                      onChange={(e) => setFormData({ content: e.target.value })}
+                      placeholder="Share your thoughts..."
+                      className="rounded-pill pe-2 py-1"
+                      style={{
+                        fontSize: '0.85rem',
+                        paddingLeft: '1rem',
+                        backgroundColor: darkMode ? '#1e1e1e' : '#f8f9fa',
+                        border: '1px solid #ccc'
+                      }}
+                    />
+                    <Button 
+                      type="submit"
+                      variant="link"
+                      className="position-absolute top-50 end-0 translate-middle-y me-2 p-0"
+                    >
+                      <FaPaperPlane className="text-primary" />
+                    </Button>
+                  </div>
+                </Form>
+              </div>
+            </StickyReviewForm>
           )}
+
+          <ProfileModal />
         </Container>
       </HubContainer>
     </ThemeContext.Provider>
