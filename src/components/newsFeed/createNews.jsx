@@ -74,7 +74,7 @@ const CreateNews = () => {
     const formDataToSend = new FormData();
     formDataToSend.append('title', formData.title);
     formDataToSend.append('content', formData.content);
-    formDataToSend.append('userId', userId); // ✅ match backend
+    formDataToSend.append('userId', userId); 
 
     formDataToSend.append('category', formData.category);
     formDataToSend.append('socialLinks', JSON.stringify(parseSocialLinks(formData.socialLinks)));

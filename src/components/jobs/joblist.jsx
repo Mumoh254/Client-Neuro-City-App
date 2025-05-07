@@ -139,7 +139,7 @@ const JobsList = () => {
     };
   }, []);
 
-  // Custom event listener for refresh
+  // Custom event 
   useEffect(() => {
     const handleRefresh = () => fetchJobs();
     window.addEventListener('jobsShouldRefresh', handleRefresh);

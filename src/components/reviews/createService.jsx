@@ -160,7 +160,7 @@ const CreateService = () => {
       }
   
       const compressedFile = await compressImage(file);
-      setImages([compressedFile]); // replace existing image
+      setImages([compressedFile]); 
       e.target.value = null;
     } catch (error) {
       Swal.fire('Error', 'Failed to process the image', 'error');
