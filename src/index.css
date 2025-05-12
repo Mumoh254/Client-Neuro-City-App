@@ -317,3 +317,87 @@ h1 {
   border-radius: 8px !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+
+/* food  */
+/* Custom Styles */
+.story-image {
+  transition: transform 0.2s ease;
+}
+
+.story-item:hover .story-image {
+  transform: scale(1.05);
+}
+
+.gradient-overlay {
+  background: linear-gradient(transparent 10%, rgba(0,0,0,0.3));
+}
+
+.hover-shadow-lg {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.hover-shadow-lg:hover {
+  box-shadow: 0 1rem 3rem rgba(0,0,0,0.15)!important;
+  transform: translateY(-4px);
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
+
+.ratio-4x3 {
+  aspect-ratio: 4 / 3;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.red{
+  background-color: #ef4444  !important;
+}
+
+.blue{
+  background-color: #2563eb !important;
+  color: #fff !important;
+}
+
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    border: 0;
+    overflow-x: auto;
+  }
+  
+  .table thead {
+    display: none;
+  }
+
+  .table tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+  }
+
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+
+  .table td:last-child {
+    border-bottom: 0;
+  }
+}
+
+

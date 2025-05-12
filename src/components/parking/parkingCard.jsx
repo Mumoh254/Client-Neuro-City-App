@@ -56,7 +56,7 @@ const ParkingSessionCard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
-  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+  const BASE_URL = "http://localhost:8000/apiV1/smartcity-ke";
   useEffect(() => {
     let timerInterval;
     

@@ -182,6 +182,13 @@ const ReviewSection = () => {
   const [followers, setFollowers] = useState({});
   const [following, setFollowing] = useState({});
 
+
+  const [users, setUsers] = useState([]);
+
+
+  const relatedUsers = users.filter(user => user.id !== selectedUser?.id);
+
+
   useEffect(() => {
     const userId = getUserIdFromToken();
     setUserId(userId);
@@ -189,6 +196,7 @@ const ReviewSection = () => {
     fetchFollowers();
     
     const interval = setInterval(fetchPosts, 120000);
+    
     return () => clearInterval(interval);
   }, []);
 
@@ -207,8 +215,9 @@ const ReviewSection = () => {
 
   const fetchFollowers = async () => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/users/followers/${userId}`);
+      const { data } = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/followers/${userId}`);
       setFollowers(data.followers);
+      console.log(data)
       setFollowing(data.following);
     } catch (err) {
       console.error('Error fetching followers:', err);
@@ -227,6 +236,8 @@ const ReviewSection = () => {
       return newState;
     });
   };
+  
+
 
   const trackView = async (postId) => {
     const numericPostId = parseInt(postId, 10);
@@ -245,6 +256,7 @@ const ReviewSection = () => {
     }
   };
 
+
   const handleLike = async (postId) => {
     try {
       const { data } = await axios.put(`${BASE_URL}/posts/${postId}/like`, { userId });
@@ -255,6 +267,7 @@ const ReviewSection = () => {
       setError('Failed to update like');
     }
   };
+
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -273,6 +286,8 @@ const ReviewSection = () => {
     }
   };
 
+
+
   const handleCommentSubmit = async (postId, commentText) => {
     try {
       const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
@@ -290,6 +305,9 @@ const ReviewSection = () => {
     }
   };
 
+
+
+
   const handleDeletePost = async (postId) => {
     try {
       await axios.delete(`${BASE_URL}/posts/${postId}`);
@@ -301,10 +319,13 @@ const ReviewSection = () => {
     }
   };
 
+  
+
   const handleVoiceAction = async (targetUserId) => {
     try {
       const isCurrentlyFollowing = following[targetUserId];
-      const { data } = await axios.post(`${BASE_URL}/users/${targetUserId}/voice`, {
+      const { data } = await axios.post(`http://localhost:8000/apiV1/smartcity-ke/users/${targetUserId}/voice`, {
+      
         userId,
         action: isCurrentlyFollowing ? 'unvoice' : 'voice'
       });
@@ -328,8 +349,8 @@ const ReviewSection = () => {
 
   const handleUserClick = async (userId) => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/users/${userId}/posts`);
-      const profileData = await axios.get(`${BASE_URL}/users/${userId}/profile`);
+      const { data } = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/smart_ke_WT_656759411/posts`);
+      const profileData = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/smart_ke_WT_656759411`);
       
       setSelectedUser({
         ...profileData.data,
@@ -499,6 +520,7 @@ const ReviewSection = () => {
     );
   });
 
+  
   const ProfileModal = () => (
     <Modal 
       show={!!selectedUser} 
@@ -519,7 +541,7 @@ const ReviewSection = () => {
               <h4 className="mb-1">{selectedUser?.name}</h4>
               <FollowerCount theme={darkMode ? darkTheme : lightTheme}>
                 <FaUserCheck />
-                {followers[selectedUser?.id] || 0} Voices
+                {followers[selectedUser?.id] || 0} Followers
               </FollowerCount>
             </div>
           </div>
@@ -530,41 +552,90 @@ const ReviewSection = () => {
             {following[selectedUser?.id] ? (
               <>
                 <FaUserCheck />
-                Unvoice
+                unvoice-up
               </>
             ) : (
               <>
                 <FaUserPlus />
-                Voice Up
+                Voice-Up
               </>
             )}
           </VoiceButton>
         </div>
-
+  
+        {/* Related Users Section */}
+        <div className="mb-4">
+          <h6 className="mb-2">Related Users</h6>
+          <div className="d-flex flex-wrap gap-3">
+            {relatedUsers
+              .filter(user => user.id !== selectedUser?.id)
+              .map(user => (
+                <div
+                  key={user.id}
+                  onClick={() => setSelectedUser(user)}
+                  style={{
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    width: '60px'
+                  }}
+                >
+                  <UserAvatar
+                    color={getAvatarColor(user.name?.[0])}
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      fontSize: '1rem',
+                      margin: '0 auto'
+                    }}
+                  >
+                    {user.name?.[0]}
+                  </UserAvatar>
+                  <small className="d-block mt-1 text-truncate">{user.name}</small>
+                </div>
+            ))}
+          </div>
+        </div>
+  
+        {/* Posts Section */}
+        <h5 className="mb-3">Posts by {selectedUser?.name}</h5>
         <div className="posts-container">
-          {userPosts.map(post => (
+          {selectedUser?.posts?.map(post => (
             <PostBubble key={post.id} theme={darkMode ? darkTheme : lightTheme}>
-              <p className="mb-2" style={{ fontSize: '0.85rem' }}>{post.content}</p>
-              <div className="d-flex align-items-center gap-3 text-muted">
-                <small>
-                  <FaThumbsUp className="me-1" />
-                  {post.likes?.length || 0}
-                </small>
-                <small>
-                  <FaRegComment className="me-1" />
-                  {post.comments?.length || 0}
-                </small>
-                <small>
-                  <FaEye className="me-1" />
-                  {post.views || 0}
-                </small>
+              <div className="d-flex gap-2 align-items-start">
+                <div className="flex-grow-1">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <small className="text-muted">
+                      {timeAgo.format(new Date(post.createdAt))}
+                    </small>
+                    <Badge bg="dark" className="rounded-pill">
+                      <FaEye className="me-1" /> {post.views || 0}
+                    </Badge>
+                  </div>
+                  <p className="mb-2">{post.content}</p>
+                  <div className="d-flex align-items-center gap-3 text-muted">
+                    <small>
+                      <FaThumbsUp className="me-1" />
+                      {post.likes?.length || 0}
+                    </small>
+                    <small>
+                      <FaRegComment className="me-1" />
+                      {post.comments?.length || 0}
+                    </small>
+                  </div>
+                </div>
               </div>
             </PostBubble>
           ))}
+          {selectedUser?.posts?.length === 0 && (
+            <div className="text-center text-muted py-4">
+              No posts by this user yet
+            </div>
+          )}
         </div>
       </ProfileModalContent>
     </Modal>
   );
+  
 
   return (
     <ThemeContext.Provider value={darkMode ? darkTheme : lightTheme}>

@@ -26,11 +26,11 @@ import ParkingForm from './components/parking/park';
 
 import ReviewsSection from './components/reviews/comunittySuport';
 import PublicAmenities from './components/public/publicamenities';
-import LiveTrackingMap from './components/devices/liveTracking';
-import TomTomTrafficMap from './components/weatherAndTraffice/tomtomTrafic';
+
+
 import AnalyticsDashboard from "./components/painpoints/painpoints";
 import RegistrationAnalytics from "./admin/userData/userRegistration";
-import WeatherNairobi from './components/weatherAndTraffice/weather';
+
 import StagesData from './components/public/stages';
 import PlasticRecyclingApp from './components/garbage/plastics';
 import EmergencyServices from './pages/emergency';
@@ -66,7 +66,8 @@ import ParkingSubscriptionModel from './components/parking/parkingsubscriptionMo
 import AdminServices from './admin/controller/adminServices';
 import AdminJobs from './admin/controller/adminJobs';
 
-
+import FoodPlatform from './components/decentralizedFoods/foods';
+import ChefProfile from './components/decentralizedFoods/chefProfile';
 const AppContainer = styled.div`
   display: flex;
   min-height: 100vh;
@@ -386,6 +387,10 @@ function App() {
           <Route path="/create-jobs" element={< CreateJob  />} />
           <Route path="/services/list-view" element={<ServicesList />} />
 
+          <Route path="/food" element={<FoodPlatform  />} />
+
+          
+
      
          
 
@@ -404,8 +409,11 @@ function App() {
             <Route path="/software-guide-feedback" element={<SoftwareFeedback />} />
             <Route path="/gems" element={<PageWithBack title="Local Gems & Foods"><Gems /></PageWithBack>} />
             <Route path="/download-neuro-app" element={<PageWithBack><Download /></PageWithBack>} />
-            <Route path="/traffic" element= {<PageWithBack title="Live Traffic"><TomTomTrafficMap /></PageWithBack>} />
+
             <Route path="/park" element={<PageWithBack><ParkingForm /></PageWithBack>} />
+
+            <Route path="/chef/:id" element={<PageWithBack><ChefProfile/></PageWithBack>} />
+           
 
             <Route path="/peoples/favourites" element={<PageWithBack><Favourites /></PageWithBack>} />
             <Route path="/emergency" element={<PageWithBack>< EmergencyServices /></PageWithBack>} />
@@ -416,12 +424,12 @@ function App() {
 
             <Route path="/plastics-recycles" element={<PageWithBack ><PlasticRecyclingApp /></PageWithBack>} />
             <Route path="/comunity-suport" element={<PageWithBack><ReviewsSection /></PageWithBack>} />
-            <Route path="/weather" element={<PageWithBack><WeatherNairobi /></PageWithBack>} />
+
             <Route path="/e-city-news-feed" element={<PageWithBack><NewsFeed /></PageWithBack>} />
             <Route path="/jobs-list" element={<PageWithBack><JobsList /></PageWithBack>} />
             <Route path="/e-chats" element={<PageWithBack><ReviewSection /></PageWithBack>} />
 
-         
+            <Route path="/food" element={<PageWithBack><FoodPlatform /></PageWithBack>} />
           </Route>
 
           {/* Admin Routes - No Sidebar */}
@@ -444,8 +452,8 @@ function App() {
 
         {showSidebar && (
           <BottomNav $show={showSidebar}>
-            <NavLink to="/plastics-recycles">
-              <FaTrashRestoreAlt /> Recycle
+            <NavLink to="/Food">
+              <FaTrashRestoreAlt /> Food
             </NavLink>
             <NavLink to="/peoples/favourites">
               <FaInternetExplorer /> Explore

@@ -8,7 +8,7 @@ const TrackPageView = () => {
 
   useEffect(() => {
     const currentTime = Date.now();
-    const timeSpent = Math.round((currentTime - startTimeRef.current) / 1000); // in seconds
+    const timeSpent = Math.round((currentTime - startTimeRef.current) / 1000); 
 
 
     if (previousPageRef.current !== location.pathname) {
