@@ -514,12 +514,12 @@ const FoodPlatform = () => {
   return (
     <Container fluid className="px-lg-4 px-2" style={{ backgroundColor: theme.light }}>
       {/* Header */}
-      <header className="header bg-white shadow-sm sticky-top">
+     <header className="header bg-white shadow-sm sticky-top">
   <div className="container">
-    <div className="d-flex justify-content-between align-items-center py-3">
+    <div className="d-flex justify-content-between align-items-center py-2 py-md-3">
       {/* Branding */}
-      <div className="d-flex align-items-center gap-3">
-        <GiKenya className="text-primary" style={{ fontSize: '2.5rem' }} />
+      <div className="d-flex align-items-center gap-2 gap-md-3">
+        <GiKenya className="text-primary header-icon" />
         <h1 className="m-0 brand-title">
           <span className="text-primary">Jikoni</span>
           <span className="text-danger">Express</span>
@@ -527,25 +527,25 @@ const FoodPlatform = () => {
       </div>
 
       {/* Actions */}
-      <div className="d-flex gap-3 align-items-center">
+      <div className="d-flex gap-2 gap-md-3 align-items-center">
         {/* Role Buttons */}
         {!state.isChefMode && !state.isRiderMode && (
-          <div className="d-flex gap-2">
+          <div className="d-flex gap-1 gap-md-2">
             <Button 
               variant="outline-primary"
-              className="rounded-pill px-4 d-flex align-items-center"
+              className="rounded-pill px-3 px-md-4 py-1 d-flex align-items-center"
               onClick={() => setState(s => ({ ...s, showChefReg: true }))}
             >
-              <Person className="me-2" />
-              Chef
+              <Person className="me-1 me-md-2" />
+              <span className="d-none d-md-inline">Chef</span>
             </Button>
             <Button 
               variant="outline-success"
-              className="rounded-pill px-4 d-flex align-items-center"
+              className="rounded-pill px-3 px-md-4 py-1 d-flex align-items-center"
               onClick={() => setState(s => ({ ...s, showRiderReg: true }))}
             >
-              <Scooter className="me-2" />
-              Rider
+              <Scooter className="me-1 me-md-2" />
+              <span className="d-none d-md-inline">Rider</span>
             </Button>
           </div>
         )}
@@ -554,25 +554,26 @@ const FoodPlatform = () => {
         {state.isChefMode && (
           <Button 
             variant="danger"
-            className="rounded-pill px-4"
+            className="rounded-pill px-3 px-md-4 py-1"
             onClick={() => {
               localStorage.removeItem('chefId');
               setState(s => ({ ...s, isChefMode: false }));
             }}
           >
-            Exit Chef Mode
+            <span className="d-none d-md-inline">Exit Chef Mode</span>
+            <span className="d-md-none">Exit</span>
           </Button>
         )}
 
         {/* Cart Button */}
         <Button 
           variant="warning"
-          className="rounded-pill px-4 position-relative"
+          className="rounded-pill px-3 px-md-4 py-1 position-relative"
           onClick={() => setState(s => ({ ...s, showCart: true }))} 
-          style={{ minWidth: '120px' }}
+          style={{ minWidth: 'auto' }}
         >
-          <Cart className="me-2" />
-          Cart
+          <Cart className="me-1 me-md-2" />
+          <span className="d-none d-md-inline">Cart</span>
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
             {state.cart.reduce((sum, i) => sum + i.quantity, 0)}
             <span className="visually-hidden">items in cart</span>
@@ -586,63 +587,66 @@ const FoodPlatform = () => {
     .header {
       border-bottom: 2px solid rgba(0,0,0,0.1);
       z-index: 1000;
+      transition: all 0.3s ease;
     }
     
     .brand-title {
       font-family: 'Pacifico', cursive;
-      font-size: 2rem;
+      font-size: 1.75rem;
       letter-spacing: -1px;
+      transition: font-size 0.3s ease;
     }
     
-    .btn-outline-primary {
-      border-color: var(--grenish-color);
-      color: var(--grenish-color);
+    .header-icon {
+      font-size: 2rem !important;
+      transition: font-size 0.3s ease;
     }
     
-    .btn-outline-primary:hover {
-      background: var(--grenish-color);
-      color: white;
-    }
-    
-    .btn-outline-success {
-      border-color: var(--bluish-color);
-      color: var(--bluish-color);
-    }
-    
+    .btn-outline-primary:hover,
     .btn-outline-success:hover {
-      background: var(--bluish-color);
-      color: white;
-    }
-    
-    .btn-warning {
-      background: #ffc107;
-      border-color: #ffc107;
-      color: black;
-      transition: all 0.3s ease;
+      transform: translateY(-1px);
     }
     
     .btn-warning:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(255,193,7,0.3);
+      transform: scale(1.05) translateY(-1px);
     }
     
     .badge {
-      font-size: 0.75rem;
-      padding: 0.5em 0.75em;
+      font-size: 0.65rem;
+      padding: 0.35em 0.6em;
+      transition: all 0.3s ease;
     }
     
     @media (max-width: 768px) {
       .brand-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+      }
+      
+      .header-icon {
+        font-size: 1.75rem !important;
       }
       
       .btn {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .brand-title {
+        font-size: 1.25rem;
       }
       
-      .btn svg {
-        margin-right: 0.25rem !important;
+      .header-icon {
+        font-size: 1.5rem !important;
+      }
+      
+      .btn {
+        padding: 0.25rem 0.5rem;
+      }
+      
+      .badge {
+        font-size: 0.55rem;
+        padding: 0.25em 0.5em;
       }
     }
   `}</style>
