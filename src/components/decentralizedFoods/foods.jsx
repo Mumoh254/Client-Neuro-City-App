@@ -4,8 +4,8 @@ import {
   Modal, Form, Offcanvas, ListGroup, Tabs, Tab , ButtonGroup, Carousel, ProgressBar
 } from 'react-bootstrap';
 import {
-  GeoAlt, Clock, Star, StarHalf   ,Cart, Person, Scooter,
-  CheckCircle, EggFried, FilterLeft, Plus, CartPlus , Dash, Trash, Pencil, Bell
+  GeoAlt,  Star, StarHalf   ,Cart,  Scooter,
+  CheckCircle, EggFried, FilterLeft,    StarFill, CartPlus, Person, Clock,  Instagram, Facebook, Twitter , Plus,  Dash, Trash, Pencil, Bell
 } from 'react-bootstrap-icons';
 
 import { useNavigate } from 'react-router-dom'; 
@@ -98,6 +98,16 @@ const StoryItem = styled.div`
 const FoodPlatform = () => {
 
 
+
+  const colors = {
+    primary: '#c3e703', // Vibrant lime green
+    secondary: '#96d1c7', // Soft teal
+    accent: '#ff6b6b',   // Coral pink
+    dark: '#2d3436',     // Charcoal
+    light: '#f5f6fa'     // Off-white
+  };
+
+
   const navigate = useNavigate(); // Hook for navigation
   
   const [state, setState] = useState({
@@ -172,6 +182,7 @@ const FoodPlatform = () => {
 
 
   useEffect(() => {
+    
     const fetchData = async () => {
       try {
         const response = await fetch('http://localhost:8000/apiV1/smartcity-ke/get/foods');
@@ -202,6 +213,9 @@ const FoodPlatform = () => {
   });
 
   
+  const  updateCart =  ()=>{
+    console.log("cart  updated")
+  }
   // Chef Food Management
   const createFood = async (foodData) => {
     try {
@@ -500,45 +514,139 @@ const FoodPlatform = () => {
   return (
     <Container fluid className="px-lg-4 px-2" style={{ backgroundColor: theme.light }}>
       {/* Header */}
-
-           <header className="d-flex flex-wrap justify-content-between align-items-center py-3">
-        <h1 className="mb-0" style={{ color: theme.primary }}>
-          <GiKenya className="me-2 m-3" />
-          Jikoni Express Culture!
+      <header className="header bg-white shadow-sm sticky-top">
+  <div className="container">
+    <div className="d-flex justify-content-between align-items-center py-3">
+      {/* Branding */}
+      <div className="d-flex align-items-center gap-3">
+        <GiKenya className="text-primary" style={{ fontSize: '2.5rem' }} />
+        <h1 className="m-0 brand-title">
+          <span className="text-primary">Jikoni</span>
+          <span className="text-danger">Express</span>
         </h1>
+      </div>
 
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          {!state.isChefMode && !state.isRiderMode && (
-            <>
-              <Button variant="primary" size="sm"
-                onClick={() => setState(s => ({ ...s, showChefReg: true }))}>
-                <Person className="me-1" /> Chef
-              </Button>
-              <Button variant="primary" size="sm"
-                onClick={() => setState(s => ({ ...s, showRiderReg: true }))}>
-                <Scooter className="me-1" /> Rider
-              </Button>
-            </>
-          )}
-
-          {state.isChefMode && (
-            <Button variant="danger" size="sm"
-              onClick={() => {
-                localStorage.removeItem('chefId');
-                localStorage.setItem('isChef', 'true');
-                setState(s => ({ ...s, isChefMode: false }));
-              }}>
-              Exit Chef Mode
+      {/* Actions */}
+      <div className="d-flex gap-3 align-items-center">
+        {/* Role Buttons */}
+        {!state.isChefMode && !state.isRiderMode && (
+          <div className="d-flex gap-2">
+            <Button 
+              variant="outline-primary"
+              className="rounded-pill px-4 d-flex align-items-center"
+              onClick={() => setState(s => ({ ...s, showChefReg: true }))}
+            >
+              <Person className="me-2" />
+              Chef
             </Button>
-          )}
+            <Button 
+              variant="outline-success"
+              className="rounded-pill px-4 d-flex align-items-center"
+              onClick={() => setState(s => ({ ...s, showRiderReg: true }))}
+            >
+              <Scooter className="me-2" />
+              Rider
+            </Button>
+          </div>
+        )}
 
-          <Button variant="primary" size="sm"
-            onClick={() => setState(s => ({ ...s, showCart: true }))}>
-            <Cart className="me-1" />
-            Cart ({state.cart.reduce((sum, i) => sum + i.quantity, 0)})
+        {/* Exit Button */}
+        {state.isChefMode && (
+          <Button 
+            variant="danger"
+            className="rounded-pill px-4"
+            onClick={() => {
+              localStorage.removeItem('chefId');
+              setState(s => ({ ...s, isChefMode: false }));
+            }}
+          >
+            Exit Chef Mode
           </Button>
-        </div>
-      </header>
+        )}
+
+        {/* Cart Button */}
+        <Button 
+          variant="warning"
+          className="rounded-pill px-4 position-relative"
+          onClick={() => setState(s => ({ ...s, showCart: true }))} 
+          style={{ minWidth: '120px' }}
+        >
+          <Cart className="me-2" />
+          Cart
+          <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {state.cart.reduce((sum, i) => sum + i.quantity, 0)}
+            <span className="visually-hidden">items in cart</span>
+          </span>
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <style jsx>{`
+    .header {
+      border-bottom: 2px solid rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    
+    .brand-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 2rem;
+      letter-spacing: -1px;
+    }
+    
+    .btn-outline-primary {
+      border-color: var(--grenish-color);
+      color: var(--grenish-color);
+    }
+    
+    .btn-outline-primary:hover {
+      background: var(--grenish-color);
+      color: white;
+    }
+    
+    .btn-outline-success {
+      border-color: var(--bluish-color);
+      color: var(--bluish-color);
+    }
+    
+    .btn-outline-success:hover {
+      background: var(--bluish-color);
+      color: white;
+    }
+    
+    .btn-warning {
+      background: #ffc107;
+      border-color: #ffc107;
+      color: black;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-warning:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(255,193,7,0.3);
+    }
+    
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.5em 0.75em;
+    }
+    
+    @media (max-width: 768px) {
+      .brand-title {
+        font-size: 1.5rem;
+      }
+      
+      .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+      }
+      
+      .btn svg {
+        margin-right: 0.25rem !important;
+      }
+    }
+  `}</style>
+</header>
 
       {/* Main Content */}
       {state.isChefMode ? (
@@ -804,140 +912,339 @@ const FoodPlatform = () => {
          <div className="py-4 container-xl">
          {/* Stories Section */}
          <div className="mb-5">
-           <h5 className="mb-3 fw-bold text-secondary"> Jikoni  Culture  Stories !!</h5>
-           <StoriesContainer>
-             <Row className="flex-nowrap overflow-auto pb-3 gx-3">
-               {filteredFoods.map(food => (
-                 <Col xs="auto" key={food.id}>
-                   <div 
-                     className="story-item position-relative rounded-4 overflow-hidden cursor-pointer"
-                     onClick={() => navigate(`/chef/${food.chefId}`)} // Navigate on click
-                   >
-                     <img 
-                       src={food.photoUrls?.[0] || '/placeholder-food.jpg'} 
-                       alt={food.title}
-                       className="story-image rounded-4"
-                       style={{ 
-                         width: '90px', 
-                         height: '80px',
-                         objectFit: 'cover',
-                         border: '0px solid #fff',
-                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                       }}
-                     />
-                     <div className="position-absolute bottom-0 start-0 end-0 p-2 gradient-overlay">
-                       <Badge pill  className="text-dark fw-medium px-2 bg-info text-white">
-                         {food.area}
-                       </Badge>
-                     </div>
-                   </div>
-                 </Col>
-               ))}
-             </Row>
-           </StoriesContainer>
-         </div>
-       
+  <h5 className="mb-3 fw-bold text-secondary">Jikoni Culture Stories!!</h5>
+  <div className="stories-container">
+    <div className="stories-scroll">
+      {filteredFoods.map(food => (
+        <div 
+          key={food.id}
+          className="story-item"
+          onClick={() => navigate(`/chef/${food.chefId}`)}
+        >
+          <div className="story-image-wrapper">
+            <img
+              src={food.photoUrls?.[0] || '/placeholder-food.jpg'}
+              alt={food.title}
+              className="story-img"
+            />
+            <div className="gradient-overlay"></div>
+            <Badge pill className="location-badge">
+              {food.area}
+            </Badge>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <style jsx>{`
+    .stories-container {
+      position: relative;
+      padding: 0 1rem;
+    }
+
+    .stories-scroll {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--grenish-color) transparent;
+      gap: 1rem;
+      padding-bottom: 1rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .stories-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .stories-scroll::-webkit-scrollbar-thumb {
+      background: var(--grenish-color);
+      border-radius: 4px;
+    }
+
+    .story-item {
+      flex: 0 0 auto;
+      position: relative;
+      width: 100px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .story-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .story-image-wrapper {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 2px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .story-item:hover .story-image-wrapper {
+      border-color: var(--grenish-color);
+    }
+
+    .story-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gradient-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+    }
+
+    .location-badge {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--grenish-color) !important;
+      color: var(--black-color) !important;
+      font-weight: 600;
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .story-item {
+        width: 85px;
+      }
+      
+      .story-image-wrapper {
+        width: 85px;
+        height: 85px;
+      }
+    }
+  `}</style>
+</div>
+
+
          {/* Food Grid */}
-         <Row xs={1} sm={2} md={3} lg={4} className="g-4">
-           {state.foods.map(food => (
-             <Col key={food.id}>
-               <ResponsiveCard className="h-100 shadow-sm hover-shadow-lg transition-all">
-                 <Carousel interval={null} indicators={food.photoUrls.length > 1}>
-                   {food.photoUrls.map((img, i) => (
-                     <Carousel.Item key={i}>
-                       <div className="ratio ratio-4x3">
-                         <img 
-                           src={img} 
-                           alt={`${food.title} - Photo ${i+1}`}
-                           className="card-img-top object-fit-cover"
-                           onError={(e) => e.target.src = '/placeholder-food.jpg'}
-                         />
-                       </div>
-                     </Carousel.Item>
-                   ))}
-                 </Carousel>
-       
-                 <Card.Body className="d-flex flex-column">
-                   <div className="d-flex justify-content-between align-items-start mb-2">
-                     <div>
-                       <h5 className="fw-bold mb-0">{food.title}</h5>
-                       <small className="text-muted">{food.mealType}</small>
-                     </div>
-                     <Badge pill bg="success" className="fs-6">KES {food.price}</Badge>
-                   </div>
-       
-                   <p className="small text-secondary mb-3 flex-grow-1">{food.description}</p>
-       
-                   <div className="d-flex gap-2 flex-wrap mb-3">
-                     <Badge pill bg="primary">{food.speciality}</Badge>
-                     <Badge pill bg="warning" text="dark">{food.cuisineType}</Badge>
-                     <Badge pill bg="info">{food.dietary}</Badge>
-                   </div>
-       
-                   {/* Chef Profile */}
-                   <div className="d-flex align-items-center gap-3 border-top pt-3">
-                     <img
-                       src={food.chef.avatar || '/images/chef.png'}
-                       alt={food.chef.user.Name}
-                       className="rounded-circle border"
-                       style={{ width: '48px', height: '48px', objectFit: 'cover' }}
-                     />
-                     <div>
-                       <div className="fw-bold small">{food.chef.user.Name}</div>
-                       <div className="text-muted small">
-                         <StarHalf className="text-warning" /> {food.chef.rating} ({food.chef.experienceYears} yrs)
-                       </div>
-                     </div>
-                   </div>
-       
-                   {/* Certifications */}
-                   {food.chef.certifications.length > 0 && (
-                     <div className="mt-3">
-                       <small className="d-block text-muted mb-1">Certifications:</small>
-                       <div className="d-flex gap-2 flex-wrap">
-                         {food.chef.certifications.map((cert, i) => (
-                           <Badge key={i} pill bg="light" text="dark" className="small border">
-                             {cert}
-                           </Badge>
-                         ))}
-                       </div>
-                     </div>
-                   )}
-       
-                   {/* Social Links */}
-                   <div className="mt-3 d-flex gap-2">
-                     {Object.entries(food.chef.socialLinks).map(([platform, url]) => (
-                       url && (
-                         <a
-                           key={platform}
-                           href={url}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="text-decoration-none"
-                         >
-                           <Button variant="outline-dark" size="sm" className="rounded-pill px-3">
-                             <i className={`bi bi-${platform.toLowerCase()} me-1`} />
-                             {platform}
-                           </Button>
-                         </a>
-                       )
-                     ))}
-                   </div>
-       
-                   {/* Add to Cart */}
-                   <Button
-                     variant="primary"
-                     className="mt-3 w-100 rounded-pill fw-bold py-2"
-                     onClick={() => updateCart(food, 1)}
-                   >
-                     <CartPlus className="me-2" /> Add to Cart
-                   </Button>
-                 </Card.Body>
-               </ResponsiveCard>
-             </Col>
-           ))}
-         </Row>
-       
+         <div className="food-platform" style={{ backgroundColor: colors.light }}>
+
+
+      <Row xs={1} sm={2} md={3} lg={4} className="g-4 p-4">
+        {state.foods.map(food => (
+          <Col key={food.id}>
+            <Card className="h-100 shadow-lg border-0 overflow-hidden food-card">
+              {/* Image Section */}
+              <div className="position-relative">
+                <Carousel interval={null} indicators={food.photoUrls.length > 1}>
+                  {food.photoUrls.map((img, i) => (
+                    <Carousel.Item key={i}>
+                      <div className="ratio ratio-4x3">
+                        <img
+                          src={img}
+                          alt={`${food.title} - Photo ${i+1}`}
+                          className="card-img-top object-fit-cover"
+                          style={{ filter: 'brightness(0.95)' }}
+                        />
+                      </div>
+                    </Carousel.Item>
+                  ))}
+                </Carousel>
+                
+                {/* Floating Price Tag */}
+                <div className="position-absolute top-0 end-0 m-3">
+                  <Badge pill className="price-tag">
+                    KES {food.price}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <Card.Body className="d-flex flex-column pt-4">
+                {/* Food Metadata */}
+                <div className="mb-3">
+                  <Badge pill className="meal-type me-2">
+                    {food.mealType}
+                  </Badge>
+                  <small className="text-muted">
+                    <Clock className="me-1" />
+                    {formatDistanceToNow(new Date(food.createdAt))} ago
+                  </small>
+                </div>
+
+                {/* Food Title */}
+                <h3 className="mb-3 fw-bold food-title">{food.title}</h3>
+
+                {/* Food Description */}
+                <p className="text-secondary mb-4 flex-grow-1">{food.description}</p>
+
+                {/* Dietary Tags */}
+                <div className="d-flex flex-wrap gap-2 mb-4">
+                  <Badge pill className="dietary-tag speciality">
+                    {food.speciality}
+                  </Badge>
+                  <Badge pill className="dietary-tag cuisine">
+                    {food.cuisineType}
+                  </Badge>
+                  <Badge pill className="dietary-tag dietary">
+                    {food.dietary}
+                  </Badge>
+                </div>
+
+                {/* Chef Profile */}
+                <div className="chef-profile bg-white p-3 rounded-3">
+                  <div className="d-flex align-items-center mb-3">
+                    <img
+                      src={food.chef.avatar || '/images/chef.png'}
+                      alt={food.chef.user.Name}
+                      className="chef-avatar me-3"
+                    />
+                    <div>
+                      <h6 className="mb-0 fw-bold">{food.chef.user.Name}</h6>
+                      <div className="d-flex align-items-center">
+                        <StarFill className="text-warning me-1" />
+                        <span className="small">{food.chef.rating}</span>
+                        <span className="mx-2">•</span>
+                        <span className="small">{food.chef.experienceYears} yrs</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Certifications */}
+                  {food.chef.certifications.length > 0 && (
+                    <div className="certifications">
+                      <span className="text-muted small d-block mb-2">Certifications:</span>
+                      <div className="d-flex flex-wrap gap-2">
+                        {food.chef.certifications.map((cert, i) => (
+                          <Badge key={i} pill className="cert-badge">
+                            {cert}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add to Cart Button */}
+                <Button 
+                  variant="primary" 
+                  className="add-to-cart-btn mt-4"
+                  onClick={() => updateCart(food, 1)}
+                >
+                  <CartPlus className="me-2" />
+                  Add to Cart
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      {/* Global Styles */}
+      <style jsx global>{`
+        :root {
+          --primary-color: ${colors.primary};
+          --secondary-color: ${colors.secondary};
+          --accent-color: ${colors.accent};
+          --dark-color: ${colors.dark};
+          --light-color: ${colors.light};
+        }
+
+        .food-card {
+          border-radius: 1.5rem;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          background: var(--light-color);
+        }
+
+        .food-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .price-tag {
+          background: var(--accent-color);
+          color: white;
+          font-size: 1.1rem;
+          padding: 0.5rem 1.25rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .meal-type {
+          background: var(--secondary-color);
+          color: var(--dark-color);
+          font-weight: 600;
+          padding: 0.5rem 1rem;
+        }
+
+        .food-title {
+          color: var(--dark-color);
+          font-size: 1.5rem;
+          line-height: 1.3;
+        }
+
+        .dietary-tag {
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+          font-weight: 500;
+          
+          &.speciality {
+            background: var(--primary-color);
+            color: var(--dark-color);
+          }
+          
+          &.cuisine {
+            background: var(--secondary-color);
+            color: var(--dark-color);
+          }
+          
+          &.dietary {
+            background: var(--accent-color);
+            color: white;
+          }
+        }
+
+        .chef-profile {
+          border: 2px solid var(--secondary-color);
+          background: rgba(255, 255, 255, 0.9);
+        }
+
+        .chef-avatar {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          border: 2px solid var(--primary-color);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .cert-badge {
+          background: var(--primary-color);
+          color: var(--dark-color);
+          font-weight: 500;
+          padding: 0.5rem 1rem;
+        }
+
+        .add-to-cart-btn {
+          background: var(--accent-color);
+          border: none;
+          padding: 1rem;
+          font-weight: 600;
+          border-radius: 1rem;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            background: var(--dark-color);
+            transform: scale(1.05);
+          }
+        }
+      `}</style>
+    </div>
+    
        </div>
      )}
 

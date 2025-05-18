@@ -401,3 +401,220 @@ h1 {
 }
 
 
+/* foods */
+:root {
+  --primary-red: #FF4532;
+  --dark-red: #D93A28;
+  --cream: #FFF8F0;
+  --dark-gray: #2B2B2B;
+  --light-gray: #5A5A5A;
+  --accent-green: #C3E703;
+  --accent-blue: #96D1C7;
+}
+
+.food-platform-container {
+  background: var(--cream);
+  padding: 2rem;
+}
+
+.food-card {
+  border-radius: 20px;
+  overflow: hidden;
+  border: none;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+}
+
+.food-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.food-image-container {
+  position: relative;
+}
+
+.image-gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.5) 100%);
+}
+
+.price-badge {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: var(--primary-red);
+  color: white!important;
+  font-size: 1.2rem;
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-weight: 700;
+}
+
+.food-card-body {
+  padding: 1.5rem;
+}
+
+.food-title {
+  color: var(--dark-gray);
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.meal-type-badge {
+  background: var(--accent-green);
+  color: var(--dark-gray)!important;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  font-weight: 600;
+}
+
+.food-description {
+  color: var(--light-gray);
+  margin: 1rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.dietary-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.tag-speciality {
+  background: var(--accent-blue);
+  color: var(--dark-gray)!important;
+}
+
+.tag-cuisine {
+  background: var(--cream);
+  color: var(--dark-gray)!important;
+  border: 1px solid var(--accent-blue);
+}
+
+.tag-dietary {
+  background: var(--dark-gray);
+  color: white!important;
+}
+
+.chef-profile-section {
+  border-top: 2px solid var(--cream);
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+.chef-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.chef-icon {
+  color: var(--primary-red);
+  font-size: 1.2rem;
+}
+
+.chef-title {
+  font-size: 1.1rem;
+  color: var(--dark-gray);
+  margin: 0;
+}
+
+.chef-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chef-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-red);
+}
+
+.chef-name {
+  font-size: 1.1rem;
+  color: var(--dark-gray);
+  margin: 0;
+}
+
+.chef-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--light-gray);
+  font-size: 0.9rem;
+}
+
+.rating-icon {
+  color: var(--primary-red);
+  font-size: 0.9rem;
+}
+
+.certifications {
+  margin-top: 1rem;
+}
+
+.cert-label {
+  display: block;
+  color: var(--light-gray);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.cert-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cert-badge {
+  background: var(--cream);
+  color: var(--dark-gray)!important;
+  border: 1px solid var(--accent-blue);
+  font-size: 0.85rem;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.social-link {
+  color: var(--light-gray);
+  transition: color 0.3s ease;
+}
+
+.social-link:hover {
+  color: var(--primary-red);
+}
+
+.social-icon {
+  font-size: 1.3rem;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  background: var(--primary-red)!important;
+  border: none!important;
+  padding: 1rem!important;
+  font-size: 1.1rem!important;
+  font-weight: 700!important;
+  margin-top: 1.5rem;
+  border-radius: 15px!important;
+  transition: all 0.3s ease;
+}
+
+.add-to-cart-btn:hover {
+  background: var(--dark-red)!important;
+  transform: scale(1.02);
+}

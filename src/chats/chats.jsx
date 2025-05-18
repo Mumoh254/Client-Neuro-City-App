@@ -17,6 +17,14 @@ import en from 'javascript-time-ago/locale/en';
 TimeAgo.addDefaultLocale(en);
 const timeAgo = new TimeAgo('en-US');
 
+
+import popSound from '../../public/audio/pop.mp3';
+
+
+const playSound = () => {
+  new Audio(popSound).play();
+};
+
 // Styled Components
 const HubContainer = styled.div`
   background: ${props => props.theme.background};
@@ -159,7 +167,8 @@ const darkTheme = {
   avatarBorder: '#818cf8',
 };
 
-const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+// const BASE_URL = "http://localhost:8000/apiV1/smartcity-ke";
+  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
 
 const getAvatarColor = (char) => {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -259,6 +268,7 @@ const ReviewSection = () => {
 
   const handleLike = async (postId) => {
     try {
+      playSound()
       const { data } = await axios.put(`${BASE_URL}/posts/${postId}/like`, { userId });
       setPosts(prev => prev.map(post => 
         post.id === postId ? { ...post, likes: data.likes } : post
@@ -290,6 +300,7 @@ const ReviewSection = () => {
 
   const handleCommentSubmit = async (postId, commentText) => {
     try {
+      playSound()
       const { data } = await axios.post(`${BASE_URL}/posts/${postId}/comments`, {
         content: commentText,
         authorId: userId
@@ -323,6 +334,7 @@ const ReviewSection = () => {
 
   const handleVoiceAction = async (targetUserId) => {
     try {
+      playSound()
       const isCurrentlyFollowing = following[targetUserId];
       const { data } = await axios.post(`http://localhost:8000/apiV1/smartcity-ke/users/${targetUserId}/voice`, {
       
@@ -389,7 +401,7 @@ const ReviewSection = () => {
                   style={{ fontSize: '0.9rem', cursor: 'pointer' }}
                   onClick={() => handleUserClick(post.author.id)}
                 >
-                  {post.author?.name || 'Anonymous'}
+                  {post.author?.Username || 'Anonymous'}
                 </h6>
                 <div className="d-flex align-items-center gap-2 mt-1">
                   <FollowerCount theme={theme}>
@@ -404,8 +416,8 @@ const ReviewSection = () => {
               
               <div className="d-flex align-items-center gap-2">
                 <Badge bg="dark" className="rounded-pill" style={{ fontSize: '0.7rem' }}>
-                  <FaEye className="me-1" /> {post.views || 0}
-                </Badge>
+    <FaEye className="me-1" /> {post._count?.views || 0}
+  </Badge>
                 {post.author?.id === userId && (
                   <Dropdown>
                     <Dropdown.Toggle variant="link" className="p-0">
@@ -463,7 +475,7 @@ const ReviewSection = () => {
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <div className="d-flex align-items-center gap-2">
                           <UserAvatar 
-                            color={getAvatarColor(comment.author?.name?.[0])}
+                            color={getAvatarColor(comment.author?.Username?.[0])}
                             style={{ width: '28px', height: '28px', fontSize: '0.7rem' }}
                             onClick={() => handleUserClick(comment.author.id)}
                           >
