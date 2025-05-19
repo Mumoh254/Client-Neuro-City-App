@@ -167,8 +167,8 @@ const darkTheme = {
   avatarBorder: '#818cf8',
 };
 
-// const BASE_URL = "http://localhost:8000/apiV1/smartcity-ke";
-  const  BASE_URl = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke";
+  // const  BASE_URl = "";
 
 const getAvatarColor = (char) => {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -282,6 +282,7 @@ const ReviewSection = () => {
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
+       playSound()
       const { data } = await axios.post(`${BASE_URL}/posts`, {
         content: formData.content,
         authorId: userId
@@ -321,6 +322,7 @@ const ReviewSection = () => {
 
   const handleDeletePost = async (postId) => {
     try {
+
       await axios.delete(`${BASE_URL}/posts/${postId}`);
       setPosts(prev => prev.filter(post => post.id !== postId));
       setSuccess('Post deleted successfully');
@@ -361,6 +363,7 @@ const ReviewSection = () => {
 
   const handleUserClick = async (userId) => {
     try {
+      playSound()
       const { data } = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/smart_ke_WT_656759411/posts`);
       const profileData = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/smart_ke_WT_656759411`);
       
