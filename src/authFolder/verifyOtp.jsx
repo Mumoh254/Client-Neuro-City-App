@@ -131,8 +131,8 @@ const TimerText = styled.span`
 const VerifyOtp = () => {
 
    const navigate = useNavigate();
-   
-  const BASE_URL = "http://localhost:8000/apiV1/smartcity-ke"
+
+  const BASE_URL = "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"
   const location = useLocation();
   const storedEmail = location.state?.email || localStorage.getItem('userEmail');
 
