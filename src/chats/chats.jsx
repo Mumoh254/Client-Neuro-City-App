@@ -361,20 +361,27 @@ const ReviewSection = () => {
     }
   };
 
-  const handleUserClick = async (userId) => {
-    try {
-      playSound()
-      const { data } = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/smart_ke_WT_656759411/posts`);
-      const profileData = await axios.get(`http://localhost:8000/apiV1/smartcity-ke/users/smart_ke_WT_656759411`);
-      
-      setSelectedUser({
-        ...profileData.data,
-        posts: data
-      });
-    } catch (err) {
-      setError('Failed to load user profile');
-    }
-  };
+ const handleUserClick = async (userId) => {
+  try {
+    playSound();
+
+    const { data } = await axios.get(
+      `${BASE_URL}/users/${userId}/posts`
+    );
+
+    const profileData = await axios.get(
+      `${BASE_URL}/users/${userId}`
+    );
+
+    setSelectedUser({
+      ...profileData.data,
+      posts: data
+    });
+  } catch (err) {
+    setError('Failed to load user profile');
+  }
+};
+
 
   const PostCard = React.memo(({ post }) => {
     const theme = useContext(ThemeContext);
@@ -553,7 +560,7 @@ const ReviewSection = () => {
               {selectedUser?.name?.[0]}
             </UserAvatar>
             <div>
-              <h4 className="mb-1">{selectedUser?.name}</h4>
+              <h4 className="mb-1">{selectedUser?.username}</h4>
               <FollowerCount theme={darkMode ? darkTheme : lightTheme}>
                 <FaUserCheck />
                 {followers[selectedUser?.id] || 0} Followers
