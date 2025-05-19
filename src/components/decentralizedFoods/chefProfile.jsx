@@ -5,6 +5,9 @@ import { StarHalf, CartPlus, GeoAlt, Clock, People, Envelope, PersonBadge } from
 import { format, formatDistanceToNow } from 'date-fns';
 
 const ChefProfile = ({ addToCart }) => {
+
+  const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"
+  
   const { id: chefId } = useParams();
   const [chef, setChef] = useState(null);
   const [foods, setFoods] = useState([]);
@@ -34,8 +37,8 @@ const ChefProfile = ({ addToCart }) => {
     const fetchChefData = async () => {
       try {
         const [chefRes, foodsRes] = await Promise.all([
-          fetch(`http://localhost:8000/apiV1/smartcity-ke/chef/${chefId}`),
-          fetch(`http://localhost:8000/apiV1/smartcity-ke/foods?chefId=${chefId}`)
+          fetch(`${BASE_URL}/chef/${chefId}`),
+          fetch(`${BASE_URL}/foods?chefId=${chefId}`)
         ]);
 
         const chefData = await chefRes.json();

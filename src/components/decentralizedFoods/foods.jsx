@@ -298,7 +298,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
 
   const updateFood = async (foodData) => {
     try {
-      const res = await fetch(`http://localhost:8000/apiV1/smartcity-ke/food/${foodData.id}`, {
+      const res = await fetch(`${BASE_URL}/food/${foodData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(foodData)
@@ -315,7 +315,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
 
   const deleteFood = async (foodId) => {
     try {
-      await fetch(`http://localhost:8000/apiV1/smartcity-ke/food/${foodId}`, {
+      await fetch(`${BASE_URL}/food/${foodId}`, {
         method: 'DELETE'
       });
       loadData();
@@ -342,7 +342,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
   // Registration Handlers
   const registerChef = async (formData) => {
     try {
-      const res = await fetch('http://localhost:8000/apiV1/smartcity-ke/chef', {
+      const res = await fetch(`${BASE_URL}/chef`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, userId })
