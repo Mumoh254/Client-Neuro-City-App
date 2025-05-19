@@ -560,7 +560,7 @@ const ReviewSection = () => {
               {selectedUser?.name?.[0]}
             </UserAvatar>
             <div>
-              <h4 className="mb-1">{selectedUser?.username}</h4>
+              <h4 className="mb-1">{selectedUser?.name}</h4>
               <FollowerCount theme={darkMode ? darkTheme : lightTheme}>
                 <FaUserCheck />
                 {followers[selectedUser?.id] || 0} Followers
