@@ -128,7 +128,7 @@ const FoodPlatform = () => {
     isRiderMode: localStorage.getItem('isRider') === 'true',
     filters: { area: 'all', specialty: 'all', mealType: 'all' }
   });
-
+const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"
   const [userId, setUserId] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
@@ -149,7 +149,7 @@ const FoodPlatform = () => {
   const loadData = async () => {
     try {
       const [foodsRes, ordersRes, ridersRes] = await Promise.all([
-        fetch('http://localhost:8000/apiV1/smartcity-ke/get/foods'),
+        fetch('${BASE_URL}/get/foods'),
         fetch('/api/orders'),
         fetch('/api/riders')
       ]);
@@ -185,7 +185,7 @@ const FoodPlatform = () => {
     
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:8000/apiV1/smartcity-ke/get/foods');
+        const response = await fetch(`${BASE_URL}/get/foods`);
         const data = await response.json();
         
         const areas = [...new Set(data.map(food => food.area))];
@@ -219,7 +219,7 @@ const FoodPlatform = () => {
   // Chef Food Management
   const createFood = async (foodData) => {
     try {
-      const res = await fetch('http://localhost:8000/apiV1/smartcity-ke/food', {
+      const res = await fetch(`${BASE_URL}/food`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -512,11 +512,11 @@ const FoodPlatform = () => {
   
 
   return (
-    <Container fluid className="px-lg-4 px-2" style={{ backgroundColor: theme.light }}>
+    <Container fluid className=" px-2" style={{ backgroundColor: theme.light }}>
       {/* Header */}
      <header className="header bg-white shadow-sm sticky-top">
   <div className="container">
-    <div className="d-flex justify-content-between align-items-center py-2 py-md-3">
+    <div className="d-flex justify-content-between align-items-center py-2 py-md-2">
       {/* Branding */}
       <div className="d-flex align-items-center gap-2 gap-md-3">
         <GiKenya className="text-primary header-icon" />
@@ -568,7 +568,7 @@ const FoodPlatform = () => {
         {/* Cart Button */}
         <Button 
           variant="warning"
-          className="rounded-pill px-3 px-md-4 py-1 position-relative"
+          className="rounded-pill px-2 px-md-2 py-1 position-relative"
           onClick={() => setState(s => ({ ...s, showCart: true }))} 
           style={{ minWidth: 'auto' }}
         >
@@ -689,8 +689,8 @@ const FoodPlatform = () => {
           {/* Image Gallery */}
           <td>
             <div style={{
-              width: '80px',
-              height: '80px',
+              width: '100px',
+              height: '100px',
               borderRadius: '8px',
               overflow: 'hidden',
               position: 'relative'
