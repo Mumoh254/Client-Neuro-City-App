@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container, Row, Col, Card, Button, Spinner, Alert, Badge,
-  Modal, Form, Offcanvas, ListGroup, Tabs, Tab , ButtonGroup, Carousel, ProgressBar
+  Modal, Form, Offcanvas,  Stack  , ListGroup, Tabs, Tab , ButtonGroup, Carousel, ProgressBar
 } from 'react-bootstrap';
 import {
   GeoAlt,  Star, StarHalf   ,Cart,  Scooter,
@@ -109,12 +109,18 @@ const FoodPlatform = () => {
 
 
   const navigate = useNavigate(); // Hook for navigation
+
+
   
   const [state, setState] = useState({
     foods: [],
     orders: [],
     riders: [],
     cart: [],
+     showCart: false,
+    cart: [],  // Properly initialized array
+    
+    loadingOrders: true,
     loading: true,
     error: null,
     showChefReg: false,
@@ -181,6 +187,8 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
   useEffect(() => { loadData(); }, []);
 
 
+
+  
   useEffect(() => {
     
     const fetchData = async () => {
@@ -212,10 +220,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
     return matchesArea && matchesSpecialty && matchesMealType;
   });
 
-  
-  const  updateCart =  ()=>{
-    console.log("cart  updated")
-  }
+
   // Chef Food Management
   const createFood = async (foodData) => {
     try {
@@ -236,6 +241,9 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
       console.error('Create error:', err);
     }
   };
+
+
+  
 
 
 
@@ -338,6 +346,46 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
       console.error('Order update error:', err);
     }
   };
+
+
+
+  // Add this cart management logic
+const updateCart = (item, quantityChange) => {
+  setState(prev => {
+    const existingItem = prev.cart.find(i => i.id === item.id);
+    let newCart = [...prev.cart];
+    
+    if (existingItem) {
+      // Update quantity
+      const newQuantity = existingItem.quantity + quantityChange;
+      if (newQuantity <= 0) {
+        // Remove item if quantity reaches 0
+        newCart = newCart.filter(i => i.id !== item.id);
+      } else {
+        // Update quantity
+        newCart = newCart.map(i => 
+          i.id === item.id ? { ...i, quantity: newQuantity } : i
+        );
+      }
+    } else if (quantityChange > 0) {
+      // Add new item to cart
+      newCart.push({ 
+        ...item,
+        quantity: 1,
+        price: Number(item.price)
+      });
+    }
+    
+    return { ...prev, cart: newCart };
+  });
+};
+
+// Add these calculation functions
+const calculateSubtotal = () => 
+  state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+const calculateTotal = () => 
+  calculateSubtotal() + DELIVERY_FEE;
 
   // Registration Handlers
   const registerChef = async (formData) => {
@@ -1040,7 +1088,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
          <div className="food-platform" style={{ backgroundColor: colors.light }}>
 
 
-      <Row xs={1} sm={2} md={3} lg={4} className="g-4 p-4">
+      <Row xs={1} sm={2} md={3} lg={4} className="g-2 p-1">
         {state.foods.map(food => (
           <Col key={food.id}>
             <Card className="h-100 shadow-lg border-0 overflow-hidden food-card">
@@ -1053,10 +1101,11 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
                         <img
                           src={img}
                           alt={`${food.title} - Photo ${i+1}`}
-                          className="card-img-top object-fit-cover"
-                          style={{ filter: 'brightness(0.95)' }}
+                          className="  card-img-top object-fit-cover"
+                          style={{ filter: 'brightness(0.96)' }}
                         />
                       </div>
+
                     </Carousel.Item>
                   ))}
                 </Carousel>
@@ -1161,7 +1210,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
         }
 
         .food-card {
-          border-radius: 1.5rem;
+          border-radius: 0rem;
           transition: transform 0.3s ease, box-shadow 0.3s ease;
           background: var(--light-color);
         }
@@ -1172,7 +1221,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
         }
 
         .price-tag {
-          background: var(--accent-color);
+          background: var(--primary-color);
           color: white;
           font-size: 1.1rem;
           padding: 0.5rem 1.25rem;
@@ -1193,7 +1242,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
         }
 
         .dietary-tag {
-          padding: 0.5rem 1rem;
+          padding: 0.5rem 0.8rem;
           font-size: 0.9rem;
           font-weight: 500;
           
@@ -1228,7 +1277,7 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
 
         .cert-badge {
           background: var(--primary-color);
-          color: var(--dark-color);
+          color: var(--light-color);
           font-weight: 500;
           padding: 0.5rem 1rem;
         }
@@ -1446,104 +1495,168 @@ const RiderRegistration = ({ show, onClose, onSubmit }) => (
   </Modal>
 );
 
-const CartSidebar = ({ show, cart, updateCart, onClose, userId, loadingOrders = false, orders = [] }) => (
 
 
-  <Offcanvas show={show} onHide={onClose} placement="end">
-  <Offcanvas.Header closeButton>
-    <Offcanvas.Title>Cart & Order History</Offcanvas.Title>
-  </Offcanvas.Header>
-  <Offcanvas.Body>
-    <Tabs defaultActiveKey="cart" className="mb-3">
-      <Tab eventKey="cart" title={`Cart (${cart.length})`}>
-        <ListGroup variant="flush" className="mb-4">
-          {cart.map(item => (
-            <ListGroup.Item key={item.id}>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="mb-0">{item.title}</h6>
-                  <small>KES {item.price}</small>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <Button size="sm" variant="outline-secondary"
-                    onClick={() => updateCart(item, item.quantity - 1)}>
-                    <Dash />
-                  </Button>
-                  <span>{item.quantity}</span>
-                  <Button size="sm" variant="outline-secondary"
-                    onClick={() => updateCart(item, item.quantity + 1)}>
-                    <Plus />
-                  </Button>
-                </div>
-              </div>
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
 
-        <div className="mt-4">
-          <h4 className="d-flex justify-content-between">
-            Total: <span>KES {cart.reduce((sum, i) => sum + (i.price * i.quantity), 0)}</span>
-          </h4>
-          <Button variant="primary" size="lg" className="w-100 mt-3">
-            Checkout
-          </Button>
+
+const DELIVERY_FEE = 100;
+
+const CartContainer = styled(Offcanvas)`
+  width: 380px !important;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.05);
+  background: #f8f9fa;
+`;
+
+const CartItem = styled(ListGroup.Item)`
+  transition: all 0.2s ease;
+  background: transparent !important;
+  border-bottom: 1px solid #eee !important;
+  
+  &:hover {
+    transform: translateX(4px);
+    background: white !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+`;
+
+const FoodImage = styled.img`
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+`;
+
+const FixedFooter = styled.div`
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 1.5rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+  border-radius: 12px 12px 0 0;
+`;
+
+const RemoveButton = styled(Button)`
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    color: #dc3545 !important;
+  }
+`;
+const CartSidebar = ({ show, onClose, cart, updateCart, onCheckout }) => {
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = subtotal + DELIVERY_FEE;
+
+  return (
+    <CartContainer show={show} onHide={onClose} placement="end">
+      <Offcanvas.Header closeButton className="border-bottom bg-white">
+        <Offcanvas.Title className="d-flex align-items-center gap-2">
+          <CartPlus fontSize={24} className="text-primary" />
+          <span className="fw-bold ">Your Food Cart</span>
+          <Badge bg="secondary"   pill>{cart.length}</Badge>
+        </Offcanvas.Title>
+      </Offcanvas.Header>
+
+      <Offcanvas.Body className="d-flex flex-column p-0">
+        <div className="flex-grow-1 overflow-auto p-3">
+          {cart.length === 0 ? (
+            <div className="text-center text-muted py-4">
+              Your cart is empty. Start adding delicious items!
+            </div>
+          ) : (
+            <ListGroup variant="flush">
+              {cart.map(item => (
+                <CartItem key={item.id} className="py-3 px-4">
+                  <Stack direction="horizontal" gap={3} className="align-items-start">
+                    <FoodImage 
+                      src={item.photoUrls || '/placeholder-food.jpg'}
+                      alt={item.title}
+                      className="mt-1"
+                    />
+                    
+                    <Stack className="flex-grow-1">
+                      <h6 className="mb-1 fw-semibold mb-2 ms-3 ">{item.title}</h6>
+                      
+                      <Stack direction="horizontal" gap={2} className="align-items-center ms-3">
+                        <Button 
+                          variant="outline-secondary" 
+                          size="sm"
+                          className="d-flex align-items-center justify-content-center p-1"
+                          style={{ width: '32px' }}
+                          onClick={() => updateCart(item, -1)}
+                          disabled={item.quantity === 1}
+                        >
+                          <Dash />
+                        </Button>
+                        
+                        <span className="text-primary fw-bold">{item.quantity}</span>
+                        
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm"
+                          className="d-flex align-items-center justify-content-center p-1"
+                          style={{ width: '32px' }}
+                          onClick={() => updateCart(item, 1)}
+                        >
+                          <Plus />
+                        </Button>
+                      </Stack>
+                    </Stack>
+
+                    <Stack className="align-items-end">
+                      <div className="text-end mb-2">
+                        <span className="fw-semibold text-dark">KSh {(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                      
+                      <Button 
+                       
+                        size="sm"
+                        className="d-flex align-items-center border-0 bgred gap-1"
+                        onClick={() => updateCart(item, -item.quantity)}
+                      >
+                        <Trash size={14} />
+                        <span   >Remove</span>
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </CartItem>
+              ))}
+            </ListGroup>
+          )}
         </div>
-      </Tab>
 
-      <Tab eventKey="history" title="Order History">
-        {loadingOrders ? (
-          <div className="text-center py-4">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+        <FixedFooter>
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-2">
+              <span className="text-muted">Subtotal:</span>
+              <span className="fw-semibold">KSh {subtotal.toFixed(2)}</span>
+            </div>
+            <div className="d-flex justify-content-between mb-3">
+              <span className="text-muted">Delivery Fee:</span>
+              <span className="fw-semibold">KSh {DELIVERY_FEE.toFixed(2)}</span>
+            </div>
+            <div className="d-flex justify-content-between pt-2 border-top">
+              <span className="fw-bold">Total:</span>
+              <span className="fw-bold text-primary">KSh {total.toFixed(2)}</span>
             </div>
           </div>
-        ) : orders.length === 0 ? (
-          <div className="text-center py-4 text-muted">
-            No previous orders found
-          </div>
-        ) : (
-          <ListGroup variant="flush">
-            {orders.map(order => (
-              <ListGroup.Item key={order.id}>
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <h6 className="mb-1">Order #{order.id}</h6>
-                    <small className="text-muted">
-                      {new Date(order.date).toLocaleDateString()}
-                    </small>
-                    <div className="mt-2">
-                      <Badge bg={order.status === 'completed' ? 'success' : 'warning'}>
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="text-end">
-                    <div>KES {order.total}</div>
-                    <small className="text-muted">
-                      {order.items.length} items
-                    </small>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  {order.items.slice(0, 2).map(item => (
-                    <small key={item.id} className="d-block text-truncate">
-                      {item.title}
-                    </small>
-                  ))}
-                  {order.items.length > 2 && (
-                    <small className="text-muted">
-                      + {order.items.length - 2} more items
-                    </small>
-                  )}
-                </div>
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        )}
-      </Tab>
-    </Tabs>
-  </Offcanvas.Body>
-</Offcanvas>
-);
+          <Button 
+         
+            size="lg" 
+            className="w-100 fw-bold py-3 bgred border-0"
+            onClick={onCheckout}
+            disabled={cart.length === 0}
+          >
+            Proceed to Checkout →
+          </Button>
+        </FixedFooter>
+      </Offcanvas.Body>
+    </CartContainer>
+  );
+};
 
-export default FoodPlatform;
+export   default    FoodPlatform

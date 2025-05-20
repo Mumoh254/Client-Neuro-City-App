@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Row, Col, Card, Carousel, Badge, Button, Spinner, Tabs, Tab, Modal, Form } from 'react-bootstrap';
-import { StarHalf, CartPlus, GeoAlt, Clock, People, Envelope, PersonBadge } from 'react-bootstrap-icons';
+import { StarHalf, CartPlus, GeoAlt, Clock, People, Envelope, PersonBadge  ,  StarFill , PinMapFill  ,   AwardFill , ClockHistory , CashCoin } from 'react-bootstrap-icons';
 import { format, formatDistanceToNow } from 'date-fns';
 
 const ChefProfile = ({ addToCart }) => {
@@ -29,7 +29,7 @@ const ChefProfile = ({ addToCart }) => {
     primaryDark: '#2563eb',
     danger: '#ef4444',
     dangerDark: '#dc2626',
-    purple: '#6366f1',
+    purple: '#2d3436',
     purpleDark: '#8b5cf6'
   };
 
@@ -99,52 +99,121 @@ const ChefProfile = ({ addToCart }) => {
 
   return (
     <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      {/* Chef Header */}
-      <div style={{ 
-        background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-        padding: '2rem 0',
-        color: 'white'
-      }}>
-        <div className="container">
-          <div className="d-flex flex-column flex-lg-row align-items-center gap-5">
-            <img
-              src={'/images/chef.png'}
-              alt={chef.user?.Name}
-              style={{
-                width: '200px',
-                height: '200px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '4px solid white',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-              }}
-            />
-            
-            <div className="text-center text-lg-start">
-              <h1 className="display-4 fw-bold mb-3">{chef.user?.Name}</h1>
-              <div className="d-flex flex-wrap gap-3 justify-content-center">
-                <Badge pill style={{ 
-                  backgroundColor: colors.purple,
-                  padding: '0.5rem 1rem',
-                  fontSize: '1rem'
-                }}>
-                  <PersonBadge className="me-2" />
-                  Member Since {format(new Date(chef.createdAt), 'MMMM yyyy')}
-                </Badge>
-                
-                <Badge pill style={{ 
-                  backgroundColor: colors.danger,
-                  padding: '0.5rem 1rem',
-                  fontSize: '1rem'
-                }}>
-                  <StarHalf className="me-2" />
-                  {chef.rating} Rating ({chef.reviewCount} reviews)
-                </Badge>
-              </div>
+  {/* Chef Header */}
+  <div style={{ 
+    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+    padding: '2rem 0',
+    color: 'white',
+    boxShadow: '0 1px 6px rgba(0, 0, 0, 0.08)'
+  }}>
+    <div className="container">
+      <div className="d-flex flex-column flex-lg-row align-items-center gap-3">
+        {/* Profile Image */}
+        <div className="position-relative" style={{ lineHeight: 0 }}>
+          <img
+            src={'/images/chef.png'}
+            alt={chef.user?.Name}
+            style={{
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid rgba(255,255,255,0.95)',
+              boxShadow: '0 3px 12px rgba(0,0,0,0.12)',
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            bottom: '4px',
+            right: '4px',
+            backgroundColor: colors.danger,
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.15)'
+          }}>
+            <StarFill style={{ color: 'white', fontSize: '0.8rem' }} />
+          </div>
+        </div>
+
+        {/* Chef Info */}
+        <div className="text-center text-lg-start" style={{ flex: 1 }}>
+          <div className="mb-2">
+            <h1 style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              marginBottom: '0.25rem',
+              letterSpacing: '-0.015em',
+              lineHeight: 1.3
+            }}>
+              {chef.user?.Name}
+            </h1>
+            <div style={{
+              display: 'flex',
+              gap: '0.375rem',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: '0.875rem'
+            }}>
+              <PinMapFill style={{ fontSize: '0.9rem' }} />
+              <span>Location {chef?.location} • {chef.area}</span>
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="d-flex flex-wrap gap-1.5 justify-content-center">
+            <div style={{
+              backgroundColor: 'rgba(255,255,255,0.09)',
+              padding: '0.375rem 0.75rem',
+              borderRadius: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              backdropFilter: 'blur(2px)',
+              fontSize: '0.825rem'
+            }}>
+              <CashCoin style={{ fontSize: '0.95rem' }} />
+              <span>Ksh {100} bob / Jikoni Culture</span>
+            </div>
+
+            <div style={{
+              background: `linear-gradient(45deg, ${colors.success}, ${colors.teal})`,
+              padding: '0.375rem 0.75rem',
+              borderRadius: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              fontSize: '0.825rem',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
+            }}>
+              <ClockHistory style={{ fontSize: '0.95rem' }} />
+              <span>{chef.experienceYears}y exp</span>
+            </div>
+
+            <div style={{
+              backgroundColor: 'rgba(255,255,255,0.09)',
+              padding: '0.375rem 0.75rem',
+              borderRadius: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              backdropFilter: 'blur(2px)',
+              fontSize: '0.825rem'
+            }}>
+              <AwardFill style={{ fontSize: '0.95rem' }} />
+              <span>{chef.speciality}</span>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+
 
       {/* Main Content */}
       <div className="container py-5">
@@ -160,8 +229,8 @@ const ChefProfile = ({ addToCart }) => {
                   <div className="mt-4">
                     <h5 className="fw-bold mb-3" style={{ color: colors.purple }}>
                       <GeoAlt className="me-2" /> Location
-                    </h5>
-                    <p className="mb-0">{chef.location}, {chef.city}</p>
+                    </h5>    
+                    <p className="mb-0"> <span className='red2'>{chef.location}</span>, {chef.city}</p>
                   </div>
                 </div>
 
@@ -170,10 +239,8 @@ const ChefProfile = ({ addToCart }) => {
                     <Envelope className="me-2" /> Contact
                   </h5>
                   <Button 
-                    variant="primary"
+                   className='bgred border-0'
                     style={{ 
-                      backgroundColor: colors.purple,
-                      borderColor: colors.purpleDark,
                       width: '100%',
                       padding: '0.75rem',
                       fontSize: '1.1rem'
@@ -311,14 +378,13 @@ const ChefProfile = ({ addToCart }) => {
                       </div>
 
                       <Button
-                        variant="primary"
+                      
                         style={{
-                          backgroundColor: colors.primary,
-                          borderColor: colors.primaryDark,
+                       
                           padding: '0.75rem',
                           fontSize: '1.1rem'
                         }}
-                        className="w-100 rounded-pill"
+                        className="w-100  bgred border-0"
                         onClick={() => addToCart(food)}
                       >
                         <CartPlus className="me-2" /> Add to Cart

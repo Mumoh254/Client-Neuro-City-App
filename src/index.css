@@ -445,13 +445,13 @@ h1 {
 
 .price-badge {
   position: absolute;
-  bottom: 15px;
-  right: 15px;
+  bottom: 10px;
+  right: 10px;
   background: var(--primary-red);
   color: white!important;
   font-size: 1.2rem;
   padding: 8px 20px;
-  border-radius: 50px;
+ 
   font-weight: 700;
 }
 
@@ -517,7 +517,7 @@ h1 {
 }
 
 .chef-icon {
-  color: var(--primary-red);
+  color: var(--primary-red) !important;
   font-size: 1.2rem;
 }
 
@@ -537,7 +537,7 @@ h1 {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  border: 2px solid var(--primary-red);
+  border: 2px solid var(--primary-red) !important;
 }
 
 .chef-name {
@@ -617,4 +617,15 @@ h1 {
 .add-to-cart-btn:hover {
   background: var(--dark-red)!important;
   transform: scale(1.02);
+}
+
+.red2{
+   background: var(--primary-red)!important;
+   padding: 2px  4px ;
+   border-radius: 2px;
+   margin-right: 3px;
+   color: #fff;
+}
+.bgred{
+     background: var(--primary-red)!important;
 }
