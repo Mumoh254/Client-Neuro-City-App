@@ -414,11 +414,11 @@ h1 {
 
 .food-platform-container {
   background: var(--cream);
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .food-card {
-  border-radius: 20px;
+  border-radius: 0px;
   overflow: hidden;
   border: none;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -522,7 +522,7 @@ h1 {
 }
 
 .chef-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--dark-gray);
   margin: 0;
 }
@@ -541,7 +541,7 @@ h1 {
 }
 
 .chef-name {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--dark-gray);
   margin: 0;
 }
@@ -628,4 +628,14 @@ h1 {
 }
 .bgred{
      background: var(--primary-red)!important;
+}
+
+
+
+/*    srotroes  container  */
+
+
+.stories-container {
+  overflow-x: auto;
+  white-space: nowrap;
 }

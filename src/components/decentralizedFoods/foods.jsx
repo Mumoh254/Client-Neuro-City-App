@@ -9,6 +9,9 @@ import {
 } from 'react-bootstrap-icons';
 
 import { useNavigate } from 'react-router-dom'; 
+  import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
 
 import styled from 'styled-components';
 import { formatDistanceToNow } from 'date-fns';
@@ -118,7 +121,7 @@ const FoodPlatform = () => {
     riders: [],
     cart: [],
      showCart: false,
-    cart: [],  // Properly initialized array
+    cart: [],  // 
     
     loadingOrders: true,
     loading: true,
@@ -134,7 +137,11 @@ const FoodPlatform = () => {
     isRiderMode: localStorage.getItem('isRider') === 'true',
     filters: { area: 'all', specialty: 'all', mealType: 'all' }
   });
-const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"
+
+ const  BASE_URL   =   "http://localhost:8000/apiV1/smartcity-ke"
+  const [showRiderReg, setShowRiderReg] = useState(false);
+
+
   const [userId, setUserId] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
@@ -152,12 +159,13 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
     }
   };
 
+  
   const loadData = async () => {
     try {
       const [foodsRes, ordersRes, ridersRes] = await Promise.all([
         fetch('${BASE_URL}/get/foods'),
         fetch('/api/orders'),
-        fetch('/api/riders')
+        fetch(`${BASE_URL}/riders`)
       ]);
 
    
@@ -187,8 +195,6 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
   useEffect(() => { loadData(); }, []);
 
 
-
-  
   useEffect(() => {
     
     const fetchData = async () => {
@@ -241,10 +247,6 @@ const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrende
       console.error('Create error:', err);
     }
   };
-
-
-  
-
 
 
   const FilterSection = () => (
@@ -408,25 +410,67 @@ const calculateTotal = () =>
     }
   };
 
-  const registerRider = async (formData) => {
-    try {
-      const res = await fetch('/api/riders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
 
-      const data = await res.json();
-      if(res.ok) {
-        localStorage.setItem('riderId', data.rider.id);
-        localStorage.setItem('isRider', 'true');
-        setState(s => ({ ...s, isRiderMode: true, showRiderReg: false }));
-        showNotification('Rider Mode Activated', 'Start accepting deliveries!');
-      }
-    } catch(err) {
-      console.error('Rider registration error:', err);
+
+
+const MySwal = withReactContent(Swal);
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end', // top-right corner
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
+const handleRiderRegistration = async (formData) => {
+  try {
+    const res = await fetch(`${BASE_URL}/rider`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: userId,
+        nationalId: formData.nationalId,
+        city: formData.city,
+        area: formData.area,
+        neighborhood: formData.neighborhood,
+        vehicleType: formData.vehicleType,
+        registrationPlate: formData.registrationPlate,
+        workHours: formData.workHours,
+        serviceArea: formData.serviceArea,
+        agreedToTerms: formData.agreedToTerms,
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('riderId', data.rider.id);
+      localStorage.setItem('isRider', 'true');
+      setShowRiderReg(false);
+
+      Toast.fire({
+        icon: 'success',
+        title: 'Rider Registered Successfully'
+      });
+    } else {
+      Toast.fire({
+        icon: 'error',
+        title: data.message || 'Registration failed'
+      });
     }
-  };
+
+  } catch (err) {
+    console.error('Registration error:', err);
+    Toast.fire({
+      icon: 'error',
+      title: 'Something went wrong. Try again!'
+    });
+  }
+};
 
 
   
@@ -503,29 +547,52 @@ const calculateTotal = () =>
     </Modal>
   );
 
-
-  const RiderRegistrationModal = ({ show, onClose, onSubmit }) => (
+const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
+  return (
     <Modal show={show} onHide={onClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>Rider Registration</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          onSubmit({
-            nationalId: formData.get('nationalId'),
-            vehicle: formData.get('vehicle'),
-            registrationPlate: formData.get('registrationPlate'),
-            workHours: formData.get('workHours'),
-            serviceArea: formData.get('serviceArea')
-          });
-        }}>
+        <Form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            onSubmit({
+              nationalId: formData.get('nationalId'),
+              city: formData.get('city'),
+              area: formData.get('area'),
+              neighborhood: formData.get('neighborhood'),
+              vehicleType: formData.get('vehicle'),
+              registrationPlate: formData.get('registrationPlate'),
+              workHours: formData.get('workHours'),
+              serviceArea: formData.get('serviceArea'),
+              agreedToTerms: formData.get('agreedToTerms') === 'on',
+              userId: userId // Pass the userId from props
+            });
+          }}
+        >
+          {/* Form fields remain the same */}
           <Form.Group className="mb-3">
             <Form.Label>National ID</Form.Label>
             <Form.Control name="nationalId" required />
           </Form.Group>
-  
+
+          <Form.Group className="mb-3">
+            <Form.Label>City</Form.Label>
+            <Form.Control name="city" required />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Area</Form.Label>
+            <Form.Control name="area" required />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Neighborhood</Form.Label>
+            <Form.Control name="neighborhood" required />
+          </Form.Group>
+
           <Form.Group className="mb-3">
             <Form.Label>Vehicle Type</Form.Label>
             <Form.Select name="vehicle" required>
@@ -534,22 +601,31 @@ const calculateTotal = () =>
               <option value="Car">Car</option>
             </Form.Select>
           </Form.Group>
-  
+
           <Form.Group className="mb-3">
             <Form.Label>License Plate</Form.Label>
             <Form.Control name="registrationPlate" required />
           </Form.Group>
-  
+
           <Form.Group className="mb-3">
             <Form.Label>Work Hours</Form.Label>
             <Form.Control name="workHours" placeholder="9am - 5pm" required />
           </Form.Group>
-  
+
           <Form.Group className="mb-3">
             <Form.Label>Service Area</Form.Label>
             <Form.Control name="serviceArea" required />
           </Form.Group>
-  
+
+          <Form.Group className="mb-3">
+            <Form.Check
+              type="checkbox"
+              label="I agree to the terms and conditions"
+              name="agreedToTerms"
+              required
+            />
+          </Form.Group>
+
           <Button type="submit" variant="primary" className="w-100">
             Register as Rider
           </Button>
@@ -557,7 +633,8 @@ const calculateTotal = () =>
       </Modal.Body>
     </Modal>
   );
-  
+};
+
 
   return (
     <Container fluid className=" px-2" style={{ backgroundColor: theme.light }}>
@@ -829,22 +906,58 @@ const calculateTotal = () =>
     </tbody>
   </table>
 </div>
-          <Form
+
+
+    <Form
   onSubmit={async (e) => {
     e.preventDefault();
 
     const formData = new FormData(e.target);
 
-    const response = await fetch("http://localhost:8000/apiV1/smartcity-ke/create/food", {
-      method: "POST",
-      body: formData
+    // Show loading toast
+    Toast.fire({
+      icon: 'info',
+      title: 'Submitting...',
+      timer: 5000,
+      didOpen: () => {
+        Swal.showLoading();
+      }
     });
 
-    const data = await response.json();
-    console.log(data);
+    try {
+      const response = await fetch("http://localhost:8000/apiV1/smartcity-ke/create/food", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (response.ok) {
+        Toast.fire({
+          icon: 'success',
+          title: 'Food successfully created'
+        });
+        // Optionally, reset the form
+        e.target.reset();
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: data.message || 'Something went wrong'
+        });
+      }
+
+    } catch (error) {
+      console.error(error);
+      Toast.fire({
+        icon: 'error',
+        title: 'Network error. Please try again'
+      });
+    }
   }}
   encType="multipart/form-data"
 >
+
   <Form.Group>
     <Form.Label>Title</Form.Label>
     <Form.Control name="title" required />
@@ -864,11 +977,12 @@ const calculateTotal = () =>
     <Form.Label>Meal Type</Form.Label>
     <Form.Control name="mealType" required />
   </Form.Group>
+<Form.Group>
+  <Form.Label>Upload Food Images</Form.Label>
+<Form.Control name="images" type="file" multiple required />
 
-  <Form.Group>
-    <Form.Label>Upload Food Images</Form.Label>
-    <Form.Control name="images" type="file" multiple required />
-  </Form.Group>
+</Form.Group>
+
 
   <Form.Group>
     <Form.Label>Area</Form.Label>
@@ -964,7 +1078,7 @@ const calculateTotal = () =>
          <div className="py-4 container-xl">
          {/* Stories Section */}
          <div className="mb-5">
-  <h5 className="mb-3 fw-bold text-secondary">Jikoni Culture Stories!!</h5>
+  <h4 className="mb-3 fw-bold text-secondary">Jikoni Culture Stories!!</h4>
   <div className="stories-container">
     <div className="stories-scroll">
       {filteredFoods.map(food => (
@@ -1173,13 +1287,35 @@ const calculateTotal = () =>
                   {food.chef.certifications.length > 0 && (
                     <div className="certifications">
                       <span className="text-muted small d-block mb-2">Certifications:</span>
-                      <div className="d-flex flex-wrap gap-2">
-                        {food.chef.certifications.map((cert, i) => (
-                          <Badge key={i} pill className="cert-badge">
-                            {cert}
-                          </Badge>
-                        ))}
-                      </div>
+                     <div className="d-flex flex-wrap gap-2">
+  {food.chef.certifications.map((cert, i) => (
+    <Badge
+      key={i}
+      pill
+      className="py-2 px-3"
+      style={{
+        background: 'linear-gradient(135deg, #6bc1ff, #00b4d8)', // cool gradient blue
+        color: 'white',
+        boxShadow: '0 4px 8px rgba(0, 180, 216, 0.4)',
+        fontWeight: '600',
+        fontSize: '0.9rem',
+        cursor: 'default',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-3px)';
+        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 180, 216, 0.6)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 180, 216, 0.4)';
+      }}
+    >
+      {cert}
+    </Badge>
+  ))}
+</div>
+
                     </div>
                   )}
                 </div>
@@ -1312,7 +1448,7 @@ const calculateTotal = () =>
       <RiderRegistrationModal
         show={state.showRiderReg}
         onClose={() => setState(s => ({ ...s, showRiderReg: false }))}
-        onSubmit={registerRider}
+        onSubmit={handleRiderRegistration}
       />
 
       {/* Cart Sidebar */}
