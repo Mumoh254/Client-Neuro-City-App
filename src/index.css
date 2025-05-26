@@ -67,20 +67,8 @@ body {
   transform: translateY(-2px);
 }
 
-.weather {
-  background: #3498db;
-  color: white;
-}
 
-.chat {
-  background: #2ecc71;
-  color: white;
-}
 
-.phone {
-  background: #e74c3c;
-  color: white;
-}
 
 .review-toggle-btn {
   position: fixed;
@@ -403,6 +391,7 @@ h1 {
 
 /* foods */
 :root {
+
   --primary-red: #FF4532;
   --dark-red: #D93A28;
   --cream: #FFF8F0;
@@ -410,6 +399,7 @@ h1 {
   --light-gray: #5A5A5A;
   --accent-green: #C3E703;
   --accent-blue: #96D1C7;
+  
 }
 
 .food-platform-container {
@@ -631,11 +621,3 @@ h1 {
 }
 
 
-
-/*    srotroes  container  */
-
-
-.stories-container {
-  overflow-x: auto;
-  white-space: nowrap;
-}

@@ -25,8 +25,8 @@ const ChefProfile = ({ addToCart }) => {
 
   // Color scheme
   const colors = {
-    primary: '#3b82f6',
-    primaryDark: '#2563eb',
+    primary: '#2ecc71',
+    primaryDark: '#2ecc71',
     danger: '#ef4444',
     dangerDark: '#dc2626',
     purple: '#2d3436',
@@ -352,12 +352,13 @@ const ChefProfile = ({ addToCart }) => {
                           </small>
                         </div>
                         <Badge 
-                          pill 
+                          
                           style={{ 
-                            backgroundColor: colors.danger,
+                            background: '#FF4532',
                             fontSize: '1rem',
                             padding: '0.5rem 1rem'
                           }}
+                        
                         >
                           KES {food.price}
                         </Badge>

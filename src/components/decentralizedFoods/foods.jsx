@@ -13,11 +13,16 @@ import { useNavigate } from 'react-router-dom';
 import withReactContent from 'sweetalert2-react-content';
 
 
+import { Heart, HeartFill } from 'react-bootstrap-icons';
+import { FaEye } from "react-icons/fa";
+
 import styled from 'styled-components';
 import { formatDistanceToNow } from 'date-fns';
 import { GiKenya } from "react-icons/gi";
 import { getUserIdFromToken } from '../handler/tokenDecoder';
 
+
+import popSound from '../../../public/audio/cliks.mp3';
 const theme = {
   primary: '#2563eb',
   secondary: '#c3e703',
@@ -98,10 +103,35 @@ const StoryItem = styled.div`
   }
 `;
 
-const FoodPlatform = () => {
+const FoodPlatform = (   food ) => {
 
 
 
+
+
+  // View increment effect
+  useEffect(() => {
+    const incrementViews = async () => {
+      try {
+        await fetch(`${BASE_URL}/food/${food.id}/view`, { method: 'PUT' });
+      } catch (error) {
+        console.error('Error incrementing views:', error);
+      }
+    };
+    incrementViews();
+  }, [food.id]);
+
+
+
+  
+
+  const playSound = () => {
+    new Audio(popSound).play();
+  };
+  
+  // 
+
+  
   const colors = {
     primary: '#c3e703', // Vibrant lime green
     secondary: '#96d1c7', // Soft teal
@@ -139,6 +169,7 @@ const FoodPlatform = () => {
   });
 
  const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"
+//  
   const [showRiderReg, setShowRiderReg] = useState(false);
 
 
@@ -219,6 +250,27 @@ const FoodPlatform = () => {
     fetchData();
   }, []);
 
+
+  const handleLike = async (foodId) => {
+  try {
+    playSound()
+    const response = await fetch(`${BASE_URL}/food/${foodId}/like`, { 
+      method: 'PUT' 
+    });
+    
+    if (response.ok) {
+      setState(prev => ({
+        ...prev,
+        foods: prev.foods.map(food => 
+          food.id === foodId ? { ...food, likes: food.likes + 1 } : food
+        )
+      }));
+    }
+  } catch (error) {
+    console.error('Error liking food:', error);
+  }
+};
+
   const filteredFoods = state.foods.filter(food => {
     const matchesArea = state.filters.area === 'all' || food.area === state.filters.area;
     const matchesSpecialty = state.filters.specialty === 'all' || food.chef?.speciality === state.filters.specialty;
@@ -230,6 +282,7 @@ const FoodPlatform = () => {
   // Chef Food Management
   const createFood = async (foodData) => {
     try {
+      playSound()
       const res = await fetch(`${BASE_URL}/food`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -308,6 +361,7 @@ const FoodPlatform = () => {
 
   const updateFood = async (foodData) => {
     try {
+      playSound()
       const res = await fetch(`${BASE_URL}/food/${foodData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -325,6 +379,7 @@ const FoodPlatform = () => {
 
   const deleteFood = async (foodId) => {
     try {
+      playSound()
       await fetch(`${BASE_URL}/food/${foodId}`, {
         method: 'DELETE'
       });
@@ -338,6 +393,7 @@ const FoodPlatform = () => {
   // Orders Management
   const updateOrderStatus = async (orderId, status) => {
     try {
+      playSound()
       await fetch(`/api/orders/${orderId}`, {
         method: 'PATCH',
         body: JSON.stringify({ status })
@@ -353,6 +409,7 @@ const FoodPlatform = () => {
 
   // Add this cart management logic
 const updateCart = (item, quantityChange) => {
+  playSound()
   setState(prev => {
     const existingItem = prev.cart.find(i => i.id === item.id);
     let newCart = [...prev.cart];
@@ -392,6 +449,7 @@ const calculateTotal = () =>
   // Registration Handlers
   const registerChef = async (formData) => {
     try {
+      playSound()
       const res = await fetch(`${BASE_URL}/chef`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -428,6 +486,7 @@ const Toast = Swal.mixin({
 });
 const handleRiderRegistration = async (formData) => {
   try {
+    playSound()
     const res = await fetch(`${BASE_URL}/rider`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -637,7 +696,7 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
 
 
   return (
-    <Container fluid className=" px-2" style={{ backgroundColor: theme.light }}>
+    <Container fluid className=" px-0" style={{ backgroundColor: theme.light }}>
       {/* Header */}
      <header className="header bg-white shadow-sm sticky-top">
   <div className="container">
@@ -647,7 +706,7 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
         <GiKenya className="text-primary header-icon" />
         <h1 className="m-0 brand-title">
           <span className="text-primary">Jikoni</span>
-          <span className="text-danger">Express</span>
+          <span className="text-danger px-1">Express</span>
         </h1>
       </div>
 
@@ -1050,6 +1109,7 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
 
 
           {/* Riders Sidebar */}
+
       <Offcanvas show={state.showBikers} onHide={() => setState(s => ({ ...s, showBikers: false }))} placement="end">
       <Offcanvas.Header closeButton>
         <Offcanvas.Title>Available Riders</Offcanvas.Title>
@@ -1076,27 +1136,34 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
 ) : (
          // User Marketplace
          <div className="py-4 container-xl">
-         {/* Stories Section */}
-         <div className="mb-5">
-  <h4 className="mb-3 fw-bold text-secondary">Jikoni Culture Stories!!</h4>
+  {/* Stories Section */}
+<div className="stories-fixed-section bg-white shadow-sm z-3 py-3">
+  <h4 className="mb-3 fw-bold px-3" style={{ color: '#FF4532' }}>🍴 Jikoni  Express   Stories</h4>
+
   <div className="stories-container">
-    <div className="stories-scroll">
+    <div className="stories-scroll px-3">
       {filteredFoods.map(food => (
         <div 
           key={food.id}
           className="story-item"
           onClick={() => navigate(`/chef/${food.chefId}`)}
+          style={{ marginRight: '1.5rem' }}
         >
-          <div className="story-image-wrapper">
-            <img
-              src={food.photoUrls?.[0] || '/placeholder-food.jpg'}
-              alt={food.title}
-              className="story-img"
-            />
-            <div className="gradient-overlay"></div>
-            <Badge pill className="location-badge">
-              {food.area}
-            </Badge>
+          <div className="story-image-wrapper position-relative">
+            <div className="story-gradient-border">
+              <img
+                src={food.photoUrls?.[0] || '/placeholder-food.jpg'}
+                alt={food.title}
+                className="story-img"
+              />
+            </div>
+            <div className="story-details">
+              <span className="chef-name">{food.chef.user.Name}</span>
+              <Badge pill className="location-badge">
+                <GeoAlt size={12} className="me-1" />
+                <span className="area-name">{food.area}</span>
+              </Badge>
+            </div>
           </div>
         </div>
       ))}
@@ -1112,19 +1179,18 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
     .stories-scroll {
       display: flex;
       overflow-x: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--grenish-color) transparent;
-      gap: 1rem;
-      padding-bottom: 1rem;
+      gap: 0rem;
+      padding: 1rem 0 1.5rem;
       -webkit-overflow-scrolling: touch;
     }
 
     .stories-scroll::-webkit-scrollbar {
       height: 6px;
+      background-color: #f5f5f5;
     }
 
     .stories-scroll::-webkit-scrollbar-thumb {
-      background: var(--grenish-color);
+      background: linear-gradient(45deg, #27ae60, #2ecc71);
       border-radius: 4px;
     }
 
@@ -1134,308 +1200,321 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
       width: 100px;
       cursor: pointer;
       transition: transform 0.2s ease;
+      margin: 0 0.5rem;
     }
 
     .story-item:hover {
-      transform: translateY(-3px);
+      transform: translateY(-5px);
     }
 
-    .story-image-wrapper {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      border: 2px solid transparent;
-      transition: border-color 0.2s ease;
-    }
-
-    .story-item:hover .story-image-wrapper {
-      border-color: var(--grenish-color);
+    .story-gradient-border {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      padding: 3px;
+      background: linear-gradient(45deg, #FF4532 0%, #FF4532 100%);
+      margin: 0 auto;
+      box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
     }
 
     .story-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid white;
     }
 
-    .gradient-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 40%;
-      background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+    .story-details {
+      text-align: center;
+      margin-top: 8px;
+      padding: 0 0.5rem;
+    }
+
+    .chef-name {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2d3436;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .location-badge {
       position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--grenish-color) !important;
-      color: var(--black-color) !important;
-      font-weight: 600;
-      font-size: 0.7rem;
+      top: -17px;
+      right: 5px;
+      background: #FF4532 !important;
+      color: white !important;
+      font-size: 0.65rem;
       padding: 4px 8px;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: none;
+      max-width: 80px;
+      display: flex;
+      align-items: center;
+    }
+
+    .area-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      max-width: 60px;
     }
 
     @media (max-width: 768px) {
       .story-item {
-        width: 85px;
+        width: 80px;
+        margin-right: 1rem;
       }
       
-      .story-image-wrapper {
-        width: 85px;
-        height: 85px;
+      .story-gradient-border {
+        width: 72px;
+        height: 72px;
+      }
+      
+      .chef-name {
+        font-size: 0.75rem;
+      }
+      
+      .location-badge {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+        max-width: 70px;
       }
     }
   `}</style>
 </div>
 
 
-         {/* Food Grid */}
-         <div className="food-platform" style={{ backgroundColor: colors.light }}>
+      {/* Food Grid */}
+{/* Food Grid */}
+<div className="food-platform" style={{ backgroundColor: colors.light }}>
+  <Row className="g-4 p-3">
+    {state.foods.map(food => (
+      <Col key={food.id} xs={12} md={6} lg={4} xl={4}> {/* Responsive columns */}
+        <Card className="h-100 shadow-lg border-0 overflow-hidden food-card">
+          {/* Image Section */}
+          <div className="position-relative">
+            <Carousel interval={null} indicators={food.photoUrls.length > 1}>
+              {food.photoUrls.map((img, i) => (
+                <Carousel.Item key={i}>
+                  <div className="ratio ratio-4x3">
+                    <img
+                      src={img}
+                      alt={`${food.title} - Photo ${i+1}`}
+                      className="card-img-top object-fit-cover"
+                      style={{ filter: 'brightness(0.96)' }}
+                    />
+                  </div>
+                </Carousel.Item>
+              ))}
+            </Carousel>
+            
+            {/* Floating Price Tag */}
+            <div className="position-absolute top-0 end-0 m-3">
+              <Badge  className="price-tag fw-bold">
+                KES {food.price}
+              </Badge>
+            </div>
+          </div>
 
+          {/* Card Body */}
+          <Card.Body className="d-flex flex-column pt-3">
+            {/* Food Metadata */}
+            <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+              <Badge pill className="meal-type">
+                {food.mealType}
+              </Badge>
+              <small className="text-muted d-flex align-items-center">
+                <Clock className="me-1" size={14} />
+                {formatDistanceToNow(new Date(food.createdAt))} ago
+              </small>
+            </div>
 
-      <Row xs={1} sm={2} md={3} lg={4} className="g-2 p-1">
-        {state.foods.map(food => (
-          <Col key={food.id}>
-            <Card className="h-100 shadow-lg border-0 overflow-hidden food-card">
-              {/* Image Section */}
-              <div className="position-relative">
-                <Carousel interval={null} indicators={food.photoUrls.length > 1}>
-                  {food.photoUrls.map((img, i) => (
-                    <Carousel.Item key={i}>
-                      <div className="ratio ratio-4x3">
-                        <img
-                          src={img}
-                          alt={`${food.title} - Photo ${i+1}`}
-                          className="  card-img-top object-fit-cover"
-                          style={{ filter: 'brightness(0.96)' }}
-                        />
-                      </div>
+            {/* Food Title */}
+            <h3 className="mb-2 fw-bold food-title fs-4">{food.title}</h3>
 
-                    </Carousel.Item>
-                  ))}
-                </Carousel>
-                
-                {/* Floating Price Tag */}
-                <div className="position-absolute top-0 end-0 m-3">
-                  <Badge pill className="price-tag">
-                    KES {food.price}
-                  </Badge>
+            {/* Food Description */}
+            <p className="text-secondary mb-3 flex-grow-1">{food.description}</p>
+
+            {/* Dietary Tags */}
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              <Badge pill className="dietary-tag speciality">
+                {food.speciality}
+              </Badge>
+              <Badge pill className="dietary-tag cuisine">
+                {food.cuisineType}
+              </Badge>
+              <Badge pill className="dietary-tag dietary">
+                {food.dietary}
+              </Badge>
+            </div>
+
+            {/* Chef Profile */}
+            <div className="chef-profile bg-white p-3 rounded-3 mt-auto">
+              <div className="d-flex align-items-center gap-3">
+                <div 
+                  className="chef-avatar hover-scale"
+                  onClick={() => {
+    playSound();
+    navigate(`/chef/${food.chefId}`);
+  }}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    minWidth: '60px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: '2px solid #FF4532',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <img
+                    src={food.chef.profilePicture || '/images/chef.png'}
+                    alt={food.chef.user.Name}
+                    className="w-100 h-100 object-fit-cover"
+                  />
+                </div>
+
+                <div className="flex-grow-1">
+                  <h6 className="mb-0 fw-bold text-truncate">{food.chef.user.Name}</h6>
+                  <div className="d-flex align-items-center gap-2 mt-1">
+                    <StarFill className="text-warning" size={14} />
+                    <small className="fw-medium">{food.chef.rating}</small>
+                    <span className="text-muted">•</span>
+                    <small className="fw-medium">{food.chef.experienceYears}yrs</small>
+                  </div>
+                </div>
+<div 
+  className="d-flex flex-column text-muted align-items-center gap-2 p-2" 
+  style={{
+   border: '0.5px solid rgba(51, 51, 51, 0.1)', // thinner + less intense
+    borderRadius: '6px', // optional for slight rounding
+    width: 'fit-content'
+  }}
+>
+                  <Button 
+                    variant="link" 
+                    className="p-0 text-danger hover-scale"
+                    onClick={() => handleLike(food.id)}
+                  >
+                    {food.likes > 0 ? <HeartFill size={20} /> : <Heart size={24} />}
+                    <span className="d-block small fw-bold">{food.likes}</span>
+                  </Button>
+                  <div className="d-flex align-items-center gap-1 text-success">
+                    <FaEye size={20} />
+                    <span className="small fw-bold">{food.views}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Card Body */}
-              <Card.Body className="d-flex flex-column pt-4">
-                {/* Food Metadata */}
-                <div className="mb-3">
-                  <Badge pill className="meal-type me-2">
-                    {food.mealType}
-                  </Badge>
-                  <small className="text-muted">
-                    <Clock className="me-1" />
-                    {formatDistanceToNow(new Date(food.createdAt))} ago
-                  </small>
-                </div>
-
-                {/* Food Title */}
-                <h3 className="mb-3 fw-bold food-title">{food.title}</h3>
-
-                {/* Food Description */}
-                <p className="text-secondary mb-4 flex-grow-1">{food.description}</p>
-
-                {/* Dietary Tags */}
-                <div className="d-flex flex-wrap gap-2 mb-4">
-                  <Badge pill className="dietary-tag speciality">
-                    {food.speciality}
-                  </Badge>
-                  <Badge pill className="dietary-tag cuisine">
-                    {food.cuisineType}
-                  </Badge>
-                  <Badge pill className="dietary-tag dietary">
-                    {food.dietary}
-                  </Badge>
-                </div>
-
-                {/* Chef Profile */}
-                <div className="chef-profile bg-white p-3 rounded-3">
-                  <div className="d-flex align-items-center mb-3">
-                    <img
-                      src={food.chef.avatar || '/images/chef.png'}
-                      alt={food.chef.user.Name}
-                      className="chef-avatar me-3"
-                    />
-                    <div>
-                      <h6 className="mb-0 fw-bold">{food.chef.user.Name}</h6>
-                      <div className="d-flex align-items-center">
-                        <StarFill className="text-warning me-1" />
-                        <span className="small">{food.chef.rating}</span>
-                        <span className="mx-2">•</span>
-                        <span className="small">{food.chef.experienceYears} yrs</span>
-                      </div>
-                    </div>
+              {/* Certifications */}
+              {food.chef.certifications.length > 0 && (
+                <div className="mt-3">
+                  <h6 className="text-uppercase small mb-2 fw-bold text-muted">Certifications</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    {food.chef.certifications.map((cert, i) => (
+                      <Badge
+                        key={i}
+               
+                        className="d-flex align-items-center py-2 px-3 hover-scale"
+                        style={{
+                          background: 'linear-gradient(45deg, #27ae60, #2ecc71)',
+                          color: 'white',
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        {cert}
+                      </Badge>
+                    ))}
                   </div>
-
-                  {/* Certifications */}
-                  {food.chef.certifications.length > 0 && (
-                    <div className="certifications">
-                      <span className="text-muted small d-block mb-2">Certifications:</span>
-                     <div className="d-flex flex-wrap gap-2">
-  {food.chef.certifications.map((cert, i) => (
-    <Badge
-      key={i}
-      pill
-      className="py-2 px-3"
-      style={{
-        background: 'linear-gradient(135deg, #6bc1ff, #00b4d8)', // cool gradient blue
-        color: 'white',
-        boxShadow: '0 4px 8px rgba(0, 180, 216, 0.4)',
-        fontWeight: '600',
-        fontSize: '0.9rem',
-        cursor: 'default',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-3px)';
-        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 180, 216, 0.6)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 180, 216, 0.4)';
-      }}
-    >
-      {cert}
-    </Badge>
-  ))}
-</div>
-
-                    </div>
-                  )}
                 </div>
+              )}
+            </div>
 
-                {/* Add to Cart Button */}
-                <Button 
-                  variant="primary" 
-                  className="add-to-cart-btn mt-4"
-                  onClick={() => updateCart(food, 1)}
-                >
-                  <CartPlus className="me-2" />
-                  Add to Cart
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+            {/* Add to Cart Button */}
+            <Button 
+              variant="primary" 
+              className="add-to-cart-btn mt-3 w-100 py-2"
+              onClick={() => updateCart(food, 1)}
+            >
+              <CartPlus className="me-2" size={20} />
+              Add to Cart
+            </Button>
+          </Card.Body>
+        </Card>
+      </Col>
+    ))}
+  </Row>
 
-      {/* Global Styles */}
-      <style jsx global>{`
-        :root {
-          --primary-color: ${colors.primary};
-          --secondary-color: ${colors.secondary};
-          --accent-color: ${colors.accent};
-          --dark-color: ${colors.dark};
-          --light-color: ${colors.light};
-        }
+  {/* Responsive Styles */}
+  <style jsx global>{`
+    .price-tag {
+      background: linear-gradient(45deg,#2ecc71, #2ecc71) !important;
+      color: white !important;
+      font-size: 1.1rem;
+      padding: 0.5rem 1.25rem;
+      box-shadow: 0 4px 12px rgba(255,69,50,0.3);
+    }
 
-        .food-card {
-          border-radius: 0rem;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-          background: var(--light-color);
-        }
+    /* Small devices (1 column) */
+    @media (max-width: 767.98px) {
+      .food-card {
+        max-width: 100%;
+      }
+      .food-title {
+        font-size: 1.25rem;
+      }
+      .chef-profile {
+        padding: 1rem !important;
+      }
+    }
 
-        .food-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-        }
+    /* Medium devices (2 columns) */
+    @media (min-width: 768px) and (max-width: 1199.98px) {
+      .food-card {
+        max-width: 100%;
+      }
+      .food-title {
+        font-size: 1.3rem;
+      }
+      .chef-avatar {
+        width: 50px !important;
+        height: 50px !important;
+      }
+    }
 
-        .price-tag {
-          background: var(--primary-color);
-          color: white;
-          font-size: 1.1rem;
-          padding: 0.5rem 1.25rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+    /* Large devices (3 columns) */
+    @media (min-width: 1200px) {
+      .food-card {
+        max-width: 380px;
+        margin: 0 auto;
+      }
+      .food-title {
+        font-size: 1.4rem;
+      }
+      .chef-profile {
+        padding: 1.5rem !important;
+      }
+    }
 
-        .meal-type {
-          background: var(--secondary-color);
-          color: var(--dark-color);
-          font-weight: 600;
-          padding: 0.5rem 1rem;
-        }
-
-        .food-title {
-          color: var(--dark-color);
-          font-size: 1.5rem;
-          line-height: 1.3;
-        }
-
-        .dietary-tag {
-          padding: 0.5rem 0.8rem;
-          font-size: 0.9rem;
-          font-weight: 500;
-          
-          &.speciality {
-            background: var(--primary-color);
-            color: var(--dark-color);
-          }
-          
-          &.cuisine {
-            background: var(--secondary-color);
-            color: var(--dark-color);
-          }
-          
-          &.dietary {
-            background: var(--accent-color);
-            color: white;
-          }
-        }
-
-        .chef-profile {
-          border: 2px solid var(--secondary-color);
-          background: rgba(255, 255, 255, 0.9);
-        }
-
-        .chef-avatar {
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
-          border: 2px solid var(--primary-color);
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .cert-badge {
-          background: var(--primary-color);
-          color: var(--light-color);
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-        }
-
-        .add-to-cart-btn {
-          background: var(--accent-color);
-          border: none;
-          padding: 1rem;
-          font-weight: 600;
-          border-radius: 1rem;
-          transition: all 0.3s ease;
-          
-          &:hover {
-            background: var(--dark-color);
-            transform: scale(1.05);
-          }
-        }
-      `}</style>
-    </div>
-    
-       </div>
-     )}
+    .add-to-cart-btn {
+      background: linear-gradient(45deg, #FF4532,#FF4532) !important;
+      border: none !important;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255,69,50,0.3);
+      }
+    }
+  `}</style>
+</div>
+</div>
+)}
 
 
       {/* Registration Modals */}
@@ -1686,6 +1765,7 @@ const RemoveButton = styled(Button)`
 const CartSidebar = ({ show, onClose, cart, updateCart, onCheckout }) => {
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const total = subtotal + DELIVERY_FEE;
+  
 
   return (
     <CartContainer show={show} onHide={onClose} placement="end">
@@ -1795,4 +1875,4 @@ const CartSidebar = ({ show, onClose, cart, updateCart, onCheckout }) => {
   );
 };
 
-export   default    FoodPlatform
+export   default    FoodPlatform;
