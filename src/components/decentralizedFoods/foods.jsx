@@ -169,7 +169,7 @@ const FoodPlatform = (   food ) => {
   });
 
  const  BASE_URL   =   "https://neuro-apps-api-express-js-production-redy.onrender.com/apiV1/smartcity-ke"
-//  
+// 
   const [showRiderReg, setShowRiderReg] = useState(false);
 
 
@@ -1135,46 +1135,84 @@ const RiderRegistrationModal = ({ show, onClose, onSubmit, userId }) => {
   </div>
 ) : (
          // User Marketplace
-         <div className="py-4 container-xl">
+       <div className="py-4 container-xl">
   {/* Stories Section */}
-<div className="stories-fixed-section bg-white shadow-sm z-3 py-3">
-  <h4 className="mb-3 fw-bold px-3" style={{ color: '#FF4532' }}>🍴 Jikoni  Express   Stories</h4>
+  <div className="stories-fixed-section bg-white shadow-sm z-3 py-3">
+    <h4 className="mb-3 fw-bold px-3" style={{ color: '#FF4532' }}>🍴 Jikoni Express Stories</h4>
 
-  <div className="stories-container">
-    <div className="stories-scroll px-3">
-      {filteredFoods.map(food => (
+    <div className="stories-container">
+      <div className="stories-scroll px-3">
+        {/* Add Story Button - Strict Addition */}
         <div 
-          key={food.id}
-          className="story-item"
-          onClick={() => navigate(`/chef/${food.chefId}`)}
+          className="story-item" 
+          onClick={() => registerAsChef()}
           style={{ marginRight: '1.5rem' }}
         >
-          <div className="story-image-wrapper position-relative">
-            <div className="story-gradient-border">
+          <div className="story-image-wrapper   position-relative">
+            <div className="story-gradient-border add-story-border">
               <img
-                src={food.photoUrls?.[0] || '/placeholder-food.jpg'}
-                alt={food.title}
-                className="story-img"
+                src="/images/story.png"
+                alt="Add Story"
+                className="story-img  "
               />
+              <div className="add-story-plus">
+                <Plus size={28} className="text-white" />
+              </div>
             </div>
             <div className="story-details">
-              <span className="chef-name">{food.chef.user.Name}</span>
-              <Badge pill className="location-badge">
-                <GeoAlt size={12} className="me-1" />
-                <span className="area-name">{food.area}</span>
-              </Badge>
+              <span className="chef-name">Add Story</span>
             </div>
           </div>
         </div>
-      ))}
+
+        {filteredFoods.map(food => (
+          <div 
+            key={food.id}
+            className="story-item"
+            onClick={() => navigate(`/chef/${food.chefId}`)}
+            style={{ marginRight: '1.5rem' }}
+          >
+            <div className="story-image-wrapper position-relative">
+              <div className="story-gradient-border">
+                <img
+                  src={food.photoUrls?.[0] || '/placeholder-food.jpg'}
+                  alt={food.title}
+                  className="story-img"
+                />
+              </div>
+              <div className="story-details">
+                <span className="chef-name">{food.chef.user.Name}</span>
+                <Badge pill className="location-badge">
+                  <GeoAlt size={12} className="me-1" />
+                  <span className="area-name">{food.area}</span>
+                </Badge>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
 
   <style jsx>{`
     .stories-container {
       position: relative;
       padding: 0 1rem;
     }
+
+      .add-story-plus {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #FF4532;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+      }
+
 
     .stories-scroll {
       display: flex;

@@ -302,6 +302,171 @@ const ChefProfile = ({ addToCart }) => {
             </Card>
           </Col>
 
+{/* Auto-Scroll Foods Section */}
+<div className="py-4 border-bottom" style={{ backgroundColor: '#f8f9fa' }}>
+  <div className="container">
+    <h5 className="mb-3 fw-bold" style={{ 
+      color: colors.primary,
+      fontSize: '1.25rem',
+      letterSpacing: '-0.015em'
+    }}>
+      <StarHalf className="me-2" style={{ width: '20px', height: '20px' }} /> 
+      Signature Creations
+    </h5>
+    
+    <div className="foods-scroll-container">
+      <div className="foods-scroll">
+        {foods.map(food => (
+          <div key={food.id} className="food-scroll-item">
+            <Card className="h-100 shadow-sm border-0 overflow-hidden" style={{
+              borderRadius: '12px',
+              transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}>
+              <div className="position-relative">
+                <Carousel interval={null} indicators={food.photoUrls?.length > 1}>
+                  {(food.photoUrls || []).map((img, i) => (
+                    <Carousel.Item key={i}>
+                      <div className="ratio ratio-1x1">
+                        <img
+                          src={img}
+                          alt={`${food.title} - Photo ${i + 1}`}
+                          className="card-img-top object-fit-cover"
+                          style={{ 
+                            filter: 'brightness(0.98)',
+                            borderTopLeftRadius: '12px',
+                            borderTopRightRadius: '12px'
+                          }}
+                          onError={(e) => (e.target.src = '/placeholder-food.jpg')}
+                        />
+                      </div>
+                    </Carousel.Item>
+                  ))}
+                </Carousel>
+                <div style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  backdropFilter: 'blur(4px)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <span style={{
+                    color: colors.primary,
+                    fontWeight: 600,
+                    fontSize: '0.9rem'
+                  }}>
+                    KES {food.price}
+                  </span>
+                </div>
+              </div>
+
+              <Card.Body className="d-flex flex-column" style={{ padding: '1.25rem' }}>
+                <h6 className="fw-bold mb-2" style={{ 
+                  color: colors.primary,
+                  fontSize: '1rem',
+                  lineHeight: 1.3
+                }}>
+                  {food.title}
+                </h6>
+
+                <div className="d-flex gap-2 flex-wrap mb-3">
+                  <Badge pill className="small" style={{ 
+                    backgroundColor: `${colors.purple}15`,
+                    color: colors.purple,
+                    padding: '0.35rem 0.7rem',
+                    fontSize: '0.8rem'
+                  }}>
+                    {food.cuisineType}
+                  </Badge>
+                  <Badge pill className="small" style={{ 
+                    backgroundColor: `${colors.danger}15`,
+                    color: colors.danger,
+                    padding: '0.35rem 0.7rem',
+                    fontSize: '0.8rem'
+                  }}>
+                    {food.dietary}
+                  </Badge>
+                </div>
+
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="w-100 d-flex align-items-center justify-content-center"
+                  style={{ 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                    padding: '0.5rem',
+                    fontSize: '0.9rem',
+                    borderRadius: '8px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => addToCart(food)}
+                >
+                  <CartPlus className="me-2" style={{ width: '16px', height: '16px' }} />
+                  Add to Cart
+                </Button>
+              </Card.Body>
+            </Card>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <style jsx>{`
+    .foods-scroll-container {
+      position: relative;
+      padding-bottom: 1rem;
+    }
+
+    .foods-scroll {
+      display: flex;
+      overflow-x: auto;
+      gap: 1.5rem;
+      padding-bottom: 1rem;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: ${colors.primary} #f1f1f1;
+    }
+
+    .food-scroll-item {
+      flex: 0 0 280px;
+      scroll-snap-align: start;
+      transition: transform 0.2s ease;
+    }
+
+    .food-scroll-item:hover {
+      transform: translateY(-4px);
+    }
+
+    .foods-scroll::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .foods-scroll::-webkit-scrollbar-thumb {
+      background-color: ${colors.primary};
+      border-radius: 4px;
+    }
+
+    .foods-scroll::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .food-scroll-item {
+        flex: 0 0 240px;
+      }
+      
+      h5 {
+        font-size: 1.1rem !important;
+      }
+    }
+  `}</style>
+</div>
           {/* Menu Items */}
           <Col lg={8}>
             <Tabs 
